@@ -25,6 +25,6 @@ add-apt-repository \
 apt-get update
 
 # For ubuntu 18
-apt-get install docker
+apt install docker.io
 
 service docker start
