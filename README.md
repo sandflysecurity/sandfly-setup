@@ -1,9 +1,26 @@
-Install and setup scripts for Sandfly.
-
 Sandfly is an agentless compromise and intrusion detection system for Linux.
 
-Find out more at www.sandflysecurity.com.
+These are the install and setup scripts for Sandfly.
 
+Sandfly can find hackers, malware, and suspicious activity on Linux systems without loading any software
+agents. Sandfly collects and reports critical forensic information on attacks detected so you can take
+immediate and informed action against the threat.
+
+Sandfly works against most versions of Linux that have Python and SSH installed. This includes:
+
+- Red Hat
+- Centos
+- Ubuntu
+- Debian
+- Fedora
+- Suse
+- Amazon AWS Linux
+- Arch
+- etc.
+
+Find out more here: www.sandflysecurity.com.
+
+Documentation here: docs.sandflysecurity.com
 
 Copyright (c) 2016-2018 Sandfly Security LTD, All Rights Reserved.
 www.sandflysecurity.com
