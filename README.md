@@ -18,9 +18,13 @@ Sandfly works against most versions of Linux that have Python and SSH installed.
 - Arch
 - etc.
 
-Find out more here: www.sandflysecurity.com.
+Find out more here:
 
-Documentation here: docs.sandflysecurity.com
+https://www.sandflysecurity.com.
+
+Documentation here:
+
+https://docs.sandflysecurity.com
 
 Copyright (c) 2016-2018 Sandfly Security LTD, All Rights Reserved.
 www.sandflysecurity.com
