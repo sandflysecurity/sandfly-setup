@@ -14,4 +14,5 @@ sudo yum makecache fast
 sudo yum -y install docker-ce
 
 sudo systemctl start docker
+sudo systemctl enable docker
 
