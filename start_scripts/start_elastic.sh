@@ -13,7 +13,7 @@ docker run --mount source=sandfly-elastic-db-vol,target=/usr/share/elasticsearch
 -e "http.host=0.0.0.0" \
 -e "xpack.security.enabled=false" \
 -e "transport.host=127.0.0.1" \
---env "ES_JAVA_OPTS=""-Xms1g -Xmx4g" \
+--env "ES_JAVA_OPTS=""-Xms2g -Xmx2g" \
 --restart on-failure:5 \
 --security-opt="no-new-privileges:true" \
 --network sandfly-net \
