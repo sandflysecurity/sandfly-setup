@@ -14,7 +14,7 @@ export SSL_NODE_KEY=$(cat $SETUP_DATA/node_key.b64)
 # sandfly container version, but you can use your own cluster if you wish.
 #export ELASTIC_SERVER="ip_addr_or_hostname_here"
 
-if [ -f $SETUP_DATA/server_cert_signed.b64 ]; then
+if [ -s $SETUP_DATA/server_cert_signed.b64 ]; then
     export SSL_SERVER_CERT=$(cat $SETUP_DATA/server_cert_signed.b64)
     export SSL_SERVER_KEY=$(cat $SETUP_DATA/server_key_signed.b64)
 else
