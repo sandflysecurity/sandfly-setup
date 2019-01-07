@@ -14,6 +14,24 @@ export SSL_NODE_KEY=$(cat $SETUP_DATA/node_key.b64)
 # sandfly container version, but you can use your own cluster if you wish.
 #export ELASTIC_SERVER="ip_addr_or_hostname_here"
 
+if [ -f $SETUP_DATA/node.sec.asc.b64 ]; then
+    echo "********* WARNING ***********"
+    echo ""
+    echo "The node secret key $SETUP_DATA/node.sec.asc.b64 is present on the server. This key must be deleted from"
+    echo "the server to fully protect the SSH keys stored in the database. It should only be on the nodes."
+    echo ""
+    echo ""
+    echo "********* WARNING ***********"
+    echo ""
+    echo ""
+    read -p "Are you sure you want to start the server with the node secret key present? (YES) " RESPONSE
+    if [ "$RESPONSE" != "YES" ]; then
+        echo "Halting server start."
+        exit -1
+    fi
+fi
+
+
 if [ -s $SETUP_DATA/server_cert_signed.b64 ]; then
     export SSL_SERVER_CERT=$(cat $SETUP_DATA/server_cert_signed.b64)
     export SSL_SERVER_KEY=$(cat $SETUP_DATA/server_key_signed.b64)
