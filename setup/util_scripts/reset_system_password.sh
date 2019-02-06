@@ -5,11 +5,14 @@
 # Used to generate a new API password the scanning nodes use to post results data. This shouldn't be used unless
 # requested by Sandfly.
 
-WORKING_DIR=$PWD
+# Use standard docker image unless overriden.
+if [[ -z "${SANDFLY_MGMT_DOCKER_IMAGE}" ]]; then
+  SANDFLY_MGMT_DOCKER_IMAGE=sandfly/sandfly-server-mgmt:latest
+fi
 
 # Uncomment and change this if you wish to override what elastic DB for Sandfly so to use. The default is to use
 # sandfly container version, but you can use your own cluster if you wish.
-#export ELASTIC_SERVER="ip_addr_or_hostname_here"
+#export ELASTIC_SERVER_HOSTNAME="ip_addr_or_hostname_here"
 
 docker network create sandfly-net
 docker rm sandfly-server-mgmt
@@ -17,8 +20,8 @@ docker rm sandfly-server-mgmt
 
 docker run --name sandfly-server-mgmt \
 --network sandfly-net \
--e ELASTIC_SERVER \
--it sandfly/sandfly-server-mgmt:latest /usr/local/sandfly/utils/reset_system_password.sh
+-e ELASTIC_SERVER_HOSTNAME \
+-it $SANDFLY_MGMT_DOCKER_IMAGE /usr/local/sandfly/utils/reset_system_password.sh
 
 
 

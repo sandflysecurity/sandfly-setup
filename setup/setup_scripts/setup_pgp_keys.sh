@@ -7,16 +7,24 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-# Generates initial SSL keys for the Sandfly Server.
+echo ""
+echo "**********************************"
+echo "*      Generating PGP Keys       *"
+echo "**********************************"
+echo ""
+
+# Use standard docker image unless overriden.
+if [[ -z "${SANDFLY_MGMT_DOCKER_IMAGE}" ]]; then
+  SANDFLY_MGMT_DOCKER_IMAGE=sandfly/sandfly-server-mgmt:latest
+fi
+
+# Sets up PGP keys pair for server and node.
 docker network create sandfly-net
 docker rm sandfly-server-mgmt
-
 
 docker run -v /dev/urandom:/dev/random:ro \
 -v $PWD/setup_data:/usr/local/sandfly/install/setup_data \
 --name sandfly-server-mgmt \
 --network sandfly-net \
--it sandfly/sandfly-server-mgmt:latest /usr/local/sandfly/install/install_ssl.sh
-
-
+-it $SANDFLY_MGMT_DOCKER_IMAGE /usr/local/sandfly/install/create_node_pgp_keys.sh
 

@@ -4,8 +4,23 @@
 
 SETUP_DATA=../setup/setup_data
 
-source $SETUP_DATA/secrets.env.sh
+# This converts legacy environment variable scripts to the new file format. This will be removed in later versions.
+if [ -f $SETUP_DATA/secrets.env.sh ]; then
+    echo "Old format password data was found. Converting it to new format now."
+    source $SETUP_DATA/secrets.env.sh
+    # Decode these values. The new format uses plain values and encodes when needed internally.
+    echo "Converting Rabbit server hostname."
+    echo $RABBIT_SERVER_HOSTNAME | base64 -d > $SETUP_DATA/rabbit.server.hostname.txt
+    echo "Converting Rabbit admin password."
+    echo $RABBIT_ADMIN_PASSWORD | base64 -d > $SETUP_DATA/rabbit.admin.password.txt
+    echo "Converting Rabbit node password."
+    echo $RABBIT_NODE_PASSWORD | base64 -d> $SETUP_DATA/rabbit.node.password.txt
+fi
 
+# Populate env variables
+export RABBIT_SERVER_HOSTNAME=$(cat $SETUP_DATA/rabbit.server.hostname.txt)
+export RABBIT_ADMIN_PASSWORD=$(cat $SETUP_DATA/rabbit.admin.password.txt)
+export RABBIT_NODE_PASSWORD=$(cat $SETUP_DATA/rabbit.node.password.txt)
 export SSL_CACERT=$(cat $SETUP_DATA/cacert.b64)
 export RABBIT_SSL_SERVER_CERT=$(cat $SETUP_DATA/rabbit_cert.b64)
 export RABBIT_SSL_SERVER_KEY=$(cat $SETUP_DATA/rabbit_key.b64)
