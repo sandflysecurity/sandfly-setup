@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2016-2018 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) 2016-2019 Sandfly Security LTD, All Rights Reserved.
 
 if [[ $EUID -ne 0 ]]; then
    echo "This script must be run as root."
@@ -16,7 +16,7 @@ echo ""
 
 # Use standard docker image unless overriden.
 if [[ -z "${SANDFLY_MGMT_DOCKER_IMAGE}" ]]; then
-  SANDFLY_MGMT_DOCKER_IMAGE=sandfly/sandfly-server-mgmt:latest
+  SANDFLY_MGMT_DOCKER_IMAGE="sandfly/sandfly-server-mgmt:latest"
 fi
 
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2016-2018 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) 2016-2019 Sandfly Security LTD, All Rights Reserved.
 
 if [[ $EUID -ne 0 ]]; then
    echo "This script must be run as root."
@@ -26,8 +26,25 @@ echo "Waiting 10 seconds."
 sleep 10
 
 ./setup_scripts/setup_server.sh
+if [[ $? -eq 1 ]]
+then
+  echo "Server setup did not run. Aborting install."
+  exit 1
+fi
+
 ./setup_scripts/setup_pgp_keys.sh
+if [[ $? -eq 1 ]]
+then
+  echo "PGP key setup did not run. Aborting install."
+  exit 1
+fi
+
 ./setup_scripts/setup_ssl.sh
+if [[ $? -eq 1 ]]
+then
+  echo "SSL setup did not run. Aborting install."
+  exit 1
+fi
 
 echo ""
 echo "**********************************"
@@ -35,7 +52,7 @@ echo "*      Make Signed SSL Key?      *"
 echo "**********************************"
 echo ""
 read -p "Generate signed SSL keys (type YES)? " RESPONSE
-if [ "$RESPONSE" = "YES" ]; then
+if [[ "$RESPONSE" = "YES" ]]; then
     echo "Starting key signing script"
     ./setup_scripts/setup_ssl_signed.sh
 fi

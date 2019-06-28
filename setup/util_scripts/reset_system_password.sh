@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2016-2018 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) 2016-2019 Sandfly Security LTD, All Rights Reserved.
 
 # Used to generate a new API password the scanning nodes use to post results data. This shouldn't be used unless
 # requested by Sandfly.
 
 # Use standard docker image unless overriden.
 if [[ -z "${SANDFLY_MGMT_DOCKER_IMAGE}" ]]; then
-  SANDFLY_MGMT_DOCKER_IMAGE=sandfly/sandfly-server-mgmt:latest
+  SANDFLY_MGMT_DOCKER_IMAGE="sandfly/sandfly-server-mgmt:latest"
 fi
 
 # Uncomment and change this if you wish to override what elastic DB for Sandfly so to use. The default is to use

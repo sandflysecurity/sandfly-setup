@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2016-2018 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) 2016-2019 Sandfly Security LTD, All Rights Reserved.
 
 # Cleans out all docker images. Required to do this before upgrading to get rid of stale containers.
 

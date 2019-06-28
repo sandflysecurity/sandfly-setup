@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2016-2018 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) 2016-2019 Sandfly Security LTD, All Rights Reserved.
 
 SETUP_DATA=../setup/setup_data
 
@@ -119,4 +119,5 @@ docker run -v /dev/urandom:/dev/random:ro \
 --network sandfly-net \
 --name sandfly-server \
 --publish 443:8443 \
+--publish 80:8000 \
 -d sandfly/sandfly-server:latest /usr/local/sandfly/start_api.sh
