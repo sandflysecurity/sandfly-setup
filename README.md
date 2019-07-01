@@ -15,8 +15,8 @@ Sandfly works against most versions of Linux that have SSH installed. This inclu
 - Fedora
 - Suse
 - Amazon AWS Linux
-- Linode
-- Digital Ocean
+- Linode Linux Images
+- Digital Ocean Linux Images
 - etc.
 
 Find out more here:
