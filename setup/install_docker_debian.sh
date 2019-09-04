@@ -3,15 +3,17 @@
 # Copyright (c) 2016-2019 Sandfly Security LTD, All Rights Reserved.
 
 apt update
-apt install thin-provisioning-tools
-apt install lvm2
+apt install \
+ thin-provisioning-tools \ 
+ lvm2
 
 # Allows apt to use HTTPS and other tools.
 apt install \
     apt-transport-https \
     ca-certificates \
     curl \
-    software-properties-common
+    software-properties-common \
+    gnupg
 
 # Docker PGP key add
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
