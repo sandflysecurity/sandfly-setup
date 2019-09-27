@@ -56,4 +56,4 @@ docker run -v /dev/urandom:/dev/random:ro \
 --disable-content-trust \
 --restart on-failure:5 \
 --security-opt="no-new-privileges:true" \
--d sandfly/sandfly-node:latest /usr/local/sandfly/start_node.sh
+-d docker.io/sandfly/sandfly-node:latest /usr/local/sandfly/start_node.sh

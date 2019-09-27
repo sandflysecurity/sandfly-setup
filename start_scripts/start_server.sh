@@ -120,4 +120,4 @@ docker run -v /dev/urandom:/dev/random:ro \
 --name sandfly-server \
 --publish 443:8443 \
 --publish 80:8000 \
--d sandfly/sandfly-server:latest /usr/local/sandfly/start_api.sh
+-d docker.io/sandfly/sandfly-server:latest /usr/local/sandfly/start_api.sh
