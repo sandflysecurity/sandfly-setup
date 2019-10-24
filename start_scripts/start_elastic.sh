@@ -22,11 +22,12 @@ docker run --mount source=sandfly-elastic-db-vol,target=/usr/share/elasticsearch
 -e "xpack.security.enabled=false" \
 -e "transport.host=127.0.0.1" \
 -e "bootstrap.memory_lock=true" \
+-e "discovery.type=single-node" \
 --ulimit memlock=-1:-1 \
---ulimit nofile=65536:65536 \
+--ulimit nofile=65535:65535 \
 --env ES_JAVA_OPTS="-Xms${RAM_HALF}g -Xmx${RAM_HALF}g" \
 --restart on-failure:5 \
 --security-opt="no-new-privileges:true" \
 --network sandfly-net \
 --name elasticsearch \
--t docker.elastic.co/elasticsearch/elasticsearch:6.8.2
+-t docker.elastic.co/elasticsearch/elasticsearch:7.4.1
