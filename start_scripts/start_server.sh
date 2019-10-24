@@ -3,6 +3,7 @@
 # Copyright (c) 2016-2019 Sandfly Security LTD, All Rights Reserved.
 
 SETUP_DATA=../setup/setup_data
+VERSION=$(cat ../VERSION)
 
 if [ -f $SETUP_DATA/node.sec.asc.b64 ]; then
     echo "********* WARNING ***********"
@@ -17,46 +18,8 @@ if [ -f $SETUP_DATA/node.sec.asc.b64 ]; then
     read -p "Are you sure you want to start the server with the node secret key present? (YES) " RESPONSE
     if [ "$RESPONSE" != "YES" ]; then
         echo "Halting server start."
-        exit -1
+        exit 1
     fi
-fi
-
-# This converts legacy environment variable scripts to the new file format. This will be removed in later versions.
-if [ -f $SETUP_DATA/secrets.env.sh ]; then
-    echo "Old format password data was found. Converting it to new format now."
-    # This inits the env variables we are about to use below from the legacy format.
-    source $SETUP_DATA/secrets.env.sh
-    # Decode these values. The new format uses plain values and encodes when needed internally.
-    echo "Converting Rabbit server hostname."
-    echo $RABBIT_SERVER_HOSTNAME | base64 -d > $SETUP_DATA/rabbit.server.hostname.txt
-    echo "Converting Rabbit admin password."
-    echo $RABBIT_ADMIN_PASSWORD | base64 -d > $SETUP_DATA/rabbit.admin.password.txt
-    echo "Converting Rabbit node password."
-    echo $RABBIT_NODE_PASSWORD | base64 -d> $SETUP_DATA/rabbit.node.password.txt
-    echo "Converting API server hostname."
-    echo $API_SERVER_HOSTNAME | base64 -d > $SETUP_DATA/api.server.hostname.txt
-    echo "Converting API node password."
-    echo $API_NODE_PASSWORD | base64 -d > $SETUP_DATA/api.node.password.txt
-    echo "Converting admin password (left over from install)."
-    echo $ADMIN_PASSWORD | base64 -d > $SETUP_DATA/admin.password.txt
-
-    echo "Setting elasticsearch server name."
-    echo "elasticsearch" > $SETUP_DATA/elastic.server.hostname.txt
-
-    echo "Saving Fernet password to new file."
-    echo $FERNET_PASSWORD > $SETUP_DATA/fernet.password.b64
-
-    if [ -z $LOGIN_SCREEN_PASSWORD ]; then
-        echo "No pre-login screen password found to convert. Skipping."
-    else
-        echo "Converting pre-login screen password."
-        echo $LOGIN_SCREEN_PASSWORD > $SETUP_DATA/login.screen.password.txt
-    fi
-
-    echo "Making backup of old secrets.env.sh file"
-    cp $SETUP_DATA/secrets.env.sh $SETUP_DATA/secrets.env.sh.bak
-    echo "Removing old secrets.env.sh file"
-    rm $SETUP_DATA/secrets.env.sh
 fi
 
 # Populate env variables.
@@ -120,4 +83,4 @@ docker run -v /dev/urandom:/dev/random:ro \
 --name sandfly-server \
 --publish 443:8443 \
 --publish 80:8000 \
--d docker.io/sandfly/sandfly-server:latest /usr/local/sandfly/start_api.sh
+-d docker.io/sandfly/sandfly-server:"$VERSION" /usr/local/sandfly/start_api.sh

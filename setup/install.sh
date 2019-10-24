@@ -7,7 +7,8 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-export SANDFLY_MGMT_DOCKER_IMAGE="docker.io/sandfly/sandfly-server-mgmt:latest"
+VERSION=$(cat ../VERSION)
+export SANDFLY_MGMT_DOCKER_IMAGE="docker.io/sandfly/sandfly-server-mgmt:$VERSION"
 
 # Uncomment and change this if you wish to override what elastic DB for Sandfly so to use. The default is to use
 # sandfly container version, but you can use your own cluster if you wish.
