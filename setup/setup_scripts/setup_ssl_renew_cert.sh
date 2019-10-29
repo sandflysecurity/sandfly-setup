@@ -15,9 +15,9 @@ echo ""
 
 # Use standard docker image unless overriden.
 if [[ -z "${SANDFLY_MGMT_DOCKER_IMAGE}" ]]; then
-  SANDFLY_MGMT_DOCKER_IMAGE="sandfly/sandfly-server-mgmt:latest"
+  VERSION=$(cat ../../VERSION)
+  SANDFLY_MGMT_DOCKER_IMAGE="docker.io/sandfly/sandfly-server-mgmt:$VERSION"
 fi
-
 
 # Calls EFF Certbot to get a signed key for the Sandfly Server.
 # publish to 80 is required by Cerbot for http connect back.
