@@ -63,5 +63,9 @@ echo "**********************************"
 echo "*         Setup Complete!        *"
 echo "**********************************"
 echo ""
-
+echo ""
+echo "Your randomly generated password for the admin account is is located under:"
+echo ""
+echo "$PWD/setup_data/admin.password.txt"
+echo ""
 
