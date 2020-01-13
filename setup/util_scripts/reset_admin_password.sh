@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2016-2019 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) 2016-2020 Sandfly Security LTD, All Rights Reserved.
 
 # Resets the admin account to a new random password. Used to recover a lost or forgotten admin password.
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2016-2019 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) 2016-2020 Sandfly Security LTD, All Rights Reserved.
 
 # This will delete all the results, errors, and audit log data from the Sandfly server. This is useful if
 # the system got flooded with alarms or other data and you want to quickly get rid of all of it and start fresh.

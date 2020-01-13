@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2016-2019 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) 2016-2020 Sandfly Security LTD, All Rights Reserved.
 
 RAM_TOTAL=$(free -g | grep Mem | awk '{print $2}')
 # Elasticsearch recommends at least 50% of memory be set aside for heap use. If you want to set this
