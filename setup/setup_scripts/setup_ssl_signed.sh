@@ -7,11 +7,20 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-echo ""
-echo "**********************************"
-echo "*  Setting up Signed SSL Certs   *"
-echo "**********************************"
-echo ""
+cat << EOF
+
+************************************************************************************************
+Generating Signed Certificates
+
+We are now going to try to contact EFF's Let's Encrypt Bot to sign our certificates. The server
+must be visible online to TCP port 80 for this procedure to work.
+
+If the system is behind a firewall or private network, you will need to use self-signed
+certificates or an internal CA to sign your certificates for the server.
+
+************************************************************************************************
+
+EOF
 
 # Use standard docker image unless overriden.
 if [[ -z "${SANDFLY_MGMT_DOCKER_IMAGE}" ]]; then
@@ -21,8 +30,8 @@ fi
 
 # Calls EFF Certbot to get a signed key for the Sandfly Server.
 # publish to 80 is required by Cerbot for http connect back.
-docker network create sandfly-net
-docker rm sandfly-server-mgmt
+docker network create sandfly-net 2>/dev/null
+docker rm sandfly-server-mgmt 2>/dev/null
 
 docker run -v /dev/urandom:/dev/random:ro \
 -v $PWD/setup_data:/usr/local/sandfly/install/setup_data \

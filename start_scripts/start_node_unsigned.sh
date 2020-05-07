@@ -6,14 +6,24 @@ SETUP_DATA=../setup/setup_data
 VERSION=$(cat ../VERSION)
 
 # Populate env variables.
-export RABBIT_SERVER_HOSTNAME=$(cat $SETUP_DATA/rabbit.server.hostname.txt)
-export RABBIT_NODE_PASSWORD=$(cat $SETUP_DATA/rabbit.node.password.txt)
-export API_SERVER_HOSTNAME=$(cat $SETUP_DATA/api.server.hostname.txt)
-export API_NODE_PASSWORD=$(cat $SETUP_DATA/api.node.password.txt)
-export SSL_CACERT=$(cat $SETUP_DATA/cacert.b64)
-export SSL_NODE_CERT=$(cat $SETUP_DATA/node_cert.b64)
-export SSL_NODE_KEY=$(cat $SETUP_DATA/node_key.b64)
-export NODE_PGP_SECRET_KEY=$(cat $SETUP_DATA/node.sec.asc.b64)
+RABBIT_SERVER_HOSTNAME=$(cat $SETUP_DATA/rabbit.server.hostname.txt)
+RABBIT_NODE_PASSWORD=$(cat $SETUP_DATA/rabbit.node.password.txt)
+API_SERVER_HOSTNAME=$(cat $SETUP_DATA/api.server.hostname.txt)
+API_NODE_PASSWORD=$(cat $SETUP_DATA/api.node.password.txt)
+SSL_CACERT=$(cat $SETUP_DATA/cacert.b64)
+SSL_NODE_CERT=$(cat $SETUP_DATA/node_cert.b64)
+SSL_NODE_KEY=$(cat $SETUP_DATA/node_key.b64)
+NODE_PGP_SECRET_KEY=$(cat $SETUP_DATA/node.sec.asc.b64)
+
+export RABBIT_SERVER_HOSTNAME
+export RABBIT_NODE_PASSWORD
+export API_SERVER_HOSTNAME
+export API_NODE_PASSWORD
+export SSL_CACERT
+export SSL_NODE_CERT
+export SSL_NODE_KEY
+export NODE_PGP_SECRET_KEY
+
 
 # Node thread values. Please do not change this unless instructed for performance reasons.
 export CONCURRENCY=500

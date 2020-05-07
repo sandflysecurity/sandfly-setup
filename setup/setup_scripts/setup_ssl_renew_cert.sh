@@ -7,11 +7,16 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-echo ""
-echo "**********************************"
-echo "*       Renewing SSL Cert        *"
-echo "**********************************"
-echo ""
+cat << EOF
+
+************************************************************************************************
+Renewing SSL Certs
+
+This script will contact EFF's Let's Encrypt Bot to renew your certificates.
+
+************************************************************************************************
+
+EOF
 
 # Use standard docker image unless overriden.
 if [[ -z "${SANDFLY_MGMT_DOCKER_IMAGE}" ]]; then
@@ -21,8 +26,8 @@ fi
 
 # Calls EFF Certbot to get a signed key for the Sandfly Server.
 # publish to 80 is required by Cerbot for http connect back.
-docker network create sandfly-net
-docker rm sandfly-server-mgmt
+docker network create sandfly-net 2>/dev/null
+docker rm sandfly-server-mgmt 2>/dev/null
 
 docker run -v /dev/urandom:/dev/random:ro \
 -v $PWD/setup_data:/usr/local/sandfly/install/setup_data \

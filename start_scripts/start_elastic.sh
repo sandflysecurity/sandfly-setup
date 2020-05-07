@@ -11,10 +11,11 @@ echo "Total system RAM: $RAM_TOTAL gb"
 echo "Setting elasticsearch heap (approx 50% RAM) to: $RAM_HALF gb"
 
 # Needed for elasticsearch in production environments.
+echo "Setting vm.max_map_count"
 sysctl -w vm.max_map_count=262144
 
-docker network create sandfly-net
-docker rm elasticsearch
+docker network create sandfly-net 2>/dev/null
+docker rm elasticsearch 2>/dev/null
 
 docker run --mount source=sandfly-elastic-db-vol,target=/usr/share/elasticsearch/data \
 -d \
@@ -30,4 +31,4 @@ docker run --mount source=sandfly-elastic-db-vol,target=/usr/share/elasticsearch
 --security-opt="no-new-privileges:true" \
 --network sandfly-net \
 --name elasticsearch \
--t docker.elastic.co/elasticsearch/elasticsearch:7.6.1
+-t docker.elastic.co/elasticsearch/elasticsearch:7.6.2

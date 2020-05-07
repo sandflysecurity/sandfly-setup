@@ -7,11 +7,16 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-echo ""
-echo "**********************************"
-echo "*       Setting up Server        *"
-echo "**********************************"
-echo ""
+cat << EOF
+
+************************************************************************************************
+Setting Up Server
+
+The server install script is now starting.
+
+************************************************************************************************
+
+EOF
 
 # Use standard docker image unless overriden.
 if [[ -z "${SANDFLY_MGMT_DOCKER_IMAGE}" ]]; then
@@ -19,19 +24,20 @@ if [[ -z "${SANDFLY_MGMT_DOCKER_IMAGE}" ]]; then
   SANDFLY_MGMT_DOCKER_IMAGE="docker.io/sandfly/sandfly-server-mgmt:$VERSION"
 fi
 
-
 # Uncomment and change this if you wish to override what elastic DB for Sandfly so to use. The default is to use
-# sandfly container version, but you can use your own cluster if you wish.
-#export ELASTIC_SERVER_HOSTNAME="ip_addr_or_hostname_here"
+# sandfly container version, but you can use your own cluster if you wish. During setup if you specified
+# a custom elastic server IP address then it will be filled in above so you likely won't have to
+# alter this.
+#export ELASTIC_SERVER_URL="http://elasticsearch.example.com:9200"
 
-docker network create sandfly-net
-docker rm sandfly-server-mgmt
+docker network create sandfly-net 2>/dev/null
+docker rm sandfly-server-mgmt 2>/dev/null
 
 docker run -v /dev/urandom:/dev/random:ro \
 -v $PWD/setup_data:/usr/local/sandfly/install/setup_data \
 --name sandfly-server-mgmt \
 --network sandfly-net \
--e ELASTIC_SERVER_HOSTNAME \
+-e ELASTIC_SERVER_URL \
 -it $SANDFLY_MGMT_DOCKER_IMAGE /usr/local/sandfly/install/install_server.sh
 
 

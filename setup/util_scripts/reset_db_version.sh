@@ -2,9 +2,8 @@
 # Sandfly Security LTD www.sandflysecurity.com
 # Copyright (c) 2016-2020 Sandfly Security LTD, All Rights Reserved.
 
-# Used to generate a new API password the scanning nodes use to post results data. This shouldn't be used unless
-# requested by Sandfly.
-
+# This will set the database version for Sandfly to a user defined value.
+# Please do not run this script unless asked to by Sandfly support.
 SETUP_DATA=../setup_data
 
 # Use standard docker image unless overriden.
@@ -26,7 +25,5 @@ docker rm sandfly-server-mgmt
 docker run --name sandfly-server-mgmt \
 --network sandfly-net \
 -e ELASTIC_SERVER_URL \
--it $SANDFLY_MGMT_DOCKER_IMAGE /usr/local/sandfly/utils/reset_system_password.sh
-
-
+-it $SANDFLY_MGMT_DOCKER_IMAGE /usr/local/sandfly/utils/init_db_version.sh
 

@@ -7,11 +7,16 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-echo ""
-echo "**********************************"
-echo "*       Setting up SSL           *"
-echo "**********************************"
-echo ""
+cat << EOF
+
+************************************************************************************************
+Setting up SSL
+
+Setup is now going to generate SSL keys for the server and scanning nodes.
+
+************************************************************************************************
+
+EOF
 
 # Use standard docker image unless overriden.
 if [[ -z "${SANDFLY_MGMT_DOCKER_IMAGE}" ]]; then
@@ -20,8 +25,8 @@ if [[ -z "${SANDFLY_MGMT_DOCKER_IMAGE}" ]]; then
 fi
 
 # Generates initial SSL keys for the Sandfly Server.
-docker network create sandfly-net
-docker rm sandfly-server-mgmt
+docker network create sandfly-net 2>/dev/null
+docker rm sandfly-server-mgmt 2>/dev/null
 
 docker run -v /dev/urandom:/dev/random:ro \
 -v $PWD/setup_data:/usr/local/sandfly/install/setup_data \
