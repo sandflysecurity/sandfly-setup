@@ -38,4 +38,13 @@ node_key.b64
 rabbit.node.password.txt
 rabbit.server.hostname.txt
 
+Elasticsearch URL Notes
+
+External Elasticsearch clusters will need to be secured according to your network policies. If you are using a
+username/password and SSL for an external Elasticsearch cluster then the URL should be the format:
+
+https://username:password@elastic.example.com:9200
+
+Where username is the username for Elasticsearch (default "elastic") and password is the password for the login
+you configured.
 
