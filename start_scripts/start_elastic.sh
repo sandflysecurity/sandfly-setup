@@ -24,6 +24,7 @@ docker run --mount source=sandfly-elastic-db-vol,target=/usr/share/elasticsearch
 -e "transport.host=127.0.0.1" \
 -e "bootstrap.memory_lock=true" \
 -e "discovery.type=single-node" \
+-e "search.max_open_scroll_context=2000" \
 --ulimit memlock=-1:-1 \
 --ulimit nofile=65535:65535 \
 --env ES_JAVA_OPTS="-Xms${RAM_HALF}g -Xmx${RAM_HALF}g" \
