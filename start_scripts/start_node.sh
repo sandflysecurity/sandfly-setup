@@ -31,6 +31,8 @@ export CONCURRENCY=500
 #export IGNORE_CERTS=true
 export IGNORE_CERTS=false
 
+# Use ramdisk vs. home dir? (BETA)
+export USE_RAMDISK=false
 
 docker run -v /dev/urandom:/dev/random:ro \
 -e RABBIT_NODE_PASSWORD \
@@ -43,6 +45,7 @@ docker run -v /dev/urandom:/dev/random:ro \
 -e NODE_PGP_SECRET_KEY \
 -e IGNORE_CERTS \
 -e CONCURRENCY \
+-e USE_RAMDISK \
 --disable-content-trust \
 --restart on-failure:5 \
 --security-opt="no-new-privileges:true" \
