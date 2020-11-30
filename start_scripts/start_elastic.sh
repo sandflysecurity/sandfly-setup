@@ -32,4 +32,4 @@ docker run --mount source=sandfly-elastic-db-vol,target=/usr/share/elasticsearch
 --security-opt="no-new-privileges:true" \
 --network sandfly-net \
 --name elasticsearch \
--t docker.elastic.co/elasticsearch/elasticsearch:7.9.3
+-t docker.elastic.co/elasticsearch/elasticsearch:7.10.0
