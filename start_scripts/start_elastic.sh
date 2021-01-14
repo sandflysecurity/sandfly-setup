@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2016-2020 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) 2016-2021 Sandfly Security LTD, All Rights Reserved.
 
 RAM_TOTAL=$(free -g | grep Mem | awk '{print $2}')
 # Elasticsearch recommends at least 50% of memory be set aside for heap use. If you want to set this
@@ -32,4 +32,4 @@ docker run --mount source=sandfly-elastic-db-vol,target=/usr/share/elasticsearch
 --security-opt="no-new-privileges:true" \
 --network sandfly-net \
 --name elasticsearch \
--t docker.elastic.co/elasticsearch/elasticsearch:7.10.0
+-t docker.elastic.co/elasticsearch/elasticsearch:7.10.1
