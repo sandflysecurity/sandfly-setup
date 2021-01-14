@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2016-2020 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) 2016-2021 Sandfly Security LTD, All Rights Reserved.
 
 # Used to reset an invalid or corrupted license key. Not normally needed unless directed to use by Sandfly
 # support.

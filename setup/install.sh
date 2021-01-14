@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2016-2020 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) 2016-2021 Sandfly Security LTD, All Rights Reserved.
 
 VERSION=$(cat ../VERSION)
 export SANDFLY_MGMT_DOCKER_IMAGE="docker.io/sandfly/sandfly-server-mgmt:$VERSION"

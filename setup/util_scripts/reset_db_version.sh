@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2016-2020 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) 2016-2021 Sandfly Security LTD, All Rights Reserved.
 
 # This will set the database version for Sandfly to a user defined value.
 # Please do not run this script unless asked to by Sandfly support.
