@@ -40,4 +40,4 @@ docker run -v /dev/urandom:/dev/random:ro \
 --name sandfly-rabbit \
 --security-opt="no-new-privileges:true" \
 --publish 5673:5673 \
--t docker.io/sandfly/sandfly-rabbit:"$VERSION"
+-t quay.io/sandfly/sandfly-rabbit:"$VERSION"

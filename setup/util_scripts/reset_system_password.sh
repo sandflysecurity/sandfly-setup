@@ -10,7 +10,7 @@ SETUP_DATA=../setup_data
 # Use standard docker image unless overriden.
 if [[ -z "${SANDFLY_MGMT_DOCKER_IMAGE}" ]]; then
   VERSION=$(cat ../../VERSION)
-  SANDFLY_MGMT_DOCKER_IMAGE="docker.io/sandfly/sandfly-server-mgmt:$VERSION"
+  SANDFLY_MGMT_DOCKER_IMAGE="quay.io/sandfly/sandfly-server-mgmt:$VERSION"
 fi
 
 # Setup elasticsearch server name to custom here if needed.

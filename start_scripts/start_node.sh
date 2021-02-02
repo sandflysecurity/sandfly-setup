@@ -49,4 +49,4 @@ docker run -v /dev/urandom:/dev/random:ro \
 --disable-content-trust \
 --restart on-failure:5 \
 --security-opt="no-new-privileges:true" \
--d docker.io/sandfly/sandfly-node:"$VERSION" /usr/local/sandfly/start_node.sh
+-d quay.io/sandfly/sandfly-node:"$VERSION" /usr/local/sandfly/start_node.sh
