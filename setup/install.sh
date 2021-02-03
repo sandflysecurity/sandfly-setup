@@ -3,7 +3,7 @@
 # Copyright (c) 2016-2021 Sandfly Security LTD, All Rights Reserved.
 
 VERSION=$(cat ../VERSION)
-export SANDFLY_MGMT_DOCKER_IMAGE="docker.io/sandfly/sandfly-server-mgmt:$VERSION"
+export SANDFLY_MGMT_DOCKER_IMAGE="quay.io/sandfly/sandfly-server-mgmt:$VERSION"
 
 clear
 cat << EOF
