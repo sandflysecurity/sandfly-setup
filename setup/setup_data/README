@@ -1,50 +1,44 @@
-This is a holding area for setup data for Sandfly.
+*********************************************************************************
+* This is a holding area for setup data for Sandfly.
+*********************************************************************************
 
-The Server should contain the following files under this directory:
 
-admin.password.txt (Only used during DB init with random password. Invalid once user logs in and changes it.)
-api.node.password.txt
-api.server.hostname.txt
-cacert.b64
-dhparam.b64
-elastic.server.url.txt
-elastic.server.url.cacert.b64 (if you generated a cert for your Elasticseach instance)
-elastic.server.replication.url.txt (optional replication Elasticsearch instance)
-elastic.server.url.replication.cacert.b64 (if you generated a cert for your optional Elasticsearch replication instance)
-fernet.password.b64
-login.screen.password.txt (optional)
-node.pub.asc.b64
-node_cert.b64
-node_key.b64
-rabbit.admin.password.txt
-rabbit.node.password.txt
-rabbit.server.hostname.txt
-rabbit_cert.b64
-rabbit_key.b64
-secrets.txt
-server_cert.b64
-server_key.b64
-server_key_signed.b64 (optional if SSL signed cert is used)
-server_cert_signed.b64 (optional if SSL signed cert is used)
+*********************************************************************************
+* Server Config
+*********************************************************************************
 
-The Node should only have these files present:
+The Server should only have these files present:
 
-api.node.password.txt
-api.server.hostname.txt
-cacert.b64
-node.sec.asc.b64 (Node secret key should ONLY be on nodes and not on the server instance!)
-node_cert.b64
-node_key.b64
-rabbit.node.password.txt
-rabbit.server.hostname.txt
+admin.password.txt (Invalid once user logs in and changes it.)
+config.server.json
+config.rabbit.json
 
-Elasticsearch URL Notes
+*********************************************************************************
+* Node Config
+*********************************************************************************
 
-External Elasticsearch clusters will need to be secured according to your network policies. If you are using a
-username/password and SSL for an external Elasticsearch cluster then the URL should be the format:
+The Node should only have this file present and it should be DELETED from the
+server once it has been copied onto the nodes:
+
+config.node.json
+
+This file contains private keys that only the node should have access to for
+security purposes.
+
+If you have decided to run the server and node on the same system, then you can
+leave this file but the server will give you a warning on start-up about the
+security risk of doing so.
+
+*********************************************************************************
+* Elasticsearch URL Notes
+*********************************************************************************
+
+External Elasticsearch clusters will need to be secured according to your network
+policies. If you are using a username/password and SSL for an external Elasticsearch
+cluster then the URL should be the format:
 
 https://username:password@elastic.example.com:9200
 
-Where username is the username for Elasticsearch (default "elastic") and password is the password for the login
-you configured.
+Where username is the username for Elasticsearch (default "elastic") and password
+is the password for the login you configured.
 

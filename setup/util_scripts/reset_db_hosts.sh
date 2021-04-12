@@ -5,28 +5,24 @@
 # This will delete all hosts from the Sandfly DB. This can be used to purge indices if some kind of corruption
 # of the host data has occurred.
 
+# Make sure we run from the correct directory so relative paths work
+cd "$( dirname "${BASH_SOURCE[0]}" )"
+
 SETUP_DATA=../setup_data
+VERSION=${SANDFLY_VERSION:-$(cat ../../VERSION)}
+IMAGE_BASE=${SANDFLY_IMAGE_BASE:-quay.io/sandfly}
 
-# Use standard docker image unless overriden.
-if [[ -z "${SANDFLY_MGMT_DOCKER_IMAGE}" ]]; then
-  VERSION=$(cat ../../VERSION)
-  SANDFLY_MGMT_DOCKER_IMAGE="quay.io/sandfly/sandfly-server-mgmt:$VERSION"
-fi
+# Populate env variables.
+CONFIG_JSON=$(cat $SETUP_DATA/config.node.json)
+export CONFIG_JSON
 
-# Setup elasticsearch server name to custom here if needed.
-ELASTIC_SERVER_URL=$(cat $SETUP_DATA/elastic.server.url.txt)
-# Uncomment and change this if you wish to override what elastic DB for Sandfly so to use. The default is to use
-# sandfly container version, but you can use your own cluster if you wish.
-#export ELASTIC_SERVER_URL="http://elasticsearch.example.com:9200"
-export ELASTIC_SERVER_URL
 
 docker network create sandfly-net 2>/dev/null
 docker rm sandfly-server-mgmt
 
 docker run --name sandfly-server-mgmt \
 --network sandfly-net \
--e ELASTIC_SERVER_URL \
--it $SANDFLY_MGMT_DOCKER_IMAGE /usr/local/sandfly/utils/init_hosts_db.sh
-
+-e CONFIG_JSON \
+-it $IMAGE_BASE/sandfly-server-mgmt:"$VERSION" /usr/local/sandfly/utils/init_hosts_db.sh
 
 

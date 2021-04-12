@@ -1,0 +1,38 @@
+{
+	"node": {
+		"keys": {
+			"server": {
+				"public_key": "node_keys_server_public_key_b64"
+			},
+			"node": {
+				"private_key": "node_keys_node_private_key_b64"
+			}
+		},
+		"ssl": {
+			"server": {
+				"cacert": "node_ssl_server_cacert_b64"
+			},
+			"node": {
+				"cert": "node_ssl_node_cert_b64",
+				"private_key": "node_ssl_node_key_b64"
+			}
+		},
+		"rabbit": {
+			"hostname": "rabbit_hostname",
+			"node_password": "rabbit_node_password"
+		},
+		"api": {
+			"hostname": "api_hostname",
+			"password": "api_password"
+		},
+		"options": {
+			"ignore_ssl_certs": true,
+			"simulator_multiplier": 0,
+			"remove_dir_when_done": true,
+			"use_ramdisk": false,
+			"concurrency": 500,
+			"log_level": "info"
+		}
+	}
+}
+
