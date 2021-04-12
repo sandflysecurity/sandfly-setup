@@ -1,0 +1,51 @@
+{
+	"server": {
+		"keys": {
+			"server": {
+				"public_key": "server_keys_server_public_key_b64",
+				"private_key": "server_keys_server_private_key_b64"
+			},
+			"node": {
+				"public_key": "server_keys_node_public_key_b64"
+			}
+		},
+		"ssl": {
+			"server": {
+				"cacert": "server_ssl_server_cacert_b64",
+				"dhparam": "server_ssl_server_dhparam_b64",
+				"cert": "server_ssl_server_cert_b64",
+				"cert_signed": "server_ssl_server_cert_signed_b64",
+				"private_key": "server_ssl_server_key_b64",
+				"private_key_signed": "server_ssl_server_key_signed_b64"
+			},
+			"node": {
+				"cert": "server_ssl_node_cert_b64",
+				"private_key": "server_ssl_node_key_b64"
+			}
+		},
+		"rabbit": {
+			"hostname": "rabbit_hostname",
+			"node_password": "rabbit_node_password"
+		},
+		"api": {
+			"hostname": "api_hostname",
+			"password": "api_password"
+		},
+		"db": {
+			"elastic": {
+				"main": {
+					"url": "db_elastic_main_url",
+					"cacert": "db_elastic_main_cacert_b64"
+				},
+				"replication": {
+					"url": "db_elastic_replication_url",
+					"cacert": "db_elastic_replication_cacert_b64"
+				}
+			}
+		},
+		"options": {
+			"log_level": "info"
+		}
+	}
+}
+

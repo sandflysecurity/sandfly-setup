@@ -11,8 +11,8 @@ docker version >/dev/null 2>&1 || { echo "This script must be run as root or as 
 cat << EOF
 
 ******************************************************************************
-Setting up SSL
-Setup is now going to generate SSL keys for the server and scanning nodes.
+Setting Up Server and Node Keys
+We're now setting up keys for use by the server and nodes.
 ******************************************************************************
 
 EOF
@@ -23,7 +23,7 @@ if [[ -z "${SANDFLY_MGMT_DOCKER_IMAGE}" ]]; then
   SANDFLY_MGMT_DOCKER_IMAGE="quay.io/sandfly/sandfly-server-mgmt:$VERSION"
 fi
 
-# Generates initial SSL keys for the Sandfly Server.
+# Sets up PGP keys pair for server and node.
 docker network create sandfly-net 2>/dev/null
 docker rm sandfly-server-mgmt 2>/dev/null
 
@@ -34,8 +34,5 @@ docker run -v /dev/urandom:/dev/random:ro \
 -v $PWD/setup_data:/usr/local/sandfly/install/setup_data \
 --name sandfly-server-mgmt \
 --network sandfly-net \
--e SANDFLY_SETUP_AUTO_HOSTNAME \
-$DOCKER_INTERACTIVE $SANDFLY_MGMT_DOCKER_IMAGE /usr/local/sandfly/install/install_ssl.sh
-
-
+$DOCKER_INTERACTIVE $SANDFLY_MGMT_DOCKER_IMAGE /usr/local/sandfly/install/install_keys.sh
 

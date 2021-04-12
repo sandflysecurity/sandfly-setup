@@ -2,6 +2,10 @@
 # Sandfly Security LTD www.sandflysecurity.com
 # Copyright (c) 2016-2021 Sandfly Security LTD, All Rights Reserved.
 
+# Make sure we run from the correct directory so relative paths work
+cd "$( dirname "${BASH_SOURCE[0]}" )"
+cd ..
+
 if [[ $EUID -ne 0 ]]; then
    echo "This script must be run as root."
    exit 1
@@ -24,7 +28,7 @@ EOF
 
 # Use standard docker image unless overriden.
 if [[ -z "${SANDFLY_MGMT_DOCKER_IMAGE}" ]]; then
-  VERSION=$(cat ../../VERSION)
+  VERSION=$(cat ../VERSION)
   SANDFLY_MGMT_DOCKER_IMAGE="quay.io/sandfly/sandfly-server-mgmt:$VERSION"
 fi
 
@@ -33,8 +37,11 @@ fi
 docker network create sandfly-net 2>/dev/null
 docker rm sandfly-server-mgmt 2>/dev/null
 
+mkdir -p setup_data/letsencrypt
+
 docker run -v /dev/urandom:/dev/random:ro \
 -v $PWD/setup_data:/usr/local/sandfly/install/setup_data \
+-v $PWD/setup_data/letsencrypt:/etc/letsencrypt \
 --name sandfly-server-mgmt \
 --network sandfly-net \
 --publish 80:80 \
