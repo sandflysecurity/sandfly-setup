@@ -19,7 +19,7 @@ Sandfly works against most versions of Linux that have SSH installed. This inclu
 - Digital Ocean Linux Images
 - etc.
 
-Find out more here:
+Get a free license for five hosts here:
 
 https://www.sandflysecurity.com.
 
@@ -27,6 +27,6 @@ Documentation here:
 
 https://docs.sandflysecurity.com
 
-Copyright (c) 2016-2020 Sandfly Security LTD, All Rights Reserved.
+Copyright (c) 2016-2021 Sandfly Security LTD, All Rights Reserved.
 www.sandflysecurity.com
 
