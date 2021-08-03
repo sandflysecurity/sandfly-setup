@@ -1,0 +1,4 @@
+# Ignore installation-specific files generated during setup.
+setup/setup_data/admin.password.txt
+setup/setup_data/config.*
+
