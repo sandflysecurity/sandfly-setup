@@ -80,7 +80,8 @@ fi
 
 ### Need to determine if the external IP is directly assigned to an interface
 if [ ! $(ip addr | grep $EXTERNALIP) ]; then
-    INTERNALIP=$(ip address show dev eth0|grep "inet " | awk '{print $2}' | awk -F/ '{print $1}'|head -n 1)
+    INTERNALIFACE=$(ls /sys/class/net|egrep '^e'|head -n 1)
+    INTERNALIP=$(ip address show dev ${INTERNALIFACE}|grep "inet " | awk '{print $2}' | awk -F/ '{print $1}'|head -n 1)
 else
     INTERNALIP=$EXTERNALIP
 fi
@@ -165,7 +166,7 @@ $SUDO ./start_node.sh >/dev/null 2>&1
 
 echo
 echo "******************************************************************************"
-echo "Acquiring and installing 15-day demo license key."
+echo "Acquiring and installing demo license key."
 echo "******************************************************************************"
 echo
 

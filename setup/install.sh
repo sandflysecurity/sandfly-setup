@@ -164,7 +164,7 @@ Setup Complete!
 Your setup is complete. Please see below for the path to the admin password to
 login.
 
-You will need to go to $PWD/start_scripts and run the following to start the
+You will need to go to $(realpath $PWD/../start_scripts) and run the following to start the
 server:
 
 ./start_rabbit.sh
@@ -176,4 +176,3 @@ $PWD/setup_data/admin.password.txt
 ******************************************************************************
 
 EOF
-
