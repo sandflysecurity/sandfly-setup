@@ -43,9 +43,9 @@ cat << "__EOF__"
 __EOF__
 
 RAM_TOTAL=$(free -m | grep Mem | awk '{print $2}')
-if [ $RAM_TOTAL -lt 3800 ]; then
+if [ $RAM_TOTAL -lt 7200 ]; then
     echo
-    echo "*** ERROR: Sandfly Server requires 4GB or more of RAM. Please increase"
+    echo "*** ERROR: Sandfly Server requires 8GB or more of RAM. Please increase"
     echo "           this system's RAM and log in again to start the Sandfly Server"
     echo "           installation process."
     exit 1
@@ -166,7 +166,7 @@ $SUDO ./start_node.sh >/dev/null 2>&1
 
 echo
 echo "******************************************************************************"
-echo "Acquiring and installing demo license key."
+echo "Acquiring and installing free edition license key."
 echo "******************************************************************************"
 echo
 
@@ -174,8 +174,8 @@ cd ../setup/setup_scripts
 $SUDO ./setup_demo_license.sh
 if [ $? -ne 0 ]; then
     echo
-    echo "*** ERROR: unable to auto-install demo license key. For a demo license,"
-    echo "***        please go to www.sandflysecurity.com and request a demo license."
+    echo "*** ERROR: unable to auto-install license key. For a free license,"
+    echo "***        please go to www.sandflysecurity.com and request a free license."
     echo
 fi
 

@@ -12,8 +12,9 @@ IMAGE_BASE=${SANDFLY_IMAGE_BASE:-quay.io/sandfly}
 if [ ! -f $SETUP_DATA/config.node.json ]; then
     echo "********* ERROR ***********"
     echo ""
-    echo "The node config data ($SETUP_DATA/config.node.json) is not present on the node. This file must be present "
-    echo "for the scanning nodes to start. Please copy this file from the server setup_data directory and try again."
+    echo "The node config data ($SETUP_DATA/config.node.json) is not present on the"
+    echo "node. This file must be present for the scanning nodes to start. Please copy"
+    echo "this file from the server setup_data directory and try again."
     echo ""
     echo "Exiting node start."
     exit 1

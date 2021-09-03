@@ -16,14 +16,14 @@ fi
 if [ -f $SETUP_DATA/config.node.json -a "$IGNORE_NODE_DATA_WARNING" != "YES" ]; then
     echo "********* WARNING ***********"
     echo ""
-    echo "The node config data ($SETUP_DATA/config.node.json) is present on the server. This file must be deleted "
-    echo "from the server to fully protect the SSH keys stored in the database. It should only be on the nodes."
-    echo ""
+    echo "The node config data ($SETUP_DATA/config.node.json) is present on the server."
+    echo "This file must be deleted from the server to fully protect the SSH keys stored"
+    echo "in the database. It should only be on the nodes."
     echo ""
     echo "********* WARNING ***********"
     echo ""
-    echo ""
-    read -p "Are you sure you want to start the server with the node config data present? Type YES if you're sure. (NO): " RESPONSE
+    echo "Are you sure you want to start the server with the node config data present?"
+    read -p "Type YES if you're sure. (NO): " RESPONSE
     if [ "$RESPONSE" != "YES" ]; then
         echo "Halting server start."
         exit 1
@@ -39,6 +39,7 @@ docker rm sandfly-server 2>/dev/null
 
 docker run -v /dev/urandom:/dev/random:ro \
 -e CONFIG_JSON \
+--sysctl net.core.somaxconn=15000 \
 --disable-content-trust \
 --restart on-failure:5 \
 --security-opt="no-new-privileges:true" \
