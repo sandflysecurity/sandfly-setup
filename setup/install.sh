@@ -167,8 +167,7 @@ login.
 You will need to go to $(realpath $PWD/../start_scripts) and run the following to start the
 server:
 
-./start_rabbit.sh
-./start_server.sh
+./start_sandfly.sh
 
 Your randomly generated password for the admin account is is located under:
 
