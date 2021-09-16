@@ -19,6 +19,10 @@ esresult=$($SUDO docker inspect --format="{{.State.Running}}" elasticsearch 2> /
 if [ "${esresult}z" != "truez" ]; then
     echo "*** Starting ElasticSearch."
     $SUDO ./start_elastic.sh
+    if [ $? -ne 0 ]; then
+        echo "*** ERROR: Error starting ElasticSearch container; cannot proceed."
+        exit 2
+    fi
     temp_cnt=30
     while [[ ${temp_cnt} -gt 0 ]];
     do
@@ -36,11 +40,15 @@ esresult=$($SUDO docker inspect --format="{{.State.Running}}" sandfly-rabbit 2> 
 if [ "${esresult}z" != "truez" ]; then
     echo "*** Starting RabbitMQ server."
     $SUDO ./start_rabbit.sh
+    if [ $? -ne 0 ]; then
+        echo "*** ERROR: Error starting RabbitMQ container; cannot proceed."
+        exit 2
+    fi
     echo "Waiting for RabbitMQ to configure and start. This will take about 45 seconds."
     # Wait a maximum of 3 minutes
     TIMER=180
     while true; do
-        docker logs sandfly-rabbit 2>&1 | grep "Server startup complete" > /dev/null
+        $SUDO docker logs sandfly-rabbit 2>&1 | grep "Server startup complete" > /dev/null
         if [ $? -eq 0 ]; then
             echo
             break
