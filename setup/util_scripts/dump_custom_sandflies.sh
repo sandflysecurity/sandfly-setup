@@ -41,7 +41,7 @@ fi
 
 echo "Pulling custom sandfly data from: $HOSTNAME"
 
-ACCESS_TOKEN=$(curl -s -k --request POST --header "Content-Type: application/json" --url https://"$HOSTNAME"/v3/auth/login \
+ACCESS_TOKEN=$(curl -s -k --request POST --header "Content-Type: application/json" --url https://"$HOSTNAME"/v4/auth/login \
 --data "{\"username\":\"admin\",\"password\":\"$PASSWORD\"}" |  jq -r ".access_token")
 if [[ "$ACCESS_TOKEN" == "null" ]]; then
   echo "Couldn't get access token for REST API. Check hostname and credentials and try again."
@@ -50,7 +50,7 @@ fi
 echo "Password OK. Dumping custom sandfly data."
 
 SANDFLY_JSON=$(curl -s -k --request GET --header "Content-Type: application/json" --header "Authorization: Bearer $ACCESS_TOKEN" \
---url https://"$HOSTNAME"/v3/sandflies/custom/backup | jq ".")
+--url https://"$HOSTNAME"/v4/sandflies/backup | jq ".")
 if [[ "$SANDFLY_JSON" == "null" ]]; then
   echo "Custom sandfly list appears empty. Nothing to dump."
   exit 1

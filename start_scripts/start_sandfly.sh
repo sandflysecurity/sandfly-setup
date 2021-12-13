@@ -14,25 +14,17 @@ if [ $(id -u) -ne 0 ]; then
     fi
 fi
 
-### Start ElasticSearch if not already running
-esresult=$($SUDO docker inspect --format="{{.State.Running}}" elasticsearch 2> /dev/null)
+### Start Postgres if not already running
+esresult=$($SUDO docker inspect --format="{{.State.Running}}" sandfly-postgres 2> /dev/null)
 if [ "${esresult}z" != "truez" ]; then
-    echo "*** Starting ElasticSearch."
-    $SUDO ./start_elastic.sh
+    echo "*** Starting Postgres."
+    $SUDO ./start_postgres.sh
     if [ $? -ne 0 ]; then
-        echo "*** ERROR: Error starting ElasticSearch container; cannot proceed."
+        echo "*** ERROR: Error starting Postgres container; cannot proceed."
         exit 2
     fi
-    temp_cnt=30
-    while [[ ${temp_cnt} -gt 0 ]];
-    do
-        printf "\rWaiting %2d second(s) for Elasticsearch to start and settle down." ${temp_cnt}
-        sleep 1
-        ((temp_cnt--))
-    done
-    echo ""
 else
-    echo "*** ElasticSearch container already running."
+    echo "*** Postgres container already running."
 fi
 
 ### Start RabbitMQ if not already running

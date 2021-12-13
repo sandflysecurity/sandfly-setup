@@ -1,286 +1,364 @@
-SANDFLY SECURITY END USER LICENSE AGREEMENT
+SANDFLY END USER LICENSE AGREEMENT
+==================================
 
-1	APPLICATION OF AGREEMENT
+1. APPLICATION OF AGREEMENT
 
-1.1	This Agreement applies to your use of the Software (as that term is 
-defined below).  By downloading, installing, accessing and/or using the
-Software:
-a	you agree to this Agreement; and
-b	where you download, install and/or use the Software on behalf of 
-another person (e.g. a company), you confirm that you are authorized
-to, and do in fact, agree to this Agreement on that person's behalf and
-that, by agreeing to this Agreement on that person's behalf, that person
-is bound by this Agreement.
+1.1. This Agreement applies to your use of the Software (as that term is
+     defined below). By downloading, installing, accessing and/or using the
+     Software:
 
-1.2	If you do not agree to this Agreement, you must not download, install, 
-access and/or use the Software.
+        a  you agree to this Agreement; and
 
-2	INTERPRETATION
+        b  where you download, install and/or use the Software on behalf of
+           another person (e.g. a company), you confirm that you are authorized
+           to, and do in fact, agree to this Agreement on that person’s behalf
+           and that, by agreeing to this Agreement on that person’s behalf,
+           that person is bound by this Agreement.
 
-2.1	In this Agreement:
-Documentation means the user and technical documentation for the Software 
-provided by Sandfly, and includes any update of that documentation.
+1.2. If you do not agree to this Agreement, you must not download, install,
+     access and/or use the Software.
 
-Fees means the fees Sandfly has quoted to you or otherwise agreed in writing 
-between you and Sandfly, as may be updated from time to time in accordance
-with clause 7.6. Intellectual Property Rights includes copyright, and all
-worldwide rights conferred under statute, common law or equity in relation to 
-inventions (including patents), registered and unregistered trade marks and
-designs, circuit layouts, data and databases, confidential information,
-know-how, and all other rights resulting from intellectual activity.
-Intellectual Property has a consistent meaning, and includes any enhancement,
-modification or derivative work of the Intellectual Property.
+2. INTERPRETATION
 
-Sandfly means Sandfly Security Limited, company number 6291750.
+2.1. In this Agreement:
 
-Sales Tax means goods and services tax, value added tax, sales tax or 
-equivalent tax payable under any applicable law.
+     Documentation means the user and technical documentation for the Software
+     provided by Sandfly, and includes any update of that documentation.
 
-Software means the security software known as Sandfly, including any Update.
+     Fees means the fees Sandfly has quoted to you or otherwise agreed in
+     writing between you and Sandfly, as may be updated from time to time in
+     accordance with clause 7.6.
 
-Support Services means the support services described in clauses 6.2 to 6.4.
+     Intellectual Property Rights includes copyright, and all worldwide rights
+     conferred under statute, common law or equity in relation to inventions
+     (including patents), registered and unregistered trade marks and designs,
+     circuit layouts, data and databases, confidential information, know-how,
+     and all other rights resulting from intellectual activity.  Intellectual
+     Property has a consistent meaning, and includes any enhancement,
+     modification or derivative work of the Intellectual Property.
 
-Update means a new version of the Software released or made available to you by 
-Sandfly.
+     Sandfly means Sandfly Security Limited, company number 6291750.
 
-You or your means you, or, if clause 1.1b applies, both you and the other 
-person on whose behalf you are acting.
+     Sales Tax means goods and services tax, value added tax, sales tax or
+     equivalent tax payable under any applicable law.
 
-2.2	In this Agreement:
-a	clause and other headings are for ease of reference only and do not 
-affect the interpretation of this Agreement;
-b	words in the singular include the plural and vice versa; 
-c	a reference to:
-i	a party to this Agreement includes that party's permitted assigns; 
-ii	personnel includes officers, employees, contractors and agents, but a 
-reference to your personnel does not include Sandfly;
-iii	a person includes an individual, a body corporate, an association of 
-persons (whether corporate or not), a trust, a government department, or
-any other entity;
-iv	including and similar words do not imply any limit; and
-v	a statute includes references to regulations, orders or notices made 
-under or in connection with the statute or regulations and all amendments,
-replacements or other changes to any of them;
-d	no term of this Agreement is to be read against a party because the 
-term was first proposed or drafted by that party; and
+     Software means the security software known as Sandfly, including any
+     Update. 
 
-3	LICENSE
+     Support Services means the support services described in clauses 6.2 to
+     6.4.
 
-Sandfly grants to you, and you accept, a non-exclusive and non-transferable 
+     Update means a new version of the Software released or made available to
+     you by Sandfly.  
+
+     You or your means you, or, if clause 1b applies, both you and the other
+     person on whose behalf you are acting.
+
+2.2. In this Agreement:
+
+     a. clause and other headings are for ease of reference only and do not
+        affect the interpretation of this Agreement;
+
+     b. words in the singular include the plural and vice versa; 
+
+     c. a reference to:
+
+        i.   a party to this Agreement includes that party’s permitted
+             assigns; 
+
+        ii.  personnel includes officers, employees, contractors and agents,
+             but a reference to your personnel does not include Sandfly; 
+
+        iii. a person includes an individual, a body corporate, an
+             association of persons (whether corporate or not), a trust, a
+             government department, or any other entity;
+
+        iv.  including and similar words do not imply any limit; and
+
+        v.   a statute includes references to regulations, orders or notices
+             made under or in connection with the statute or regulations and
+             all amendments, replacements or other changes to any of them;
+
+     d. no term of this Agreement is to be read against a party because the
+        term was first proposed or drafted by that party; and
+
+3. LICENSE
+
+Sandfly grants to you, and you accept, a non-exclusive and non-transferable
 license for the duration of this Agreement to use the Software and the
 Documentation solely for your internal business purposes on the terms and
-conditions of this Agreement.
+conditions of this Agreement.  
 
-4	LICENSE CONDITIONS
+4. LICENSE CONDITIONS
 
-4.1	You must:
-a	use the Software and the Documentation for lawful purposes only; 
-b	must not copy (except making a single copy for your own back-up 
-purposes), reproduce, translate, decompile, reverse-engineer, resell, modify,
-vary, sub-license or otherwise deal in the Software or the Documentation except:
-i	as expressly provided for in this Agreement; or
-ii	to the extent expressly permitted by law;
-c	ensure the Software and the Documentation are protected at all times 
-from misuse, damage, destruction or any form of unauthorized use, copying or
-disclosure;
-d	maintain all proprietary notices on the Software and the Documentation;
-e	not transfer, assign or otherwise deal with or grant a security 
-interest in the Software, the Documentation or your rights under this Agreement;
-f	not challenge Sandfly's ownership of (including the Intellectual 
-Property Rights in) the Software or the Documentation; and
-g	notify Sandfly in writing immediately after you become aware of any 
-circumstance which may suggest that any person may have unauthorized knowledge,
-possession or use of the Software or the Documentation.
+4.1. You must:
 
-5	TRIAL PERIOD
+     a. use the Software and the Documentation for lawful purposes only;
 
-5.1	Sandfly may make the Software available to you for a free trial (Trial 
-Period).
+     b. must not copy (except making a single copy for your own back-up
+        purposes), reproduce, translate, decompile, reverse-engineer, resell,
+        modify, vary, sub-license or otherwise deal in the Software or the
+        Documentation except:
 
-5.2	Where you download, install, access and/or use the Software under a 
-free trial, then:
-a	this clause 5 applies; and 
-b	these Terms apply except to the extent varied in this clause 5. 
+        i.  as expressly provided for in this Agreement; or
 
-5.3	The Software is provided to you during the Trial Period on an as is 
-basis, and, despite any other provision in these Terms, all conditions,
-warranties, guarantees and indemnities in relation to the Software are excluded
-by Sandfly to the fullest extent permitted by law.
+        ii. to the extent expressly permitted by law;
 
-5.4	No Fees are payable for your access and use of the Software during the 
-Trial Period. You must purchase access to the paid version of the Software you
-wish to access and use the Software following expiry of the Trial Period.
+     c. ensure the Software and the Documentation are protected at all times
+        from misuse, damage, destruction or any form of unauthorized use,
+        copying or disclosure;
 
-5.5	Nothing in these Terms imposes any obligation:
-a	on you, at the termination or expiry of the Trial Period, to purchase a 
-license to the Software; or
-b	on Sandfly: 
-i	at the termination or expiry of the Trial Period, to provide you with a 
-license to the Software; or
-ii	to maintain any feature or part of the trial version Software in any 
-paid version of the Software.
+     d. maintain all proprietary notices on the Software and the
+        Documentation;
 
-6	SUPPORT SERVICES
+     e. not transfer, assign or otherwise deal with or grant a security
+        interest in the Software, the Documentation or your rights under this
+        Agreement;
 
-6.1	Sandfly will provide you with the Support Services, provided you have:
-a	paid all Fees due; 
-b	maintained a proper operating environment for the use of the Software 
-in accordance with any guidance from Sandfly, including in the Documentation;
-and
-c	complied with this Agreement and the Documentation.
+     f. not challenge Sandfly’s ownership of (including the Intellectual
+        Property Rights in) the Software or the Documentation; and
 
-6.2	Where you consider on reasonable grounds that there is a material
-failure of the Software to perform in accordance with the Documentation (Issue),
-Sandfly will:
-a	provide telephone and email support in the form of consultation,
-assistance and advice in relation to the Issue; and
-b	use reasonable efforts to assist in the resolution of the Issue (taking
-into account the nature and severity of the Issue).
+     g. notify Sandfly in writing immediately after you become aware of any
+        circumstance which may suggest that any person may have unauthorized
+        knowledge, possession or use of the Software or the Documentation.
 
-6.3	The provision of support by Sandfly under section 6.2 is conditional on
-you:
-a	first using reasonable efforts to resolve the Issue by referring to the
-Documentation; and
-b	contacting Sandfly during the business hours publicized on its website,
-via the support contact details published on its website.
+5. TRIAL PERIOD
 
-6.4	Sandfly may, at its discretion, from time to time provide you with
-Updates, in which case:
-a	you must promptly install the Update; and
-b	if you fail to install the Update, Sandfly may, at its option:
-i	cease providing the Support Services; or
-ii	increase the Fees with immediate effect by an amount Sandfly considers
-reasonable to cover any additional cost of Sandfly continuing to provide the
-Support Services.
+5.1. Sandfly may make the Software available to you for a free trial of up to
+     30 days from the Start Date (Trial Period).  
 
-6.5	New versions of the Software that provide new features or additional
-functionality may, at Sandfly's discretion, be subject to payment of an
-additional fee.
+5.2. Where you download, install, access and/or use the Software under a free
+     trial, then:
 
-6.6	Either party may terminate Support Services on 30 days' notice.
+     a. this clause 5 applies; and
 
-7	FEES
+     b. these Terms apply except to the extent varied in this clause 5.
 
-7.1	You must pay the Fees to Sandfly.
+5.3. The Software is provided to you during the Trial Period on an as is and
+     as available basis, and, despite any other provision in these Terms, all
+     conditions, warranties (including warranties of merchantability or
+     fitness for purpose), guarantees and indemnities in relation to the
+     Software are excluded by Sandfly to the fullest extent permitted by law.
 
-7.2	Sandfly will provide you with valid tax invoices monthly or annually in
-advance for the Fees due in the following month or year, as set out in Sandfly's
-quote or otherwise agreed in writing between you and Sandfly.
+5.4. No Fees are payable for your access and use of the Software during the
+     Trial Period. You must purchase access to the paid version of the
+     Software you wish to access and use the Software following expiry of the
+     Trial Period.
 
-7.3	The Fees exclude applicable Sales Tax, which you must pay on taxable
-supplies under this Agreement.
+5.5. Nothing in these Terms imposes any obligation:
 
-7.4	You must pay the Fees:
-a	within 30 days of the date of invoice; and
-b	electronically in cleared funds without any set off or deduction except
-to the extent required by law.  If you are required by law to make any
-deduction, you must pay Sandfly any additional amount that is necessary to
-ensure receipt by Sandfly of the full amount which Sandfly would have received
-but for the deduction.
+     a. on you, at the termination or expiry of the Trial Period, to purchase a
+        license to the Software; or
 
-7.5	Sandfly may charge interest on overdue amounts.  Interest will be
-calculated from the due date to the date of payment (both inclusive) at a rate
-equal to the higher of 1% per month and the maximum amount permitted by law.
+     b. on Sandfly:
 
-7.6	Sandfly may increase the Fees by giving at least 30 days' notice.  If
-you do not wish to pay the increased Fees, you may terminate this Agreement on
-no less than 10 days' notice, provided the notice is received by us before the
-effective date of the Fee increase.  If you do not terminate this Agreement in
-accordance with this clause, you are deemed to have accepted the increased Fees.
+        i.  at the termination or expiry of the Trial Period, to provide you
+            with a license to the Software; or
+        
+        ii. to maintain any feature or part of the trial version Software in
+            any paid version of the Software.
 
-8	INTELLECTUAL PROPERTY
+6. SUPPORT SERVICES
 
-8.1	From the date of creation or development, Sandfly owns all Intellectual
-Property Rights in:
-a	the Software and the Documentation; and
-b	any other item or material created, developed or provided by or on
-behalf of Sandfly under or in connection with this Agreement.
+6.1. Sandfly will provide you with the Support Services, provided you have: 
 
-8.2	If you provide Sandfly with ideas, comments or suggestions relating to
-the Software or the Documentation (together feedback):
-a	all Intellectual Property Rights in that feedback, and anything created
-as a result of that feedback (including new material enhancements, modifications
-or derivative works), are owned solely by Sandfly; and
-b	Sandfly may use or disclose any feedback for any purpose.
+     a. paid all Fees due; 
 
-9	WARRANTY
+     b. maintained a proper operating environment for the use of the Software
+        in accordance with any guidance from Sandfly, including in the
+        Documentation; and
 
-9.1	THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER
-EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE ENTIRE RISK AS TO
-THE QUALITY AND PERFORMANCE OF THE SOFTWARE IS WITH YOU.  IF THE SOFTWARE PROVES
-DEFECTIVE, YOU ASSUME THE COST OF ALL NECESSARY SERVICING, REPAIR OR CORRECTION.
+     c. complied with this Agreement and the Documentation.
 
-9.2	WITHOUT LIMITING CLAUSE 9.1, SANDFLY MAKES NO REPRESENTATION CONCERNING
-THE QUALITY OF THE SOFTWARE, AND DOES NOT PROMISE THAT THE SOFTWARE WILL BE
-ERROR-FREE, BUG-FREE, OR WILL OPERATE WITHOUT INTERRUPTION.
+6.2. Where you consider on reasonable grounds that there is a material failure
+     of the Software to perform in accordance with the Documentation (Issue),
+     Sandfly will:
 
-9.3	YOU AGREE AND REPRESENT THAT YOU ARE ACQUIRING THE SOFTWARE, AND
-ENTERING THIS AGREEMENT, FOR THE PURPOSE OF A BUSINESS.
+     a. provide telephone and email support in the form of consultation,
+        assistance and advice in relation to the Issue; and
 
-10	LIABILITY
+     b. use reasonable efforts to assist in the resolution of the Issue (taking
+        into account the nature and severity of the Issue).
 
-10.1	TO THE MAXIMUM EXTENT PERMITTED BY LAW:
-a	YOU ACCESS AND USE THE SOFTWARE AT YOUR OWN RISK; AND
-b	SANDFLY IS NOT LIABLE OR RESPONSIBLE TO YOU OR ANY OTHER PERSON FOR ANY
-CLAIM, DAMAGE, LOSS, LIABILITY AND COST UNDER OR IN CONNECTION WITH THIS
-AGREEMENT, THE SOFTWARE, OR YOUR ACCESS AND USE OF (OR INABILITY TO ACCESS
-OR USE) THE SOFTWARE.  THIS EXCLUSION APPLIES REGARDLESS OF WHETHER SANDFLY'S
-LIABILITY OR RESPONSIBILITY ARISES IN CONTRACT, TORT (INCLUDING NEGLIGENCE),
-EQUITY, BREACH OF STATUTORY DUTY, OR OTHERWISE.
+6.3. The provision of support by Sandfly under section 6.2 is conditional on
+     you:
 
-10.2	TO THE MAXIMUM EXTENT PERMITTED BY LAW AND ONLY TO THE EXTENT CLAUSE
-10.1 DOES NOT APPLY, THE MAXIMUM AGGREGATE LIABILITY OF SANDFLY UNDER OR IN
-CONNECTION WITH THIS AGREEMENT OR RELATING TO THE SOFTWARE, WHETHER IN CONTRACT,
-TORT (INCLUDING NEGLIGENCE), BREACH OF STATUTORY DUTY OR OTHERWISE, WILL BE
-LIMITED (AT SANDFLY'S OPTION) TO:
-a	REMEDYING, REPAIRING OR REPLACING THE SOFTWARE; AND/OR
-b	REFUNDING THE FEES PAID BY YOU IN YOUR MOST RECENT PAYMENT PRECEDING
-THE FIRST EVENT GIVING RISE TO LIABILITY.
+     a. first using reasonable efforts to resolve the Issue by referring to the
+        Documentation; and
 
-10.3	WITHOUT LIMITING CLAUSE 10.1, SANDFLY IS NOT LIABLE TO YOU UNDER OR IN
-CONNECTION WITH THIS AGREEMENT FOR ANY:
-a	LOSS OF PROFIT, REVENUE, SAVINGS, BUSINESS, DATA AND/OR GOODWILL; OR
-b	CONSEQUENTIAL, INDIRECT, INCIDENTAL OR SPECIAL DAMAGE OR LOSS OF ANY
-KIND.
+     b. contacting Sandfly during the business hours publicized on its website,
+        via the support contact details published on its website.
 
-11	TERMINATION
+6.4. Sandfly may, at its discretion, from time to time provide you with
+     Updates, in which case:  
 
-11.1	Sandfly may, by notice to you, immediacy terminate this Agreement if
-you are in breach of this Agreement.
+     a. you must promptly install the Update; and 
 
-11.2	On termination of this Agreement you must return to Sandfly or destroy
-all copies of the Software and Documentation in your possession or control.
+     b. if you fail to install the Update, Sandfly may, at its option:
 
-11.3	Termination of this Agreement does not affect each party's rights and
-obligations accrued before the termination date, including your obligations to
-pay all Fees payable before termination.
+        i.  cease providing the Support Services; or
 
-11.4	No compensation is payable by Sandfly to you as a result of termination
-of this Agreement for whatever reason, and you will not be entitled to a refund
-of any Fees that you have already paid.
+        ii. increase the Fees with immediate effect by an amount Sandfly
+            considers reasonable to cover any additional cost of Sandfly
+            continuing to provide the Support Services.
 
-12	GENERAL
+6.5. New versions of the Software that provide new features or additional
+     functionality may, at Sandfly’s discretion, be subject to payment of an
+     additional fee.
 
-12.1	Sandfly is not liable to you for any failure to perform its obligations
-under this Agreement to the extent caused by events beyond its reasonable
-control.
+6.6. Either party may terminate Support Services on 30 days’ written notice.
 
-12.2	Any illegality, unenforceability or invalidity of a provision of this
-Agreement does not affect the legality, enforceability or validity of the
-remaining provisions of this Agreement.
+7. FEES
 
-12.3	Any variation to this Agreement must be in writing and signed by both
-parties.
+7.1. You must pay the Fees to Sandfly.
 
-12.4	This Agreement sets out everything agreed by the parties relating to
-the Software and the Support Services and supersedes and cancels anything
-discussed, exchanged or agreed prior.  The parties have not relied on any
-representation, warranty or agreement relating to the Software and the Support
-Services that is not expressly set out in this Agreement, and no such
-representation, warranty or agreement has any effect.
+7.2. Sandfly will provide you with valid tax invoices monthly or annually in
+     advance for the Fees due in the following month or year, as set out in
+     Sandfly’s quote or otherwise agreed in writing between you and Sandfly.
 
-12.5	This Agreement is governed by, and must be interpreted in accordance
-with, the laws of New Zealand.  Each party submits to the non-exclusive
-jurisdiction of the Courts of New Zealand in relation to any dispute connected
-with this Agreement.
+7.3. The Fees exclude applicable Sales Tax, which you must pay on taxable
+     supplies under this Agreement.
+
+7.4. You must pay the Fees:
+
+     a. within 30 days of the date of invoice; and
+
+     b. electronically in cleared funds without any set off or deduction except
+        to the extent required by law.  If you are required by law to make any
+        deduction, you must pay Sandfly any additional amount that is necessary
+        to ensure receipt by Sandfly of the full amount which Sandfly would
+        have received but for the deduction. 
+
+7.5. Sandfly may charge interest on overdue amounts.  Interest will be
+     calculated from the due date to the date of payment (both inclusive) at a
+     rate equal to the higher of 1% per month and the maximum amount permitted
+     by law. 
+
+7.6. Sandfly may increase the Fees by giving at least 30 days’ notice.  If you
+     do not wish to pay the increased Fees, you may terminate this Agreement
+     on no less than 10 days’ notice, provided the notice is received by us
+     before the effective date of the Fee increase.  If you do not terminate
+     this Agreement in accordance with this clause, you are deemed to have
+     accepted the increased Fees.
+
+8. INTELLECTUAL PROPERTY
+
+8.1. From the date of creation or development, Sandfly owns all Intellectual
+     Property Rights in:
+
+     a. the Software and the Documentation; and
+
+     b. any other item or material created, developed or provided by or on
+        behalf of Sandfly under or in connection with this Agreement.
+
+8.2. If you provide Sandfly with ideas, comments or suggestions relating to the
+     Software or the Documentation (together feedback):
+
+     a. all Intellectual Property Rights in that feedback, and anything created
+        as a result of that feedback (including new material enhancements,
+        modifications or derivative works), are owned solely by Sandfly; and
+
+     b. Sandfly may use or disclose any feedback for any purpose.
+
+9. WARRANTY
+
+9.1. THE SOFTWARE AND SUPPORT SERVICES ARE PROVIDED ON AN "AS IS" AND “AS
+     AVAILABLE” BASIS WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR
+     IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+     MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE ENTIRE RISK AS
+     TO THE QUALITY AND PERFORMANCE OF THE SOFTWARE IS WITH YOU.  IF THE
+     SOFTWARE PROVES DEFECTIVE, YOU ASSUME THE COST OF ALL NECESSARY
+     SERVICING, REPAIR OR CORRECTION.
+
+9.2. WITHOUT LIMITING CLAUSE 9.1, SANDFLY MAKES NO REPRESENTATION CONCERNING
+     THE QUALITY OF THE SOFTWARE OR SUPPORT SERVICES, AND DOES NOT PROMISE
+     THAT THE SOFTWARE WILL BE ERROR-FREE, BUG-FREE, WILL OPERATE WITHOUT
+     INTERRUPTION, OR WILL MEET YOUR REQUIREMENTS FOR A PARTICULAR PURPOSE.
+
+9.3. WITHOUT LIMITING CLAUSE  9.1 AND 9.2, WHERE LEGISLATION OR RULE OF LAW
+     IMPLIES INTO THESE TERMS A CONDITION OR WARRANTY THAT CANNOT BE EXCLUDED
+     OR MODIFIED BY CONTRACT,  LIABILITY FOR THEM IS LIMITED IN ACCORDANCE
+     WITH CLAUSE 10.2 AND 10.3.
+
+9.4. YOU AGREE AND REPRESENT THAT YOU ARE ACQUIRING THE SOFTWARE AND (IF
+     APPLICABLE) SUPPORT SERVICES, AND ENTERING THIS AGREEMENT, FOR THE
+     PURPOSE OF TRADE, AND TO THE EXTENT PERMISSIBLE BY LAW, ANY APPLICABLE
+     CONSUMER PROTECTION LAW DOES NOT APPLY TO THE SUPPLY OF THE SOFTWARE,
+     SUPPORT SERVICES OR THIS AGREEMENT, AND IT IS FAIR AND REASONABLE THAT
+     THE PARTIES ARE BOUND BY THIS CLAUSE 9.4
+
+10. LIABILITY
+
+10.1. TO THE MAXIMUM EXTENT PERMITTED BY LAW:
+
+      a. YOU ACCESS AND USE THE SOFTWARE AT YOUR OWN RISK; AND
+
+      b. SANDFLY IS NOT LIABLE OR RESPONSIBLE TO YOU OR ANY OTHER PERSON FOR
+         ANY CLAIM, DAMAGE, LOSS, LIABILITY AND COST UNDER OR IN CONNECTION
+         WITH THIS AGREEMENT, THE SOFTWARE, OR YOUR ACCESS AND USE OF (OR
+         INABILITY TO ACCESS OR USE) THE SOFTWARE.  THIS EXCLUSION APPLIES
+         REGARDLESS OF WHETHER SANDFLY’S LIABILITY OR RESPONSIBILITY ARISES IN
+         CONTRACT, TORT (INCLUDING NEGLIGENCE), EQUITY, BREACH OF STATUTORY
+         DUTY, OR OTHERWISE.
+
+10.2. TO THE MAXIMUM EXTENT PERMITTED BY LAW AND ONLY TO THE EXTENT CLAUSE 10.1
+      DOES NOT APPLY, THE MAXIMUM AGGREGATE LIABILITY OF SANDFLY UNDER OR IN
+      CONNECTION WITH THIS AGREEMENT OR RELATING TO THE SOFTWARE, WHETHER IN
+      CONTRACT, TORT (INCLUDING NEGLIGENCE), BREACH OF STATUTORY DUTY OR
+      OTHERWISE, WILL BE LIMITED (AT SANDFLY’S OPTION) TO:
+
+      a. REMEDYING, REPAIRING OR REPLACING THE SOFTWARE; AND/OR
+
+      b. REFUNDING THE FEES PAID BY YOU IN YOUR MOST RECENT PAYMENT PRECEDING
+         THE FIRST EVENT GIVING RISE TO LIABILITY.
+
+10.3. WITHOUT LIMITING CLAUSE 10.1, SANDFLY IS NOT LIABLE TO YOU UNDER OR IN
+      CONNECTION WITH THIS AGREEMENT FOR ANY:
+
+      a. LOSS OF PROFIT, REVENUE, SAVINGS, BUSINESS, DATA AND/OR GOODWILL; OR
+
+      b. CONSEQUENTIAL, INDIRECT, INCIDENTAL OR SPECIAL DAMAGE OR LOSS OF ANY
+         KIND.
+
+11. TERMINATION
+
+11.1. Sandfly may, by notice to you, immediately terminate this Agreement if you
+      are in breach of this Agreement. 
+
+11.2. On termination of this Agreement you must return to Sandfly or destroy
+      all copies of the Software and Documentation in your possession or
+      control. 
+
+11.3. Termination of this Agreement does not affect each party’s rights and
+      obligations accrued before the termination date, including your
+      obligations to pay all Fees payable before termination.
+
+11.4. No compensation is payable by Sandfly to you as a result of termination
+      of this Agreement for whatever reason, and you will not be entitled to a
+      refund of any Fees that you have already paid.
+
+12. GENERAL
+
+12.1. Sandfly is not liable to you for any failure to perform its obligations
+      under this Agreement to the extent caused by events beyond its reasonable
+      control.
+
+12.2. Any illegality, unenforceability or invalidity of a provision of this
+      Agreement does not affect the legality, enforceability or validity of the
+      remaining provisions of this Agreement.
+
+12.3. Any variation to this Agreement must be in writing and signed by both
+      parties.
+
+12.4. This Agreement sets out everything agreed by the parties relating to the
+      Software and the Support Services and supersedes and cancels anything
+      discussed, exchanged or agreed prior.  The parties have not relied on any
+      representation, warranty or agreement relating to the Software and the
+      Support Services that is not expressly set out in this Agreement, and no
+      such representation, warranty or agreement has any effect.
+
+12.5. This Agreement is governed by, and must be interpreted in accordance
+      with, the laws of New Zealand.  Each party submits to the non-exclusive
+      jurisdiction of the Courts of New Zealand in relation to any dispute
+      connected with this Agreement.
+

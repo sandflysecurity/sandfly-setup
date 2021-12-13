@@ -43,7 +43,7 @@ fi
 
 echo "Pulling host data from: $HOSTNAME"
 
-ACCESS_TOKEN=$(curl -s -k --request POST --header "Content-Type: application/json" --url https://"$HOSTNAME"/v3/auth/login \
+ACCESS_TOKEN=$(curl -s -k --request POST --header "Content-Type: application/json" --url https://"$HOSTNAME"/v4/auth/login \
 --data "{\"username\":\"admin\",\"password\":\"$PASSWORD\"}" |  jq -r ".access_token")
 
 if [[ "$ACCESS_TOKEN" == "null" ]]; then
@@ -53,7 +53,7 @@ fi
 echo "Password OK. Dumping hosts."
 
 HOST_JSON=$(curl -s -k --request GET --header "Content-Type: application/json" --header "Authorization: Bearer $ACCESS_TOKEN" \
---url https://"$HOSTNAME"/v3/hosts | jq ".")
+--url https://"$HOSTNAME"/v4/hosts | jq ".")
 if [[ "$HOST_JSON" == "null" ]]; then
   echo "Host list appears empty. Nothing to dump."
   exit 1
@@ -63,6 +63,6 @@ echo "Saving host JSON to ./sandfly.hosts.json"
 echo "$HOST_JSON" > sandfly.hosts.json
 
 echo "Saving hostname and credential ID to ./sandfly.hosts.csv"
-echo $HOST_JSON | jq -r '.hits.hits[]._source | "\(.hostname), \(.credentials_id)"' > sandfly.hosts.csv
+echo $HOST_JSON | jq -r '.data[] | "\(.hostname), \(.credentials_id)"' > sandfly.hosts.csv
 
 echo "Done!"

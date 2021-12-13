@@ -27,4 +27,4 @@ docker run -v /dev/urandom:/dev/random:ro \
 --name sandfly-rabbit \
 --security-opt="no-new-privileges:true" \
 --publish 5673:5673 \
--t $IMAGE_BASE/sandfly-rabbit:"$VERSION"
+-t $IMAGE_BASE/sandfly-rabbit${IMAGE_SUFFIX}:"$VERSION"

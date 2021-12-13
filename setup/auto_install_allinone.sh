@@ -42,15 +42,6 @@ cat << "__EOF__"
                        UUU         UUU         UUU
 __EOF__
 
-RAM_TOTAL=$(free -m | grep Mem | awk '{print $2}')
-if [ $RAM_TOTAL -lt 7200 ]; then
-    echo
-    echo "*** ERROR: Sandfly Server requires 8GB or more of RAM. Please increase"
-    echo "           this system's RAM and log in again to start the Sandfly Server"
-    echo "           installation process."
-    exit 1
-fi
-
 echo
 echo "******************************************************************************"
 echo "***** Sandfly Automated Single-VM Setup **************************************"
@@ -134,14 +125,14 @@ done
 echo
 echo "******************************************************************************"
 echo "Waiting for Sandfly Server to configure and start. This will take about"
-echo "60 seconds."
+echo "20 seconds."
 echo "******************************************************************************"
 echo
 $SUDO ./start_server.sh >/dev/null 2>&1
 # Wait a maximum of 2 minutes, double what we should need
 TIMER=120
 while true; do
-    docker logs sandfly-server 2>&1 | grep "started and is ready" > /dev/null
+    docker logs sandfly-server 2>&1 | grep "Starting Sandfly API service version" > /dev/null
     if [ $? -eq 0 ]; then
         echo
         break
@@ -189,7 +180,7 @@ echo "** SANDFLY INSTALLATION COMPLETE                                          
 echo "**                                                                          **"
 echo "** Use the URL and login information printed below to log in to your        **"
 echo "** server. The initial admin password is stored on this server in           **"
-echo "** the setup_data directory; we recommend you change your intial            **"
+echo "** the setup_data directory; we recommend you change your initial           **"
 echo "** password after logging in.                                               **"
 echo "**                                                                          **"
 echo "******************************************************************************"

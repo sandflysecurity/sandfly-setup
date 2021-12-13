@@ -20,7 +20,7 @@ EOF
 # Use standard docker image unless overriden.
 if [[ -z "${SANDFLY_MGMT_DOCKER_IMAGE}" ]]; then
   VERSION=$(cat ../VERSION)
-  SANDFLY_MGMT_DOCKER_IMAGE="quay.io/sandfly/sandfly-server-mgmt:$VERSION"
+  SANDFLY_MGMT_DOCKER_IMAGE="quay.io/sandfly/sandfly-server-mgmt${IMAGE_SUFFIX}:$VERSION"
 fi
 
 docker network create sandfly-net 2>/dev/null
@@ -33,6 +33,5 @@ docker run -v /dev/urandom:/dev/random:ro \
 -v $PWD/setup_data:/usr/local/sandfly/install/setup_data \
 --name sandfly-server-mgmt \
 --network sandfly-net \
--e ELASTIC_SERVER_URL \
 -e SANDFLY_SETUP_AUTO_HOSTNAME \
 $DOCKER_INTERACTIVE $SANDFLY_MGMT_DOCKER_IMAGE /usr/local/sandfly/install/install_server.sh

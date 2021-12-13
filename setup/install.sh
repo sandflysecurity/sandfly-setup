@@ -4,7 +4,7 @@
 
 # This script will install the Sandfly server. By default, it will run
 # through an interactive setup process that is appropriate for users wishing
-# to control the location of Elasticsearch, Rabbit, etc.
+# to control the location of Rabbit, etc.
 #
 # The script is also capable of performing a non-interactive automated all-
 # in-one single-system setup. To perform the automated setup, set the
@@ -19,10 +19,11 @@
 
 # Make sure we run from the correct directory so relative paths work
 cd "$( dirname "${BASH_SOURCE[0]}" )"
+SETUP_DATA_DIR=./setup_data
 
 VERSION=${SANDFLY_SETUP_VERSION:-$(cat ../VERSION)}
 DOCKER_BASE=${SANDFLY_SETUP_DOCKER_BASE:-quay.io/sandfly}
-export SANDFLY_MGMT_DOCKER_IMAGE="$DOCKER_BASE/sandfly-server-mgmt:$VERSION"
+export SANDFLY_MGMT_DOCKER_IMAGE="$DOCKER_BASE/sandfly-server-mgmt${IMAGE_SUFFIX}:$VERSION"
 
 # Is this an automated install?
 [ -n "$SANDFLY_SETUP_AUTO_HOSTNAME" ] && export SANDFLY_AUTO=YES
@@ -49,63 +50,15 @@ Sandfly Management Image: $SANDFLY_MGMT_DOCKER_IMAGE
 
 EOF
 
-if [ -z "$SANDFLY_AUTO" ]; then
-  cat << EOF
-
-******************************************************************************
-Elasticsearch Database Setup
-
-If you want to use an external Elasticsearch cluster, please fill in the field
-below with the URL. Otherwise, just hit enter and we'll use the default URL.
-
-The default URL is internally routed only with the Sandfly server and is not
-reachable over the network.
-
-External Elasticsearch clusters will need to be secured according to your
-network policies. If you are using a username/password and SSL for an external
-Elasticsearch cluster then the URL should be the format:
-
-https://username:password@elastic.example.com:9200
-
-Where username is the username for Elasticsearch (default "elastic") and
-password is the password for the login you configured.
-
-After setup is completed, you can copy over a certificate for the SSL
-connection for the Elasticsearch cluster. Please see the documentation for
-more details on how to do this.
-******************************************************************************
-
-EOF
-
-  read -p "Optional Elasticsearch URL (Default: http://elasticsearch:9200): " ELASTIC_SERVER_URL
-fi
-
-if [[ ! "$ELASTIC_SERVER_URL" ]]; then
-    echo "No Elasticsearch URL provided. Using default."
-else
-    echo "Setting Elasticsearch URL to: $ELASTIC_SERVER_URL"
-    export ELASTIC_SERVER_URL
-fi
-
 docker network create sandfly-net 2>/dev/null
 docker rm sandfly-server-mgmt 2>/dev/null
 
-# Use standard Elasticsearch image unless overriden.
-if [[ -z "${ELASTIC_SERVER_URL}" ]]
-then
-  echo "Starting default Elasticsearch database. Please wait a bit."
-  ../start_scripts/start_elastic.sh
-  temp_cnt=30
-  while [[ ${temp_cnt} -gt 0 ]];
-  do
-      printf "\rWaiting %2d second(s) for Elasticsearch to start and settle down." ${temp_cnt}
-      sleep 1
-      ((temp_cnt--))
-  done
-else
-  echo "Using remote Elasticsearch URL for database: $ELASTIC_SERVER_URL"
-fi
-
+# The first time we start Postgres, we need to assign a superuser password.
+POSTGRES_ADMIN_PASSWORD=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c40)
+echo "$POSTGRES_ADMIN_PASSWORD" > $SETUP_DATA_DIR/postgres.admin.password.txt
+echo "Starting Postgres database."
+../start_scripts/start_postgres.sh
+sleep 5
 
 ./setup_scripts/setup_server.sh
 if [[ $? -eq 1 ]]
@@ -169,7 +122,7 @@ server:
 
 ./start_sandfly.sh
 
-Your randomly generated password for the admin account is is located under:
+Your randomly generated password for the admin account is located under:
 
 $PWD/setup_data/admin.password.txt
 ******************************************************************************

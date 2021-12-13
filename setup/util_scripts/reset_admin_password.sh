@@ -11,7 +11,7 @@ VERSION=${SANDFLY_VERSION:-$(cat ../../VERSION)}
 IMAGE_BASE=${SANDFLY_IMAGE_BASE:-quay.io/sandfly}
 
 # Populate env variables.
-CONFIG_JSON=$(cat $SETUP_DATA/config.node.json)
+CONFIG_JSON=$(cat $SETUP_DATA/config.server.json)
 export CONFIG_JSON
 
 
@@ -21,5 +21,5 @@ docker rm sandfly-server-mgmt
 docker run --name sandfly-server-mgmt \
 --network sandfly-net \
 -e CONFIG_JSON \
--it $IMAGE_BASE/sandfly-server-mgmt:"$VERSION" /usr/local/sandfly/utils/reset_admin_password.sh
+-it $IMAGE_BASE/sandfly-server-mgmt${IMAGE_SUFFIX}:"$VERSION" /usr/local/sandfly/utils/reset_admin_password.sh
 

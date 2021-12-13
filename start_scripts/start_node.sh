@@ -29,4 +29,4 @@ docker run -v /dev/urandom:/dev/random:ro \
 --disable-content-trust \
 --restart on-failure:5 \
 --security-opt="no-new-privileges:true" \
--d $IMAGE_BASE/sandfly-node:"$VERSION" /usr/local/sandfly/start_node.sh
+-d $IMAGE_BASE/sandfly-node${IMAGE_SUFFIX}:"$VERSION" /usr/local/sandfly/start_node.sh
