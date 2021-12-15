@@ -91,7 +91,7 @@ sleep 5
 esresult=$(docker inspect --format="{{.State.Running}}" elasticsearch 2> /dev/null)
 if [ "${esresult}z" != "truez" ]; then
     echo "*** Starting ElasticSearch."
-    ../start_scripts/start_elastic.sh
+    ./legacy_start_elastic.sh
     if [ $? -ne 0 ]; then
         echo "*** ERROR: Error starting ElasticSearch container; cannot proceed."
         exit 2
