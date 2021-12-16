@@ -13,6 +13,18 @@ if [ -e $SETUP_DATA/allinone ]; then
     IGNORE_NODE_DATA_WARNING=YES
 fi
 
+if [ ! -f ../setup/setup_data/config.server.json ]; then
+    echo ""
+    echo "********************************** ERROR **********************************"
+    echo "*                                                                         *"
+    echo "* Sandfly does not appear to be configured. Please use install.sh to      *"
+    echo "* perform a new installation of Sandfly on this host.                     *"
+    echo "*                                                                         *"
+    echo "********************************** ERROR **********************************"
+    echo ""
+    exit 1
+fi
+
 if [ -f $SETUP_DATA/config.node.json -a "$IGNORE_NODE_DATA_WARNING" != "YES" ]; then
     echo ""
     echo "********************************* WARNING *********************************"
@@ -45,6 +57,9 @@ if [ $? != 0 ]; then
     echo "* this version of the Sandfly server. Please perform the upgrade  *"
     echo "* procedure before starting Sandfly.                              *"
     echo "*                                                                 *"
+    echo "* The setup/upgrade.sh script will upgrade Sandfly to the current *"
+    echo "* version.                                                        *"
+    echo "*                                                                 *"
     echo "*******************************************************************"
     echo ""
     exit 1
@@ -60,7 +75,7 @@ docker rm sandfly-server 2>/dev/null
 docker run -v /dev/urandom:/dev/random:ro \
 -e CONFIG_JSON \
 --disable-content-trust \
---restart on-failure:5 \
+--restart=always \
 --security-opt="no-new-privileges:true" \
 --network sandfly-net \
 --name sandfly-server \

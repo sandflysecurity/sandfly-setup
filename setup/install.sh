@@ -25,6 +25,21 @@ VERSION=${SANDFLY_SETUP_VERSION:-$(cat ../VERSION)}
 DOCKER_BASE=${SANDFLY_SETUP_DOCKER_BASE:-quay.io/sandfly}
 export SANDFLY_MGMT_DOCKER_IMAGE="$DOCKER_BASE/sandfly-server-mgmt${IMAGE_SUFFIX}:$VERSION"
 
+# Sandfly already installed?
+if [ -f $SETUP_DATA/config.server.json ]; then
+    echo ""
+    echo "********************************** ERROR **********************************"
+    echo "*                                                                         *"
+    echo "* Sandfly is already installed (there is a config.server.json file in     *"
+    echo "* the setup_data directory).                                              *"
+    echo "*                                                                         *"
+    echo "* If you are upgrading to a new version of Sandfly, please use upgrade.sh *"
+    echo "*                                                                         *"
+    echo "********************************** ERROR **********************************"
+    echo ""
+    exit 1
+fi
+
 # Is this an automated install?
 [ -n "$SANDFLY_SETUP_AUTO_HOSTNAME" ] && export SANDFLY_AUTO=YES
 

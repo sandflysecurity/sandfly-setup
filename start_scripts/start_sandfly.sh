@@ -5,6 +5,20 @@
 # Make sure we run from the correct directory so relative paths work
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
+if [ ! -f ../setup/setup_data/config.server.json ]; then
+    echo ""
+    echo "********************************** ERROR **********************************"
+    echo "*                                                                         *"
+    echo "* Sandfly does not appear to be configured. Please use install.sh to      *"
+    echo "* perform a new installation of Sandfly Server on this host.              *"
+    echo "*                                                                         *"
+    echo "* If this system is a node, not a server, use start_node.sh.              *"
+    echo "*                                                                         *"
+    echo "********************************** ERROR **********************************"
+    echo ""
+    exit 1
+fi
+
 # Determine if we need to use the sudo command to control Docker
 SUDO=""
 if [ $(id -u) -ne 0 ]; then
