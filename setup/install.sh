@@ -26,7 +26,7 @@ DOCKER_BASE=${SANDFLY_SETUP_DOCKER_BASE:-quay.io/sandfly}
 export SANDFLY_MGMT_DOCKER_IMAGE="$DOCKER_BASE/sandfly-server-mgmt${IMAGE_SUFFIX}:$VERSION"
 
 # Sandfly already installed?
-if [ -f $SETUP_DATA/config.server.json ]; then
+if [ -f $SETUP_DATA_DIR/config.server.json ]; then
     echo ""
     echo "********************************** ERROR **********************************"
     echo "*                                                                         *"
