@@ -23,7 +23,7 @@ docker run -v /dev/urandom:/dev/random:ro \
 --hostname sandfly-rabbit -d \
 -e CONFIG_JSON \
 --disable-content-trust \
---restart on-failure:5 \
+--restart=always \
 --name sandfly-rabbit \
 --security-opt="no-new-privileges:true" \
 --publish 5673:5673 \

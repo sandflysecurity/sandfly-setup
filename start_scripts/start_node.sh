@@ -27,6 +27,6 @@ export CONFIG_JSON
 docker run -v /dev/urandom:/dev/random:ro \
 -e CONFIG_JSON \
 --disable-content-trust \
---restart on-failure:5 \
+--restart=always \
 --security-opt="no-new-privileges:true" \
 -d $IMAGE_BASE/sandfly-node${IMAGE_SUFFIX}:"$VERSION" /usr/local/sandfly/start_node.sh

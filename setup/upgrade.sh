@@ -43,7 +43,7 @@ if [ "${server_result}z" == "truez" -o "${rabbit_result}z" == "truez" ]; then
     echo "********************************** ERROR **********************************"
     echo "*                                                                         *"
     echo "* Sandfly is currently running, so cannot be upgraded. Please stop all    *"
-    echo "* Sandfly containers (e.g. \`docker ls\` to get list, then for each name,   *"
+    echo "* Sandfly containers (e.g. \`docker ps\` to get list, then for each name,   *"
     echo "* \`docker stop <name>\`).                                                  *"
     echo "*                                                                         *"
     echo "********************************** ERROR **********************************"
@@ -56,11 +56,12 @@ fi
 grep -q \"config_version\":\ 2, $SETUP_DATA/config.server.json
 if [ $? == 0 ]; then
     echo ""
-    echo "********************************** ERROR **********************************"
+    echo "********************************** INFO ***********************************"
     echo "*                                                                         *"
-    echo "* Sandfly appears to already be upgraded to the correct version.          *"
+    echo "* Sandfly configuration is already at a compatible version. No upgrade    *"
+    echo "* is required.                                                            *"
     echo "*                                                                         *"
-    echo "********************************** ERROR **********************************"
+    echo "********************************** INFO ***********************************"
     echo ""
     exit 1
 fi
@@ -70,8 +71,12 @@ CONFIG_JSON=$(cat $SETUP_DATA/config.server.json)
 export CONFIG_JSON
 
 # Back up the old config
-mkdir -p $SETUP_DATA/backup
-cp $SETUP_DATA/*.json $SETUP_DATA/backup
+BACKUPFOLDER=$SETUP_DATA/backup/$(date '+%Y-%m-%d.%H%M')
+mkdir -p $BACKUPFOLDER
+cp -a $SETUP_DATA/*.json $BACKUPFOLDER
+if [ -f $SETUP_DATA/admin.password.txt ]; then
+    cp -a $SETUP_DATA/admin.password.txt $BACKUPFOLDER
+fi
 
 # Start the Postgres server
 # The first time we start Postgres, we need to assign a superuser password.
@@ -126,13 +131,13 @@ docker rm elasticsearch
 echo ""
 echo "*********************************** INFO ***********************************"
 echo "*                                                                          *"
-echo "* The upgrade to Sandfly 3.1 is complete. Users, credentials, hosts,       *"
-echo "* schedules, and other configuration data has been migrated to the 3.1     *"
+echo "* The upgrade to Sandfly 3.2 is complete. Users, credentials, hosts,       *"
+echo "* schedules, and other configuration data has been migrated to the 3.2     *"
 echo "* Postgres database. You will need to run new scans (or wait for scheduled *"
 echo "* scans) for results to start re-populating.                               *"
 echo "*                                                                          *"
 echo "* Sandfly no longer uses Elasticsearch for local data storage. When        *"
-echo "* starting Sandfly 3.1, use the start_postgres.sh start script instead of  *"
+echo "* starting Sandfly 3.2, use the start_postgres.sh start script instead of  *"
 echo "* the old start_elastic.sh start script. (Or use the start_sandfly.sh      *"
 echo "* script which starts all necessary server components automatically.)      *"
 echo "*                                                                          *"
@@ -140,7 +145,7 @@ echo "* Your Sandfly 3.0 Elasticsearch database Docker volume is still available
 echo "* if you need to roll back the upgrade. The Sandfly 3.0 configuration      *"
 echo "* files have been backed up to the setup_data/backup directory.            *"
 echo "*                                                                          *"
-echo "* When you are satisfied with the Sandfly 3.1 upgrade, you may permanently *"
+echo "* When you are satisfied with the Sandfly 3.2 upgrade, you may permanently *"
 echo "* delete your Sandfly 3.0 Elasticsearch database with the command:         *"
 echo "*    docker volume rm sandfly-elastic-db-vol                               *"
 echo "*                                                                          *"

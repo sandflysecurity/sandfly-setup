@@ -25,7 +25,7 @@ docker run \
 -e POSTGRES_PASSWORD="$POSTGRES_ADMIN_PASSWORD" \
 -e PGDATA=/var/lib/postgresql/data/pgdata \
 --shm-size=1g \
---restart on-failure:5 \
+--restart=always \
 --security-opt="no-new-privileges:true" \
 --network sandfly-net \
 --name sandfly-postgres \
