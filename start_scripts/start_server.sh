@@ -9,6 +9,9 @@ SETUP_DATA=../setup/setup_data
 VERSION=${SANDFLY_VERSION:-$(cat ../VERSION)}
 IMAGE_BASE=${SANDFLY_IMAGE_BASE:-quay.io/sandfly}
 
+# Remove old scripts
+../setup/clean_scripts.sh
+
 if [ -e $SETUP_DATA/allinone ]; then
     IGNORE_NODE_DATA_WARNING=YES
 fi

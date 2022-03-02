@@ -78,6 +78,9 @@ if [ -f $SETUP_DATA/admin.password.txt ]; then
     cp -a $SETUP_DATA/admin.password.txt $BACKUPFOLDER
 fi
 
+# Remove old scripts
+./clean_scripts.sh
+
 # Start the Postgres server
 # The first time we start Postgres, we need to assign a superuser password.
 if [ ! -f $SETUP_DATA_DIR/postgres.admin.password.txt ]; then
