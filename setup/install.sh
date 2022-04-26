@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2016-2021 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) 2016-2022 Sandfly Security LTD, All Rights Reserved.
 
 # This script will install the Sandfly server. By default, it will run
 # through an interactive setup process that is appropriate for users wishing
@@ -35,6 +35,10 @@ if [ -f $SETUP_DATA_DIR/config.server.json ]; then
     echo "*                                                                         *"
     echo "* If you are upgrading to a new version of Sandfly, please use upgrade.sh *"
     echo "*                                                                         *"
+    echo "* If you wish to completely delete your old Sandfly configuration and     *"
+    echo "* database, please use delete_sandfly_installation.sh in the util_scripts *"
+    echo "* directory.                                                              *"
+    echo "*                                                                         *"
     echo "********************************** ERROR **********************************"
     echo ""
     exit 1
@@ -57,6 +61,27 @@ EOF
 which docker >/dev/null 2>&1 || { echo "Unable to locate docker binary; please install Docker."; exit 1; }
 docker version >/dev/null 2>&1 || { echo "This script must be run as root or as a user with access to the Docker daemon."; exit 1; }
 
+# Sandfly Postgres Docker volume already exists?
+docker inspect sandfly-pg14-db-vol >/dev/null 2>&1
+if [[ $? -eq 0 ]]
+then
+    echo ""
+    echo "********************************** ERROR **********************************"
+    echo "*                                                                         *"
+    echo "* Sandfly is already installed (the database Docker volume,               *"
+    echo "* sandfly-pg14-db-vol, exists).                                           *"
+    echo "*                                                                         *"
+    echo "* If you are upgrading to a new version of Sandfly, please use upgrade.sh *"
+    echo "*                                                                         *"
+    echo "* If you wish to completely delete your old Sandfly configuration and     *"
+    echo "* database, please use delete_sandfly_installation.sh in the util_scripts *"
+    echo "* directory.                                                              *"
+    echo "*                                                                         *"
+    echo "********************************** ERROR **********************************"
+    echo ""
+    exit 1
+fi
+
 [ "$SANDFLY_AUTO" = "YES" ] && cat << EOF
 This will be a fully-automated setup.
 
@@ -76,21 +101,21 @@ echo "Starting Postgres database."
 sleep 5
 
 ./setup_scripts/setup_server.sh
-if [[ $? -eq 1 ]]
+if [[ $? -ne 0 ]]
 then
   echo "Server setup did not run. Aborting install."
   exit 1
 fi
 
 ./setup_scripts/setup_keys.sh
-if [[ $? -eq 1 ]]
+if [[ $? -ne 0 ]]
 then
   echo "Server and node key setup did not run. Aborting install."
   exit 1
 fi
 
 ./setup_scripts/setup_ssl.sh
-if [[ $? -eq 1 ]]
+if [[ $? -ne 0 ]]
 then
   echo "SSL setup did not run. Aborting install."
   exit 1
@@ -117,7 +142,7 @@ EOF
 fi # if auto
 
 ./setup_scripts/setup_config_json.sh
-if [[ $? -eq 1 ]]
+if [[ $? -ne 0 ]]
 then
   echo "Server, node and rabbit config JSON could not be generated. Aborting install."
   exit 1

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2016-2021 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) 2016-2022 Sandfly Security LTD, All Rights Reserved.
 
 # Make sure we run from the correct directory so relative paths work
 cd "$( dirname "${BASH_SOURCE[0]}" )"
@@ -51,3 +51,7 @@ docker run -v /dev/urandom:/dev/random:ro \
 --network sandfly-net \
 -it $SANDFLY_MGMT_DOCKER_IMAGE /usr/local/sandfly/install/update_config_json_ssl.sh
 
+if [ $? -ne 0 ]; then
+  echo "Error updating configuration with new certificate."
+  exit 1
+fi

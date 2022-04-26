@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2016-2021 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) 2016-2022 Sandfly Security LTD, All Rights Reserved.
 
 # Make sure we run from the correct directory so relative paths work
 cd "$( dirname "${BASH_SOURCE[0]}" )"
@@ -20,3 +20,5 @@ CONFIG_JSON=$(cat setup_data/config.server.json) \
   --network sandfly-net \
   -e CONFIG_JSON \
   $SANDFLY_MGMT_DOCKER_IMAGE /usr/local/sandfly/utils/demolictool
+
+exit $?

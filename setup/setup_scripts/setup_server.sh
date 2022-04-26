@@ -35,3 +35,5 @@ docker run -v /dev/urandom:/dev/random:ro \
 --network sandfly-net \
 -e SANDFLY_SETUP_AUTO_HOSTNAME \
 $DOCKER_INTERACTIVE $SANDFLY_MGMT_DOCKER_IMAGE /usr/local/sandfly/install/install_server.sh
+
+exit $?

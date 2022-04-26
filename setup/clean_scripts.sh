@@ -30,3 +30,15 @@ if [ -f ../start_scripts/start_elastic.sh ]; then
     mkdir -p $BACKUPFOLDER
     mv ../start_scripts/start_elastic.sh $BACKUPFOLDER
 fi
+
+# 3.3.0 - old util/dump scripts are now part of api_examples
+if [ -f util_scripts/dump_custom_sandflies.sh ]; then
+    mkdir -p $BACKUPFOLDER
+    mv util_scripts/dump_custom_sandflies.sh $BACKUPFOLDER
+fi
+
+if [ -f util_scripts/dump_hosts.sh ]; then
+    mkdir -p $BACKUPFOLDER
+    mv util_scripts/dump_hosts.sh $BACKUPFOLDER
+fi
+# End 3.3.0
