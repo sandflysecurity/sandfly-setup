@@ -82,6 +82,7 @@ docker run -v /dev/urandom:/dev/random:ro \
 --security-opt="no-new-privileges:true" \
 --network sandfly-net \
 --name sandfly-server \
+--user sandflyserver:sandfly \
 --publish 443:8443 \
 --publish 80:8000 \
 -d $IMAGE_BASE/sandfly-server${IMAGE_SUFFIX}:"$VERSION" /opt/sandfly/start_api.sh

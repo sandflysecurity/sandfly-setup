@@ -23,7 +23,7 @@ SETUP_DATA_DIR=./setup_data
 
 VERSION=${SANDFLY_SETUP_VERSION:-$(cat ../VERSION)}
 DOCKER_BASE=${SANDFLY_SETUP_DOCKER_BASE:-quay.io/sandfly}
-export SANDFLY_MGMT_DOCKER_IMAGE="$DOCKER_BASE/sandfly-server-mgmt${IMAGE_SUFFIX}:$VERSION"
+export SANDFLY_MGMT_DOCKER_IMAGE="$DOCKER_BASE/sandfly-server${IMAGE_SUFFIX}:$VERSION"
 
 # Sandfly already installed?
 if [ -f $SETUP_DATA_DIR/config.server.json ]; then
@@ -113,6 +113,11 @@ then
   echo "Server and node key setup did not run. Aborting install."
   exit 1
 fi
+
+# Need to provide the API server hostname, which was written to a file in
+# setup_server.sh, to generate the SSL cert.
+SSL_SERVER_HOSTNAME=$(cat ./setup_data/api.server.hostname.txt)
+export SSL_SERVER_HOSTNAME
 
 ./setup_scripts/setup_ssl.sh
 if [[ $? -ne 0 ]]

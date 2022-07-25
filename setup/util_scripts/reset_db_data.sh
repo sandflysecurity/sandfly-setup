@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2016-2021 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) 2016-2022 Sandfly Security LTD, All Rights Reserved.
 
-# This will delete all the results, errors, and audit log data from the Sandfly server. This is useful if
-# the system got flooded with alarms or other data and you want to quickly get rid of all of it and start fresh.
-# All other config data will remain untouched.
+# This will delete all the results, errors, and audit log data from the
+# Sandfly server. This is useful if the system got flooded with alarms or
+# other data and you want to quickly get rid of all of it and start fresh. All
+# other config data will remain untouched.
 
 # Make sure we run from the correct directory so relative paths work
 cd "$( dirname "${BASH_SOURCE[0]}" )"
@@ -23,7 +24,7 @@ docker rm sandfly-server-mgmt
 docker run --name sandfly-server-mgmt \
 --network sandfly-net \
 -e CONFIG_JSON \
--it $IMAGE_BASE/sandfly-server-mgmt${IMAGE_SUFFIX}:"$VERSION" /usr/local/sandfly/utils/init_data_db.sh
+-it $IMAGE_BASE/sandfly-server${IMAGE_SUFFIX}:"$VERSION" /opt/sandfly/utils/init_data_db.sh
 
 
 

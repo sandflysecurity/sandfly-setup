@@ -21,7 +21,7 @@ EOF
 # Use standard docker image unless overriden.
 if [[ -z "${SANDFLY_MGMT_DOCKER_IMAGE}" ]]; then
   VERSION=$(cat ../VERSION)
-  SANDFLY_MGMT_DOCKER_IMAGE="quay.io/sandfly/sandfly-server-mgmt${IMAGE_SUFFIX}:$VERSION"
+  SANDFLY_MGMT_DOCKER_IMAGE="quay.io/sandfly/sandfly-server${IMAGE_SUFFIX}:$VERSION"
 fi
 
 # Calls EFF Certbot to get a signed key for the Sandfly Server.
@@ -32,12 +32,12 @@ docker rm sandfly-server-mgmt 2>/dev/null
 mkdir -p setup_data/letsencrypt
 
 docker run -v /dev/urandom:/dev/random:ro \
--v $PWD/setup_data:/usr/local/sandfly/install/setup_data \
+-v $PWD/setup_data:/opt/sandfly/install/setup_data \
 -v $PWD/setup_data/letsencrypt:/etc/letsencrypt \
 --name sandfly-server-mgmt \
 --network sandfly-net \
---publish 80:80 \
--it $SANDFLY_MGMT_DOCKER_IMAGE /usr/local/sandfly/install/install_certbot.sh
+--publish 80:8000 \
+-it $SANDFLY_MGMT_DOCKER_IMAGE /opt/sandfly/install/install_certbot.sh
 
 if [ $? -ne 0 ]; then
   echo "Error renewing SSL certificate."
@@ -46,10 +46,10 @@ fi
 
 docker rm sandfly-server-mgmt 2>/dev/null
 docker run -v /dev/urandom:/dev/random:ro \
--v $PWD/setup_data:/usr/local/sandfly/install/setup_data \
+-v $PWD/setup_data:/opt/sandfly/install/setup_data \
 --name sandfly-server-mgmt \
 --network sandfly-net \
--it $SANDFLY_MGMT_DOCKER_IMAGE /usr/local/sandfly/install/update_config_json_ssl.sh
+-it $SANDFLY_MGMT_DOCKER_IMAGE /opt/sandfly/install/update_config_json_ssl.sh
 
 if [ $? -ne 0 ]; then
   echo "Error updating configuration with new certificate."

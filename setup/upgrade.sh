@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2016-2021 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) 2016-2022 Sandfly Security LTD, All Rights Reserved.
 
 # Make sure we run from the correct directory so relative paths work
 cd "$( dirname "${BASH_SOURCE[0]}" )"
@@ -11,7 +11,7 @@ IMAGE_BASE=${SANDFLY_IMAGE_BASE:-quay.io/sandfly}
 
 # Use standard docker image unless overriden.
 if [[ -z "${SANDFLY_MGMT_DOCKER_IMAGE}" ]]; then
-  SANDFLY_MGMT_DOCKER_IMAGE="quay.io/sandfly/sandfly-server-mgmt${IMAGE_SUFFIX}:$VERSION"
+  SANDFLY_MGMT_DOCKER_IMAGE="quay.io/sandfly/sandfly-server${IMAGE_SUFFIX}:$VERSION"
 fi
 
 
@@ -117,10 +117,10 @@ else
 fi
 
 docker run \
--v $PWD/setup_data:/usr/local/sandfly/install/setup_data \
+-v $PWD/setup_data:/opt/sandfly/install/setup_data \
 --name sandfly-server-mgmt \
 --network sandfly-net \
-$SANDFLY_MGMT_DOCKER_IMAGE /usr/local/sandfly/install/upgrade.sh
+$SANDFLY_MGMT_DOCKER_IMAGE /opt/sandfly/install/upgrade.sh
 
 if [ $? != 0 ]; then
     echo "*** ERROR: Upgrade process failed. See above messages for details."
@@ -134,13 +134,13 @@ docker rm elasticsearch
 echo ""
 echo "*********************************** INFO ***********************************"
 echo "*                                                                          *"
-echo "* The upgrade to Sandfly 3.2 is complete. Users, credentials, hosts,       *"
-echo "* schedules, and other configuration data has been migrated to the 3.2     *"
+echo "* The Sandfly upgrade is complete. Users, credentials, hosts,              *"
+echo "* schedules, and other configuration data has been migrated to the         *"
 echo "* Postgres database. You will need to run new scans (or wait for scheduled *"
 echo "* scans) for results to start re-populating.                               *"
 echo "*                                                                          *"
 echo "* Sandfly no longer uses Elasticsearch for local data storage. When        *"
-echo "* starting Sandfly 3.2, use the start_postgres.sh start script instead of  *"
+echo "* starting Sandfly, use the start_postgres.sh start script instead of      *"
 echo "* the old start_elastic.sh start script. (Or use the start_sandfly.sh      *"
 echo "* script which starts all necessary server components automatically.)      *"
 echo "*                                                                          *"
@@ -148,7 +148,7 @@ echo "* Your Sandfly 3.0 Elasticsearch database Docker volume is still available
 echo "* if you need to roll back the upgrade. The Sandfly 3.0 configuration      *"
 echo "* files have been backed up to the setup_data/backup directory.            *"
 echo "*                                                                          *"
-echo "* When you are satisfied with the Sandfly 3.2 upgrade, you may permanently *"
+echo "* When you are satisfied with the Sandfly upgrade, you may permanently     *"
 echo "* delete your Sandfly 3.0 Elasticsearch database with the command:         *"
 echo "*    docker volume rm sandfly-elastic-db-vol                               *"
 echo "*                                                                          *"

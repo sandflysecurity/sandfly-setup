@@ -11,14 +11,14 @@ docker version >/dev/null 2>&1 || { echo "This script must be run as root or as 
 # Use standard docker image unless overriden.
 if [[ -z "${SANDFLY_MGMT_DOCKER_IMAGE}" ]]; then
   VERSION=$(cat ../VERSION)
-  SANDFLY_MGMT_DOCKER_IMAGE="quay.io/sandfly/sandfly-server-mgmt${IMAGE_SUFFIX}:$VERSION"
+  SANDFLY_MGMT_DOCKER_IMAGE="quay.io/sandfly/sandfly-server${IMAGE_SUFFIX}:$VERSION"
 fi
 
 CONFIG_JSON=$(cat setup_data/config.server.json) \
   docker run --rm -v /dev/urandom:/dev/random:ro \
-  -v $PWD/setup_data:/usr/local/sandfly/install/setup_data \
+  -v $PWD/setup_data:/opt/sandfly/install/setup_data \
   --network sandfly-net \
   -e CONFIG_JSON \
-  $SANDFLY_MGMT_DOCKER_IMAGE /usr/local/sandfly/utils/demolictool
+  $SANDFLY_MGMT_DOCKER_IMAGE /opt/sandfly/utils/demolictool
 
 exit $?

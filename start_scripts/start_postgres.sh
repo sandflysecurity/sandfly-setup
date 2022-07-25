@@ -46,6 +46,9 @@ if [[ $maintenance_work_mem -gt 2097152 ]]; then
     maintenance_work_mem=2097152
 fi
 parallel_workers=$(( $cpu_count / 2))
+if [[ $parallel_workers -lt 1 ]]; then
+    parallel_workers=1
+fi
 if [[ $parallel_workers -gt 4 ]]; then
     # cap parallel_workers (per task) at 4
     parallel_workers=4
@@ -82,21 +85,53 @@ echo ""
 ### END OF POSTGRES TUNING CALCULATIONS #####################################
 #############################################################################
 
+# If the volume already exists (e.g. this isn't the first startup during
+# initial installation), print a warning if the volume is on a disk that is
+# more than 85% full.
+docker inspect sandfly-pg14-db-vol >/dev/null 2>/dev/null && \
+diskuse=$(df --output=pcent \
+    $(docker inspect sandfly-pg14-db-vol -f '{{json .Mountpoint}}' | \
+    tr -d \" ) | grep -v "Use%"|tr -d " %") && \
+if [[ $diskuse -gt 85 ]]; then
+    echo ""
+    echo "********************************* WARNING ***********************************"
+    echo "*                                                                           *"
+    echo "* The disk holding the Sandfly Postgres Docker volume, sandfly-pg14-db-vol, *"
+    echo "* is using more than 85% of available space. If the disk fills during       *"
+    echo "* Sandfly operation, it will become impossible to log in, delete results,   *"
+    echo "* etc.                                                                      *"
+    echo "*                                                                           *"
+    echo "* Please free up disk space, or increase the size of the disk, before       *"
+    echo "* starting Sandfly.                                                         *"
+    echo "*                                                                           *"
+    echo "* If you wish to continue anyway with low disk space, enter YES at the      *"
+    echo "* prompt.                                                                   *"
+    echo "********************************* WARNING ***********************************"
+    echo ""
+    echo "The disk is currently ${diskuse}% full."
+    echo "Do you wish to start the database despite having low free disk space?"
+    read -p "Type YES if you're sure. [NO]: " RESPONSE
+    if [ "$RESPONSE" != "YES" ]; then
+        echo "Halting database start."
+        exit 1
+    fi
+fi
+
 docker network create sandfly-net 2>/dev/null
 docker rm sandfly-postgres 2>/dev/null
 
 docker run \
---mount source=sandfly-pg14-db-vol,target=/var/lib/postgresql/data/pgdata \
+--mount source=sandfly-pg14-db-vol,target=/var/lib/postgresql/data \
 -d \
 -e POSTGRES_PASSWORD="$POSTGRES_ADMIN_PASSWORD" \
--e PGDATA=/var/lib/postgresql/data/pgdata \
+-e PGDATA=/var/lib/postgresql/data \
 --shm-size=${ram_total}k \
 --restart=always \
 --security-opt="no-new-privileges:true" \
 --network sandfly-net \
 --name sandfly-postgres \
 -t \
-postgres:14.2 \
+postgres:14.4 \
 -c shared_buffers=${shared_buffers}kB \
 -c effective_cache_size=${effective_cache_size}kB \
 -c maintenance_work_mem=${maintenance_work_mem}kB \
@@ -112,3 +147,5 @@ postgres:14.2 \
 -c max_parallel_workers_per_gather=$parallel_workers \
 -c max_parallel_workers=$cpu_count \
 -c max_parallel_maintenance_workers=$parallel_workers
+
+exit $?

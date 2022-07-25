@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2016-2021 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) 2016-2022 Sandfly Security LTD, All Rights Reserved.
 
 # This script installed a Let's Encrypt SSL certificate on a sandfly system
 # that has previously been auto-configured, such as cloud marketplace
@@ -66,7 +66,7 @@ fi
 # Use standard docker image unless overriden.
 if [[ -z "${SANDFLY_MGMT_DOCKER_IMAGE}" ]]; then
   VERSION=$(cat ../VERSION)
-  SANDFLY_MGMT_DOCKER_IMAGE="quay.io/sandfly/sandfly-server-mgmt${IMAGE_SUFFIX}:$VERSION"
+  SANDFLY_MGMT_DOCKER_IMAGE="quay.io/sandfly/sandfly-server${IMAGE_SUFFIX}:$VERSION"
 fi
 
 docker network create sandfly-net 2>/dev/null
@@ -75,13 +75,13 @@ docker rm sandfly-server-mgmt 2>/dev/null
 mkdir -p setup_data/letsencrypt
 
 docker run -v /dev/urandom:/dev/random:ro \
--v $PWD/setup_data:/usr/local/sandfly/install/setup_data \
+-v $PWD/setup_data:/opt/sandfly/install/setup_data \
 -v $PWD/setup_data/letsencrypt:/etc/letsencrypt \
 -e SSL_FQDN \
 --name sandfly-server-mgmt \
 --network sandfly-net \
---publish 80:80 \
--it $SANDFLY_MGMT_DOCKER_IMAGE /usr/local/sandfly/install/install_certbot.sh
+--publish 80:8000 \
+-it $SANDFLY_MGMT_DOCKER_IMAGE /opt/sandfly/install/install_certbot.sh
 
 if [ $? -ne 0 ]; then
   echo
@@ -100,10 +100,10 @@ fi
 
 docker rm sandfly-server-mgmt 2>/dev/null
 docker run -v /dev/urandom:/dev/random:ro \
--v $PWD/setup_data:/usr/local/sandfly/install/setup_data \
+-v $PWD/setup_data:/opt/sandfly/install/setup_data \
 --name sandfly-server-mgmt \
 --network sandfly-net \
--it $SANDFLY_MGMT_DOCKER_IMAGE /usr/local/sandfly/install/update_config_json_ssl.sh
+-it $SANDFLY_MGMT_DOCKER_IMAGE /opt/sandfly/install/update_config_json_ssl.sh
 
 if [ $? -ne 0 ]; then
   echo

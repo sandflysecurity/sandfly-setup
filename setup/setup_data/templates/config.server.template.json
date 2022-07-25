@@ -25,7 +25,7 @@
 			}
 		},
 		"rabbit": {
-			"hostname": "rabbit_hostname",
+			"hostname": "sandfly-rabbit",
 			"node_password": "rabbit_node_password"
 		},
 		"api": {
