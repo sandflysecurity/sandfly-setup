@@ -58,11 +58,18 @@ Welcome to the Sandfly $VERSION server setup.
 EOF
 
 # See if we can run Docker
-which docker >/dev/null 2>&1 || { echo "Unable to locate docker binary; please install Docker."; exit 1; }
-docker version >/dev/null 2>&1 || { echo "This script must be run as root or as a user with access to the Docker daemon."; exit 1; }
+if [ !$(which docker >/dev/null 2>&1 ) ]; then
+    which podman >/dev/null 2>&1 || { echo "Unable to locate docker or podman binary; please install Docker or Podman."; exit 1; }
+    CONTAINER_BINARY=podman 
+else
+    CONTAINER_BINARY=docker
+fi
+    
+
+$CONTAINER_BINARY version >/dev/null 2>&1 || { echo "This script must be run as root or as a user with access to the Docker daemon."; exit 1; }
 
 # Sandfly Postgres Docker volume already exists?
-docker inspect sandfly-pg14-db-vol >/dev/null 2>&1
+$CONTAINER_BINARY inspect sandfly-pg14-db-vol >/dev/null 2>&1
 if [[ $? -eq 0 ]]
 then
     echo ""
@@ -90,8 +97,8 @@ Sandfly Management Image: $SANDFLY_MGMT_DOCKER_IMAGE
 
 EOF
 
-docker network create sandfly-net 2>/dev/null
-docker rm sandfly-server-mgmt 2>/dev/null
+$CONTAINER_BINARY network create sandfly-net 2>/dev/null
+$CONTAINER_BINARY rm sandfly-server-mgmt 2>/dev/null
 
 # The first time we start Postgres, we need to assign a superuser password.
 POSTGRES_ADMIN_PASSWORD=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c40)

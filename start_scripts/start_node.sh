@@ -9,6 +9,13 @@ SETUP_DATA=../setup/setup_data
 VERSION=${SANDFLY_VERSION:-$(cat ../VERSION)}
 IMAGE_BASE=${SANDFLY_IMAGE_BASE:-quay.io/sandfly}
 
+if [ !$(which docker >/dev/null 2>&1 ) ]; then
+    which podman >/dev/null 2>&1 || { echo "Unable to locate docker or podman binary; please install Docker or Podman."; exit 1; }
+    CONTAINER_BINARY=podman
+else
+    CONTAINER_BINARY=docker
+fi
+
 # Remove old scripts
 ../setup/clean_scripts.sh
 
@@ -34,11 +41,11 @@ export CONFIG_JSON
 
 # First, use jq inside the container (we can't assume jq is available on host)
 # to get the hostname of the server.
-API_HOST=$(docker run -e CONFIG_JSON --rm \
+API_HOST=$($CONTAINER_BINARY run -e CONFIG_JSON --rm \
     -e CONFIG_JSON \
     $IMAGE_BASE/sandfly-node${IMAGE_SUFFIX}:"$VERSION" \
     /bin/bash -c 'jq -r .node.api.hostname <<< $CONFIG_JSON')
-RABBIT_HOST=$(docker run -e CONFIG_JSON --rm \
+RABBIT_HOST=$($CONTAINER_BINARY run -e CONFIG_JSON --rm \
     -e CONFIG_JSON \
     $IMAGE_BASE/sandfly-node${IMAGE_SUFFIX}:"$VERSION" \
     /bin/bash -c 'jq -r .node.rabbit.hostname <<< $CONFIG_JSON')
@@ -76,9 +83,9 @@ if [[ $API_OPEN -eq 0 ]] || [[ $AMQP_OPEN -eq 0 ]]; then
     exit 1
 fi
 
-docker run -v /dev/urandom:/dev/random:ro \
+$CONTAINER_BINARY run -v /dev/urandom:/dev/random:ro \
 -e CONFIG_JSON \
 --disable-content-trust \
 --restart=always \
---security-opt="no-new-privileges:true" \
+--security-opt="no-new-privileges$( if [ $CONTAINER_BINARY == "podman" ]; then echo ""; else echo ":true"; fi)" \
 -d $IMAGE_BASE/sandfly-node${IMAGE_SUFFIX}:"$VERSION" /usr/local/sandfly/start_node.sh

@@ -6,7 +6,12 @@
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 cd ..
 
-docker version >/dev/null 2>&1 || { echo "This script must be run as root or as a user with access to the Docker daemon."; exit 1; }
+if [ !$(which docker >/dev/null 2>&1 ) ]; then
+    which podman >/dev/null 2>&1 || { echo "Unable to locate docker or podman binary; please install Docker or Podman."; exit 1; }
+    CONTAINER_BINARY=podman
+else
+    CONTAINER_BINARY=docker
+fi
 
 cat << EOF
 
@@ -17,20 +22,20 @@ We're now setting up keys for use by the server and nodes.
 
 EOF
 
-# Use standard docker image unless overriden.
+# Use standard $CONTAINER_BINARY image unless overriden.
 if [[ -z "${SANDFLY_MGMT_DOCKER_IMAGE}" ]]; then
   VERSION=$(cat ../VERSION)
   SANDFLY_MGMT_DOCKER_IMAGE="quay.io/sandfly/sandfly-server${IMAGE_SUFFIX}:$VERSION"
 fi
 
 # Sets up PGP keys pair for server and node.
-docker network create sandfly-net 2>/dev/null
-docker rm sandfly-server-mgmt 2>/dev/null
+$CONTAINER_BINARY network create sandfly-net 2>/dev/null
+$CONTAINER_BINARY rm sandfly-server-mgmt 2>/dev/null
 
 DOCKER_INTERACTIVE="-it"
 [ "$SANDFLY_AUTO" = "YES" ] && DOCKER_INTERACTIVE=""
 
-docker run -v /dev/urandom:/dev/random:ro \
+$CONTAINER_BINARY run -v /dev/urandom:/dev/random:ro \
 -v $PWD/setup_data:/opt/sandfly/install/setup_data \
 --name sandfly-server-mgmt \
 --network sandfly-net \
