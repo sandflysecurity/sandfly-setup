@@ -3,12 +3,19 @@
 # Sandfly Security LTD www.sandflysecurity.com
 # Copyright (c) 2021-2022 Sandfly Security LTD, All Rights Reserved.
 
+if [ !$(which docker >/dev/null 2>&1 ) ]; then
+    which podman >/dev/null 2>&1 || { echo "Unable to locate docker or podman binary; please install Docker or Podman."; exit 1; }
+    CONTAINER_BINARY=podman
+else
+    CONTAINER_BINARY=docker
+fi
+
 # Make sure we run from the correct directory so relative paths work
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 # After the first time Postgres starts, the admin password will be set in the
 # database in the Docker volume we use, and setting the password through the
-# docker run command will have no effect (e.g. it doesn't try to change it if
+# $CONTAINER_BINARY run command will have no effect (e.g. it doesn't try to change it if
 # a database already exists). If this is an initial install, the password we
 # want to use should be in setup_data courtesy of the install.sh script.
 POSTGRES_ADMIN_PASSWORD="unknown"
@@ -88,9 +95,9 @@ echo ""
 # If the volume already exists (e.g. this isn't the first startup during
 # initial installation), print a warning if the volume is on a disk that is
 # more than 85% full.
-docker inspect sandfly-pg14-db-vol >/dev/null 2>/dev/null && \
+$CONTAINER_BINARY inspect sandfly-pg14-db-vol >/dev/null 2>/dev/null && \
 diskuse=$(df --output=pcent \
-    $(docker inspect sandfly-pg14-db-vol -f '{{json .Mountpoint}}' | \
+    $($CONTAINER_BINARY inspect sandfly-pg14-db-vol -f '{{json .Mountpoint}}' | \
     tr -d \" ) | grep -v "Use%"|tr -d " %") && \
 if [[ $diskuse -gt 85 ]]; then
     echo ""
@@ -117,17 +124,17 @@ if [[ $diskuse -gt 85 ]]; then
     fi
 fi
 
-docker network create sandfly-net 2>/dev/null
-docker rm sandfly-postgres 2>/dev/null
+$CONTAINER_BINARY network create sandfly-net 2>/dev/null
+$CONTAINER_BINARY rm sandfly-postgres 2>/dev/null
 
-docker run \
---mount source=sandfly-pg14-db-vol,target=/var/lib/postgresql/data \
+$CONTAINER_BINARY run \
+$( if [ $CONTAINER_BINARY == "podman" ]; then echo "-v sandfly-pg14-db-vol:/var/lib/postgresql/data "; else echo "--mount source=sandfly-pg14-db-vol,target=/var/lib/postgresql/data "; fi) \
 -d \
 -e POSTGRES_PASSWORD="$POSTGRES_ADMIN_PASSWORD" \
 -e PGDATA=/var/lib/postgresql/data \
 --shm-size=${ram_total}k \
 --restart=always \
---security-opt="no-new-privileges:true" \
+--security-opt="no-new-privileges$( if [ $CONTAINER_BINARY == "podman" ]; then echo ""; else echo ":true"; fi)" \
 --network sandfly-net \
 --name sandfly-postgres \
 -t \

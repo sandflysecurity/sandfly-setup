@@ -2,6 +2,13 @@
 # Sandfly Security LTD www.sandflysecurity.com
 # Copyright (c) 2021 Sandfly Security LTD, All Rights Reserved.
 
+if [ !$(which docker >/dev/null 2>&1 ) ]; then
+    which podman >/dev/null 2>&1 || { echo "Unable to locate docker or podman binary; please install Docker or Podman."; exit 1; }
+    CONTAINER_BINARY=podman
+else
+    CONTAINER_BINARY=docker
+fi
+
 # Make sure we run from the correct directory so relative paths work
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
@@ -22,14 +29,14 @@ fi
 # Determine if we need to use the sudo command to control Docker
 SUDO=""
 if [ $(id -u) -ne 0 ]; then
-    docker version >/dev/null 2>&1
+    $CONTAINER_BINARY version >/dev/null 2>&1
     if [ $? -ne 0 ]; then
         SUDO="sudo"
     fi
 fi
 
 ### Start Postgres if not already running
-esresult=$($SUDO docker inspect --format="{{.State.Running}}" sandfly-postgres 2> /dev/null)
+esresult=$($SUDO $CONTAINER_BINARY inspect --format="{{.State.Running}}" sandfly-postgres 2> /dev/null)
 if [ "${esresult}z" != "truez" ]; then
     echo "*** Starting Postgres."
     $SUDO ./start_postgres.sh
@@ -42,7 +49,7 @@ else
 fi
 
 ### Start RabbitMQ if not already running
-esresult=$($SUDO docker inspect --format="{{.State.Running}}" sandfly-rabbit 2> /dev/null)
+esresult=$($SUDO $CONTAINER_BINARY inspect --format="{{.State.Running}}" sandfly-rabbit 2> /dev/null)
 if [ "${esresult}z" != "truez" ]; then
     echo "*** Starting RabbitMQ server."
     $SUDO ./start_rabbit.sh
@@ -54,7 +61,7 @@ if [ "${esresult}z" != "truez" ]; then
     # Wait a maximum of 3 minutes
     TIMER=180
     while true; do
-        $SUDO docker logs sandfly-rabbit 2>&1 | grep "Server startup complete" > /dev/null
+        $SUDO $CONTAINER_BINARY logs sandfly-rabbit 2>&1 | grep "Server startup complete" > /dev/null
         if [ $? -eq 0 ]; then
             echo
             break
@@ -73,7 +80,7 @@ else
 fi
 
 ### Start sandfly-server if not already running
-esresult=$($SUDO docker inspect --format="{{.State.Running}}" sandfly-server 2> /dev/null)
+esresult=$($SUDO $CONTAINER_BINARY inspect --format="{{.State.Running}}" sandfly-server 2> /dev/null)
 if [ "${esresult}z" != "truez" ]; then
     echo "*** Starting Sandfly Server."
     $SUDO ./start_server.sh

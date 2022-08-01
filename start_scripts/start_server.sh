@@ -5,6 +5,13 @@
 # Make sure we run from the correct directory so relative paths work
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
+if [ !$(which docker >/dev/null 2>&1 ) ]; then
+    which podman >/dev/null 2>&1 || { echo "Unable to locate docker or podman binary; please install Docker or Podman."; exit 1; }
+    CONTAINER_BINARY=podman
+else
+    CONTAINER_BINARY=docker
+fi
+
 SETUP_DATA=../setup/setup_data
 VERSION=${SANDFLY_VERSION:-$(cat ../VERSION)}
 IMAGE_BASE=${SANDFLY_IMAGE_BASE:-quay.io/sandfly}
@@ -72,14 +79,14 @@ fi
 CONFIG_JSON=$(cat $SETUP_DATA/config.server.json)
 export CONFIG_JSON
 
-docker network create sandfly-net 2>/dev/null
-docker rm sandfly-server 2>/dev/null
+$CONTAINER_BINARY network create sandfly-net 2>/dev/null
+$CONTAINER_BINARY rm sandfly-server 2>/dev/null
 
-docker run -v /dev/urandom:/dev/random:ro \
+$CONTAINER_BINARY run -v /dev/urandom:/dev/random:ro \
 -e CONFIG_JSON \
 --disable-content-trust \
 --restart=always \
---security-opt="no-new-privileges:true" \
+--security-opt="no-new-privileges$( if [ $CONTAINER_BINARY == "podman" ]; then echo ""; else echo ":true"; fi)" \
 --network sandfly-net \
 --name sandfly-server \
 --user sandflyserver:sandfly \
