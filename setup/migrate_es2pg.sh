@@ -14,7 +14,6 @@ if [[ -z "${SANDFLY_MGMT_DOCKER_IMAGE}" ]]; then
   SANDFLY_MGMT_DOCKER_IMAGE="quay.io/sandfly/sandfly-server${IMAGE_SUFFIX}:$VERSION"
 fi
 
-
 # See if we can run Docker
 which docker >/dev/null 2>&1 || { echo "Unable to locate docker binary; please install Docker."; exit 1; }
 docker version >/dev/null 2>&1 || { echo "This script must be run as root or as a user with access to the Docker daemon."; exit 1; }

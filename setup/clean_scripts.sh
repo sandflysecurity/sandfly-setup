@@ -31,6 +31,12 @@ if [ -f ../start_scripts/start_elastic.sh ]; then
     mv ../start_scripts/start_elastic.sh $BACKUPFOLDER
 fi
 
+# upgrade.sh renamed
+if [ -f ./upgrade.sh ]; then
+    mkdir -p $BACKUPFOLDER
+    mv ./upgrade.sh $BACKUPFOLDER
+fi
+
 # 3.3.0 - old util/dump scripts are now part of api_examples
 if [ -f util_scripts/dump_custom_sandflies.sh ]; then
     mkdir -p $BACKUPFOLDER

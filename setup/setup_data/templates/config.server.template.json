@@ -40,7 +40,8 @@
 			}
 		},
 		"options": {
-			"log_level": "info"
+			"log_level": "info",
+			"disable_strict_tls_policy": false
 		}
 	}
 }

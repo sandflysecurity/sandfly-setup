@@ -1,0 +1,47 @@
+Sandfly API Service SSL Certificate
+===================================
+
+To use your own SSL/TLS certificate for the Sandfly API service, place two
+files in this directory named cert.pem and privatekey.pem.
+
+If one or both files are present in this directory, the corresponding values
+in config.server.json will be ignored (server.ssl.server.cert_signed and
+server.ssl.server.private_key_signed).
+
+cert.pem
+--------
+
+The cert.pem file must contain the server certificate and (if necessary) the
+intermediate chain certificate(s).
+
+The server certificate must be the first certificate in the cert.pem file.
+Each certificate (the server certificate and the intermediate certificates)
+must be PEM-encoded and include the "-----BEGIN CERTIFICATE-----" and
+"-----END CERTIFICATE-----" delimiters.
+
+If you have your server certificate in certificate.pem and your intermediate
+certificates in cachain.pem, you can create the cert.pem file by
+concatenating them together in the correct order:
+
+    cat certificate.pem cachain.pem > cert.pem
+
+The complete cert.pem file should look like (without leading spaces):
+
+    -----BEGIN CERTIFICATE-----
+    MII...
+    -----END CERTIFICATE-----
+    -----BEGIN CERTIFICATE-----
+    MII...
+    -----END CERTIFICATE-----
+    ... (possibly more certificates)
+
+
+privatekey.pem
+--------------
+
+The privatekey.pem file must be a PEM-encoded, unecrypted private key file.
+It should look something like (without leading spaces):
+
+    -----BEGIN RSA PRIVATE KEY-----
+    MII...
+    -----END RSA PRIVATE KEY-----

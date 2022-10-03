@@ -72,11 +72,26 @@ fi
 CONFIG_JSON=$(cat $SETUP_DATA/config.server.json)
 export CONFIG_JSON
 
+# Server SSL certificate overrides from files
+CONFIG_SSL_CERT=""
+CONFIG_SSL_KEY=""
+
+if [ -f $SETUP_DATA/server_ssl_cert/cert.pem ]; then
+    CONFIG_SSL_CERT=$(cat $SETUP_DATA/server_ssl_cert/cert.pem)
+fi
+
+if [ -f $SETUP_DATA/server_ssl_cert/privatekey.pem ]; then
+    CONFIG_SSL_KEY=$(cat $SETUP_DATA/server_ssl_cert/privatekey.pem)
+fi
+
+export CONFIG_SSL_CERT CONFIG_SSL_KEY
+
 docker network create sandfly-net 2>/dev/null
 docker rm sandfly-server 2>/dev/null
 
 docker run -v /dev/urandom:/dev/random:ro \
 -e CONFIG_JSON \
+-e CONFIG_SSL_CERT -e CONFIG_SSL_KEY \
 --disable-content-trust \
 --restart=always \
 --security-opt="no-new-privileges:true" \

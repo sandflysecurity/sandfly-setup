@@ -131,7 +131,7 @@ docker run \
 --network sandfly-net \
 --name sandfly-postgres \
 -t \
-postgres:14.4 \
+postgres:14.5 \
 -c shared_buffers=${shared_buffers}kB \
 -c effective_cache_size=${effective_cache_size}kB \
 -c maintenance_work_mem=${maintenance_work_mem}kB \
