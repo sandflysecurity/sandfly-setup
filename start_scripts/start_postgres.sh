@@ -121,7 +121,7 @@ docker network create sandfly-net 2>/dev/null
 docker rm sandfly-postgres 2>/dev/null
 
 docker run \
---mount source=sandfly-pg14-db-vol,target=/var/lib/postgresql/data \
+--mount type=volume,source=sandfly-pg14-db-vol,target=/var/lib/postgresql/data \
 -d \
 -e POSTGRES_PASSWORD="$POSTGRES_ADMIN_PASSWORD" \
 -e PGDATA=/var/lib/postgresql/data \
@@ -131,7 +131,7 @@ docker run \
 --network sandfly-net \
 --name sandfly-postgres \
 -t \
-postgres:14.5 \
+docker.io/library/postgres:14.5 \
 -c shared_buffers=${shared_buffers}kB \
 -c effective_cache_size=${effective_cache_size}kB \
 -c maintenance_work_mem=${maintenance_work_mem}kB \

@@ -28,7 +28,7 @@ docker volume rm sandfly-rabbitmq-tmp-vol 2>/dev/null
 # ref: https://github.com/docker-library/rabbitmq/issues/106
 
 docker run -v /dev/urandom:/dev/random:ro \
-    --mount source=sandfly-rabbitmq-tmp-vol,target=/var/lib/rabbitmq \
+    --mount type=volume,source=sandfly-rabbitmq-tmp-vol,target=/var/lib/rabbitmq \
     --hostname sandfly-rabbit -d \
     -e CONFIG_JSON \
     --disable-content-trust \
