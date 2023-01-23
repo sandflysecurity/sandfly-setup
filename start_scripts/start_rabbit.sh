@@ -9,6 +9,8 @@ SETUP_DATA=../setup/setup_data
 VERSION=${SANDFLY_VERSION:-$(cat ../VERSION)}
 IMAGE_BASE=${SANDFLY_IMAGE_BASE:-quay.io/sandfly}
 
+LOG_MAX_SIZE="20m"
+
 # Populate env variables.
 CONFIG_JSON=$(cat $SETUP_DATA/config.rabbit.json)
 export CONFIG_JSON
@@ -28,13 +30,20 @@ docker volume rm sandfly-rabbitmq-tmp-vol 2>/dev/null
 # ref: https://github.com/docker-library/rabbitmq/issues/106
 
 docker run -v /dev/urandom:/dev/random:ro \
-    --mount type=volume,source=sandfly-rabbitmq-tmp-vol,target=/var/lib/rabbitmq \
-    --hostname sandfly-rabbit -d \
-    -e CONFIG_JSON \
-    --disable-content-trust \
-    --restart=always \
-    --name sandfly-rabbit \
-    --security-opt="no-new-privileges:true" \
-    --network sandfly-net \
-    --publish 5673:5673 \
-    -t $IMAGE_BASE/sandfly-rabbit${IMAGE_SUFFIX}:"$VERSION"
+--mount source=sandfly-rabbitmq-tmp-vol,target=/var/lib/rabbitmq \
+--hostname sandfly-rabbit -d \
+-e CONFIG_JSON \
+-e RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS="+S 1:1 +sbwt none +sbwtdcpu none +sbwtdio none" \
+--disable-content-trust \
+--restart=always \
+--name sandfly-rabbit \
+--label sandfly-rabbit \
+--security-opt="no-new-privileges:true" \
+--network sandfly-net \
+--publish 5673:5673 \
+--log-driver json-file \
+--log-opt max-size=${LOG_MAX_SIZE} \
+--log-opt max-file=5 \
+-t $IMAGE_BASE/sandfly-rabbit${IMAGE_SUFFIX}:"$VERSION"
+
+exit $?

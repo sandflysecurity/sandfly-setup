@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2016-2021 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) 2016-2022 Sandfly Security LTD, All Rights Reserved.
 
 # Make sure we run from the correct directory so relative paths work
 cd "$( dirname "${BASH_SOURCE[0]}" )"
@@ -8,6 +8,13 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 SETUP_DATA=../setup/setup_data
 VERSION=${SANDFLY_VERSION:-$(cat ../VERSION)}
 IMAGE_BASE=${SANDFLY_IMAGE_BASE:-quay.io/sandfly}
+
+# Use valid (#m or #g) env variable, otherwise the Sandfly default.
+if  [[ "${SANDFLY_LOG_MAX_SIZE}" =~ ^[1-9][0-9]*[m|g]$ ]]; then
+  LOG_MAX_SIZE=${SANDFLY_LOG_MAX_SIZE}
+else
+  LOG_MAX_SIZE="100m"
+fi
 
 # Remove old scripts
 ../setup/clean_scripts.sh
@@ -97,7 +104,13 @@ docker run -v /dev/urandom:/dev/random:ro \
 --security-opt="no-new-privileges:true" \
 --network sandfly-net \
 --name sandfly-server \
+--label sandfly-server \
 --user sandflyserver:sandfly \
 --publish 443:8443 \
 --publish 80:8000 \
+--log-driver json-file \
+--log-opt max-size=${LOG_MAX_SIZE} \
+--log-opt max-file=5 \
 -d $IMAGE_BASE/sandfly-server${IMAGE_SUFFIX}:"$VERSION" /opt/sandfly/start_api.sh
+
+exit $?

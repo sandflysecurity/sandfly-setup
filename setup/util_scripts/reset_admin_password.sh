@@ -16,7 +16,7 @@ export CONFIG_JSON
 
 
 docker network create sandfly-net 2>/dev/null
-docker rm sandfly-server-mgmt
+docker rm sandfly-server-mgmt 2>/dev/null
 
 docker run --name sandfly-server-mgmt \
 --network sandfly-net \
