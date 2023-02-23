@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2021-2022 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) 2021-2023 Sandfly Security LTD, All Rights Reserved.
 
 # Make sure we run from the correct directory so relative paths work
 cd "$( dirname "${BASH_SOURCE[0]}" )"
@@ -17,6 +17,19 @@ if [ -f ../setup/setup_data/postgres.admin.password.txt ]; then
     POSTGRES_ADMIN_PASSWORD=$(cat ../setup/setup_data/postgres.admin.password.txt)
 fi
 
+POOL_SIZE=$(grep -Eo '"pool_size":[[:space:]]*[[:digit:]]+' ../setup/setup_data/config.server.json | grep -Eo '[[:digit:]]+')
+if [ -z "$POOL_SIZE" ]; then
+    POOL_SIZE=50
+fi
+if [ "$POOL_SIZE" -lt 50 ]; then
+    echo "ERROR: server.db.postgres.pool_size must be between 50 and 500"
+    exit 1
+fi
+if [ "$POOL_SIZE" -gt 500 ]; then
+    echo "ERROR: server.db.postgres.pool_size must be between 50 and 500"
+    exit 1
+fi
+
 #############################################################################
 ### POSTGRES TUNING CALCULATIONS ############################################
 ### Roughly following 'pgtune' project calculations #########################
@@ -24,7 +37,7 @@ fi
 
 cpu_count=$(grep -c '^processor' /proc/cpuinfo)
 ram_total=$(free -k | grep Mem | awk '{print $2}')
-max_connections=60
+max_connections=$(($POOL_SIZE+10))
 
 # We will calculate based on 70% of system RAM for postgres, leaving
 # 30% for Sandfly, Rabbit, etc.

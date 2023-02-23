@@ -35,6 +35,7 @@
 		"db": {
 			"postgres": {
 				"connstr": "db_postgres_connstr",
+				"pool_size": 50,
 				"postgres_password": "db_postgres_postgres_password",
 				"sandfly_password": "db_postgres_sandfly_password"
 			}
