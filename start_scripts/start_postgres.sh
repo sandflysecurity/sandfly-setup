@@ -17,17 +17,63 @@ if [ -f ../setup/setup_data/postgres.admin.password.txt ]; then
     POSTGRES_ADMIN_PASSWORD=$(cat ../setup/setup_data/postgres.admin.password.txt)
 fi
 
-POOL_SIZE=$(grep -Eo '"pool_size":[[:space:]]*[[:digit:]]+' ../setup/setup_data/config.server.json | grep -Eo '[[:digit:]]+')
-if [ -z "$POOL_SIZE" ]; then
-    POOL_SIZE=50
+if [ -f ../setup/setup_data/config.server.json ]; then
+    POOL_SIZE=$(grep -Eo '"pool_size":[[:space:]]*[[:digit:]]+' ../setup/setup_data/config.server.json | grep -Eo '[[:digit:]]+')
+else
+    POOL_SIZE=20
 fi
-if [ "$POOL_SIZE" -lt 50 ]; then
-    echo "ERROR: server.db.postgres.pool_size must be between 50 and 500"
+if [ -z "$POOL_SIZE" ]; then
+    POOL_SIZE=20
+fi
+if [ "$POOL_SIZE" -lt 20 ]; then
+    echo "ERROR: server.db.postgres.pool_size must be between 20 and 500"
     exit 1
 fi
 if [ "$POOL_SIZE" -gt 500 ]; then
-    echo "ERROR: server.db.postgres.pool_size must be between 50 and 500"
+    echo "ERROR: server.db.postgres.pool_size must be between 20 and 500"
     exit 1
+fi
+
+if [ -f ../setup/setup_data/config.server.json ]; then
+    POOL_SIZE_NODES=$(grep -Eo '"pool_size_nodes":[[:space:]]*[[:digit:]]+' ../setup/setup_data/config.server.json | grep -Eo '[[:digit:]]+')
+else
+    POOL_SIZE_NODES=30
+fi
+if [ -z "$POOL_SIZE_NODES" ]; then
+    POOL_SIZE_NODES=30
+fi
+if [ "$POOL_SIZE_NODES" -lt 20 ]; then
+    echo "ERROR: server.db.postgres.pool_size_nodes must be between 20 and 500"
+    exit 1
+fi
+if [ "$POOL_SIZE_NODES" -gt 500 ]; then
+    echo "ERROR: server.db.postgres.pool_size_nodes must be between 20 and 500"
+    exit 1
+fi
+
+if [ -f ../setup/setup_data/config.server.json ]; then
+    RESULT_WORKERS=$(grep -Eo '"result_workers":[[:space:]]*[[:digit:]]+' ../setup/setup_data/config.server.json | grep -Eo '[[:digit:]]+')
+else
+    RESULT_WORKERS=20
+fi
+if [ -z "$RESULT_WORKERS" ]; then
+    RESULT_WORKERS=20
+fi
+if [ "$RESULT_WORKERS" -lt 10 ]; then
+    echo "ERROR: server.db.postgres.result_workers must be between 10 and 500"
+    exit 1
+fi
+if [ "$RESULT_WORKERS" -gt 500 ]; then
+    echo "ERROR: server.db.postgres.result_workers must be between 10 and 500"
+    exit 1
+fi
+
+# If necessary, we adjust POOL_SIZE_NODES to be a minimum of 10 more than
+# RESULT_WORKERS to make sure we have enough connections for when the server
+# code does the same thing.
+if [ $(($POOL_SIZE_NODES-$RESULT_WORKERS)) -lt 10 ]; then
+    echo "INFO: Adjusting POOL_SIZE_NODES to ensure 10 extra connections"
+    POOL_SIZE_NODES=$((RESULT_WORKERS+10))
 fi
 
 #############################################################################
@@ -37,7 +83,7 @@ fi
 
 cpu_count=$(grep -c '^processor' /proc/cpuinfo)
 ram_total=$(free -k | grep Mem | awk '{print $2}')
-max_connections=$(($POOL_SIZE+10))
+max_connections=$(($POOL_SIZE+$POOL_SIZE_NODES))
 
 # We will calculate based on 70% of system RAM for postgres, leaving
 # 30% for Sandfly, Rabbit, etc.
@@ -81,7 +127,7 @@ echo ""
 echo "Based on $cpu_count CPUs and ${ram_total}kB total RAM, we will start"
 echo "Postgres with the following settings:"
 echo ""
-echo "max_connections                  = $max_connections"
+echo "max_connections                  = $(($max_connections+10))"
 echo "shared_buffers                   = ${shared_buffers}kB"
 echo "effective_cache_size             = ${effective_cache_size}kB"
 echo "maintenance_work_mem             = ${maintenance_work_mem}kB"
@@ -153,7 +199,8 @@ docker run \
 --log-opt max-size=${LOG_MAX_SIZE} \
 --log-opt max-file=5 \
 -t \
-postgres:14.6 \
+postgres:14.7 \
+-c max_connections=$(($max_connections+10)) \
 -c shared_buffers=${shared_buffers}kB \
 -c effective_cache_size=${effective_cache_size}kB \
 -c maintenance_work_mem=${maintenance_work_mem}kB \
