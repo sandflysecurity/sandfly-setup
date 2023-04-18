@@ -58,8 +58,10 @@ fi
 
 # jq might not be available on the outer Docker host, so we'll do a simple grep
 # to make sure the config version is correct for this server version.
-grep -q \"config_version\":\ 2, $SETUP_DATA/config.server.json
-if [ $? != 0 ]; then
+
+# config_version 1 means we still need to upgrade from ES to Postgres.
+grep -q \"config_version\":\ 1, $SETUP_DATA/config.server.json > /dev/null
+if [ $? -eq 0 ]; then
     echo ""
     echo "****************************** ERROR ******************************"
     echo "*                                                                 *"
@@ -69,6 +71,42 @@ if [ $? != 0 ]; then
     echo "*                                                                 *"
     echo "* The setup/upgrade.sh script will upgrade Sandfly to the current *"
     echo "* version.                                                        *"
+    echo "*                                                                 *"
+    echo "*******************************************************************"
+    echo ""
+    exit 1
+fi
+
+# Config version 2 means we need to warn about clearing results.
+grep -q \"config_version\":\ 2, $SETUP_DATA/config.server.json > /dev/null
+if [ $? -eq 0 ]; then
+    clear
+    echo ""
+    echo "************************ A T T E N T I O N ************************"
+    echo "*                                                                 *"
+    echo "* Upgrading to this version of Sandfly will clear all results     *"
+    echo "* from the database.                                              *"
+    echo "*                                                                 *"
+    echo "* If you do NOT wish to upgrade, press Ctrl-C now to cancel.      *"
+    echo "* Otherwise, press enter to continue.                             *"
+    echo "*                                                                 *"
+    echo "*******************************************************************"
+    echo ""
+    echo "Press enter to continue"
+    read foo_enter
+    
+    # Update config file so we don't warn on future startups.
+    sed -i 's/"config_version": 2/"config_version": 3/' $SETUP_DATA/config.server.json
+fi
+
+# As a safety net, we'll check for the correct config version.
+grep -q \"config_version\":\ 3, $SETUP_DATA/config.server.json > /dev/null
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "****************************** ERROR ******************************"
+    echo "*                                                                 *"
+    echo "* Unexpected configuration version. Please contact Sandfly        *"
+    echo "* Support for assistance repairing your installation.             *"
     echo "*                                                                 *"
     echo "*******************************************************************"
     echo ""
