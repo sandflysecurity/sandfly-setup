@@ -80,3 +80,16 @@ if [ "${esresult}z" != "truez" ]; then
 else
     echo "*** Sandfly Server container already running."
 fi
+
+### If the credentials adapter is present and configured next to the
+### sandfly-setup directory, start it as well.
+
+if [ -f ../../sandfly-credentials-adapter-setup/conf/config.json ]; then
+    esresult=$($SUDO docker inspect --format="{{.State.Running}}" sandfly-credentials-adapter 2> /dev/null)
+    if [ "${esresult}z" != "truez" ]; then
+        echo "*** Starting Sandfly Credentials Adapter."
+        $SUDO ../../sandfly-credentials-adapter-setup/start_credentials_adapter.sh
+    else
+        echo "*** Sandfly Credentials Adapter already running."
+    fi
+fi
