@@ -185,7 +185,7 @@ docker network create sandfly-net 2>/dev/null
 docker rm sandfly-postgres 2>/dev/null
 
 docker run \
---mount source=sandfly-pg14-db-vol,target=/var/lib/postgresql/data \
+--mount type=volume,source=sandfly-pg14-db-vol,target=/var/lib/postgresql/data \
 -d \
 -e POSTGRES_PASSWORD="$POSTGRES_ADMIN_PASSWORD" \
 -e PGDATA=/var/lib/postgresql/data \
@@ -199,7 +199,7 @@ docker run \
 --log-opt max-size=${LOG_MAX_SIZE} \
 --log-opt max-file=5 \
 -t \
-postgres:14.8 \
+docker.io/library/postgres:14.8 \
 -c max_connections=$(($max_connections+10)) \
 -c shared_buffers=${shared_buffers}kB \
 -c effective_cache_size=${effective_cache_size}kB \
