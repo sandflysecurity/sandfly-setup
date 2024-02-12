@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2016-2022 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) 2016-2023 Sandfly Security LTD, All Rights Reserved.
 
 # Make sure we run from the correct directory so relative paths work
 cd "$( dirname "${BASH_SOURCE[0]}" )"
@@ -18,6 +18,21 @@ fi
 
 # Remove old scripts
 ../setup/clean_scripts.sh
+
+if [ -f "/snap/bin/docker" ]; then
+    echo ""
+    echo "****************************** ERROR ******************************"
+    echo "*                                                                 *"
+    echo "* A version of Docker appears to be installed via Snap.           *"
+    echo "*                                                                 *"
+    echo "* Sandfly is only compatible with the apt version of Docker.      *"
+    echo "* Having both versions installed will conflict with Sandfly.      *"
+    echo "* Please remove the snap version before starting a node.          *"
+    echo "*                                                                 *"
+    echo "****************************** ERROR ******************************"
+    echo ""
+    exit 1
+fi
 
 if [ ! -f $SETUP_DATA/config.node.json ]; then
     echo
@@ -46,6 +61,7 @@ docker run -v /dev/urandom:/dev/random:ro \
 --log-driver json-file \
 --log-opt max-size=${LOG_MAX_SIZE} \
 --log-opt max-file=5 \
--d $IMAGE_BASE/sandfly-node${IMAGE_SUFFIX}:"$VERSION" /usr/local/sandfly/start_node.sh
+--user sandfly:sandfly \
+-d $IMAGE_BASE/sandfly${IMAGE_SUFFIX}:"$VERSION" /opt/sandfly/start_node.sh
 
 exit $?

@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2016-2021 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) 2016-2023 Sandfly Security LTD, All Rights Reserved.
 
-apt update
-apt install \
+sudo apt update
+sudo apt install \
  thin-provisioning-tools \ 
  lvm2
 
 # Allows apt to use HTTPS and other tools.
-apt install \
+sudo apt install \
     apt-transport-https \
     ca-certificates \
     curl \
@@ -16,15 +16,15 @@ apt install \
     gnupg
 
 # Docker PGP key add
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 
-add-apt-repository \
+sudo add-apt-repository \
    "deb [arch=amd64] https://download.docker.com/linux/debian \
    $(lsb_release -cs) \
    stable"
 
-apt update
+sudo apt update
 
-apt install docker-ce docker-ce-cli containerd.io 
+sudo apt install docker-ce docker-ce-cli containerd.io 
 
-service docker start
+sudo service docker start

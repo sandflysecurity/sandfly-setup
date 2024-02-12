@@ -7,6 +7,21 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 LOG_MAX_SIZE="20m"
 
+if [ -f "/snap/bin/docker" ]; then
+    echo ""
+    echo "****************************** ERROR ******************************"
+    echo "*                                                                 *"
+    echo "* A version of Docker appears to be installed via Snap.           *"
+    echo "*                                                                 *"
+    echo "* Sandfly is only compatible with the apt version of Docker.      *"
+    echo "* Having both versions installed will conflict with Sandfly.      *"
+    echo "* Please remove the snap version before starting postgres.        *"
+    echo "*                                                                 *"
+    echo "****************************** ERROR ******************************"
+    echo ""
+    exit 1
+fi
+
 # After the first time Postgres starts, the admin password will be set in the
 # database in the Docker volume we use, and setting the password through the
 # docker run command will have no effect (e.g. it doesn't try to change it if
@@ -86,7 +101,7 @@ ram_total=$(free -k | grep Mem | awk '{print $2}')
 max_connections=$(($POOL_SIZE+$POOL_SIZE_NODES))
 
 # We will calculate based on 70% of system RAM for postgres, leaving
-# 30% for Sandfly, Rabbit, etc.
+# 30% for Sandfly, etc.
 ram_postgres=$(( $ram_total / 10 * 7 ))
 
 shared_buffers=$(( $ram_postgres / 4 ))
@@ -199,7 +214,7 @@ docker run \
 --log-opt max-size=${LOG_MAX_SIZE} \
 --log-opt max-file=5 \
 -t \
-docker.io/library/postgres:14.8 \
+docker.io/library/postgres:14.9 \
 -c max_connections=$(($max_connections+10)) \
 -c shared_buffers=${shared_buffers}kB \
 -c effective_cache_size=${effective_cache_size}kB \

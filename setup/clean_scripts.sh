@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2022 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) 2022-2023 Sandfly Security LTD, All Rights Reserved.
 
 # Make sure we run from the correct directory so relative paths work
 cd "$( dirname "${BASH_SOURCE[0]}" )"
@@ -48,3 +48,20 @@ if [ -f util_scripts/dump_hosts.sh ]; then
     mv util_scripts/dump_hosts.sh $BACKUPFOLDER
 fi
 # End 3.3.0
+
+# 5.0.0 - RabbitMQ no longer used; Elastic upgrade no longer supported
+if [ -f ../start_scripts/start_rabbit.sh ]; then
+    mkdir -p $BACKUPFOLDER
+    mv ../start_scripts/start_rabbit.sh $BACKUPFOLDER
+fi
+
+if [ -f legacy_start_elastic.sh ]; then
+    mkdir -p $BACKUPFOLDER
+    mv legacy_start_elastic.sh $BACKUPFOLDER
+fi
+
+if [ -f migrate_es2pg.sh ]; then
+    mkdir -p $BACKUPFOLDER
+    mv migrate_es2pg.sh $BACKUPFOLDER
+fi
+# End 5.0.0

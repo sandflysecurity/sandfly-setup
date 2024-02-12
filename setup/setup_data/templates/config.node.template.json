@@ -17,10 +17,6 @@
 				"private_key": "node_ssl_node_key_b64"
 			}
 		},
-		"rabbit": {
-			"hostname": "rabbit_hostname",
-			"node_password": "rabbit_node_password"
-		},
 		"api": {
 			"hostname": "api_hostname",
 			"password": "api_password"
@@ -32,7 +28,6 @@
 			"default_directory": "",
 			"fallback_directory": "/dev/shm",
 			"concurrency": 500,
-			"watchdog_restart_seconds": 300,
 			"log_level": "info",
 			"queue_name": "main"
 		}

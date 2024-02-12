@@ -11,7 +11,7 @@ docker version >/dev/null 2>&1 || { echo "This script must be run as root or as 
 # Use standard docker image unless overriden.
 if [[ -z "${SANDFLY_MGMT_DOCKER_IMAGE}" ]]; then
   VERSION=$(cat ../VERSION)
-  SANDFLY_MGMT_DOCKER_IMAGE="quay.io/sandfly/sandfly-server${IMAGE_SUFFIX}:$VERSION"
+  SANDFLY_MGMT_DOCKER_IMAGE="quay.io/sandfly/sandfly${IMAGE_SUFFIX}:$VERSION"
 fi
 
 CONFIG_JSON=$(cat setup_data/config.server.json) \

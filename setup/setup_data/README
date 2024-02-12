@@ -11,7 +11,6 @@ The Server should only have these files present:
 
 admin.password.txt (Invalid once user logs in and changes it.)
 config.server.json
-config.rabbit.json
 
 *********************************************************************************
 * Node Config
@@ -28,17 +27,3 @@ security purposes.
 If you have decided to run the server and node on the same system, then you can
 leave this file but the server will give you a warning on start-up about the
 security risk of doing so.
-
-*********************************************************************************
-* Elasticsearch URL Notes
-*********************************************************************************
-
-External Elasticsearch clusters will need to be secured according to your network
-policies. If you are using a username/password and SSL for an external Elasticsearch
-cluster then the URL should be the format:
-
-https://username:password@elastic.example.com:9200
-
-Where username is the username for Elasticsearch (default "elastic") and password
-is the password for the login you configured.
-

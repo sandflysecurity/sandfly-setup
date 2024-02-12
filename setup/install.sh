@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2016-2022 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) 2016-2024 Sandfly Security LTD, All Rights Reserved.
 
 # This script will install the Sandfly server. By default, it will run
-# through an interactive setup process that is appropriate for users wishing
-# to control the location of Rabbit, etc.
+# through an interactive setup process.
 #
 # The script is also capable of performing a non-interactive automated all-
 # in-one single-system setup. To perform the automated setup, set the
@@ -23,7 +22,22 @@ SETUP_DATA_DIR=./setup_data
 
 VERSION=${SANDFLY_SETUP_VERSION:-$(cat ../VERSION)}
 DOCKER_BASE=${SANDFLY_SETUP_DOCKER_BASE:-quay.io/sandfly}
-export SANDFLY_MGMT_DOCKER_IMAGE="$DOCKER_BASE/sandfly-server${IMAGE_SUFFIX}:$VERSION"
+export SANDFLY_MGMT_DOCKER_IMAGE="$DOCKER_BASE/sandfly${IMAGE_SUFFIX}:$VERSION"
+
+if [ -f "/snap/bin/docker" ]; then
+    echo ""
+    echo "****************************** ERROR ******************************"
+    echo "*                                                                 *"
+    echo "* A version of Docker appears to be installed via Snap.           *"
+    echo "*                                                                 *"
+    echo "* Sandfly is only compatible with the apt version of Docker.      *"
+    echo "* Having both versions installed will conflict with Sandfly.      *"
+    echo "* Please remove the snap version before installing Sandfly.       *"
+    echo "*                                                                 *"
+    echo "****************************** ERROR ******************************"
+    echo ""
+    exit 1
+fi
 
 # Sandfly already installed?
 if [ -f $SETUP_DATA_DIR/config.server.json ]; then
@@ -171,7 +185,7 @@ fi # if auto
 ./setup_scripts/setup_config_json.sh
 if [[ $? -ne 0 ]]
 then
-  echo "Server, node and rabbit config JSON could not be generated. Aborting install."
+  echo "Server and node config JSON could not be generated. Aborting install."
   exit 1
 fi
 

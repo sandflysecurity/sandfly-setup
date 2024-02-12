@@ -23,6 +23,21 @@ if [ -e $SETUP_DATA/allinone ]; then
     IGNORE_NODE_DATA_WARNING=YES
 fi
 
+if [ -f "/snap/bin/docker" ]; then
+    echo ""
+    echo "****************************** ERROR ******************************"
+    echo "*                                                                 *"
+    echo "* A version of Docker appears to be installed via Snap.           *"
+    echo "*                                                                 *"
+    echo "* Sandfly is only compatible with the apt version of Docker.      *"
+    echo "* Having both versions installed will conflict with Sandfly.      *"
+    echo "* Please remove the snap version before starting the server.      *"
+    echo "*                                                                 *"
+    echo "****************************** ERROR ******************************"
+    echo ""
+    exit 1
+fi
+
 if [ ! -f ../setup/setup_data/config.server.json ]; then
     echo ""
     echo "********************************** ERROR **********************************"
@@ -58,24 +73,6 @@ fi
 
 # jq might not be available on the outer Docker host, so we'll do a simple grep
 # to make sure the config version is correct for this server version.
-
-# config_version 1 means we still need to upgrade from ES to Postgres.
-grep -q \"config_version\":\ 1, $SETUP_DATA/config.server.json > /dev/null
-if [ $? -eq 0 ]; then
-    echo ""
-    echo "****************************** ERROR ******************************"
-    echo "*                                                                 *"
-    echo "* The version of the server configuration file does not match     *"
-    echo "* this version of the Sandfly server. Please perform the upgrade  *"
-    echo "* procedure before starting Sandfly.                              *"
-    echo "*                                                                 *"
-    echo "* The setup/upgrade.sh script will upgrade Sandfly to the current *"
-    echo "* version.                                                        *"
-    echo "*                                                                 *"
-    echo "*******************************************************************"
-    echo ""
-    exit 1
-fi
 
 # Config version 2 means we need to warn about clearing results.
 grep -q \"config_version\":\ 2, $SETUP_DATA/config.server.json > /dev/null
@@ -113,6 +110,10 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+# Old versions of Sandfly may have left behind a temporary volume for the
+# old rabbit container. Clean it up if present.
+docker volume rm sandfly-rabbitmq-tmp-vol 2>/dev/null
+
 # Populate env variables.
 CONFIG_JSON=$(cat $SETUP_DATA/config.server.json)
 export CONFIG_JSON
@@ -143,12 +144,12 @@ docker run -v /dev/urandom:/dev/random:ro \
 --network sandfly-net \
 --name sandfly-server \
 --label sandfly-server \
---user sandflyserver:sandfly \
+--user sandfly:sandfly \
 --publish 443:8443 \
 --publish 80:8000 \
 --log-driver json-file \
 --log-opt max-size=${LOG_MAX_SIZE} \
 --log-opt max-file=5 \
--d $IMAGE_BASE/sandfly-server${IMAGE_SUFFIX}:"$VERSION" /opt/sandfly/start_api.sh
+-d $IMAGE_BASE/sandfly${IMAGE_SUFFIX}:"$VERSION" /opt/sandfly/start_api.sh
 
 exit $?

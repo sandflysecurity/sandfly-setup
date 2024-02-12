@@ -29,6 +29,9 @@ if [[ -n "$postgres" ]]; then
     echo "* Postgres server stopped."
 fi
 
+# Rabbit container is no longer used in 5.0 and later, but we will leave this
+# stop command in place for some time in case this version of sandfly-setup is
+# being used during an upgrade of an existing system.
 rabbit=$(docker container ps -qf "name=sandfly-rabbit")
 if [[ -n "$rabbit" ]]; then
     echo "* RabbitMQ is running on this system. Stopping..."

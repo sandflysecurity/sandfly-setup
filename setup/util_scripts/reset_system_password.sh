@@ -22,6 +22,6 @@ docker rm sandfly-server-mgmt 2>/dev/null
 docker run --name sandfly-server-mgmt \
 --network sandfly-net \
 -e CONFIG_JSON \
--it $IMAGE_BASE/sandfly-server${IMAGE_SUFFIX}:"$VERSION" /opt/sandfly/utils/reset_system_password.sh
+-it $IMAGE_BASE/sandfly${IMAGE_SUFFIX}:"$VERSION" /opt/sandfly/utils/reset_system_password.sh
 
 

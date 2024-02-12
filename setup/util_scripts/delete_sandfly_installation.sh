@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2022 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) 2022-2024 Sandfly Security LTD, All Rights Reserved.
 
 # This script deletes EVERYTHING. Sandfly config, database, any other unused
 # Docker volumes on the host, etc.
@@ -43,8 +43,14 @@ fi
 $SETUP_DIR/clean_docker.sh
 
 # Now blow away docker volumes. We'll leave off the -f flag, so the user will
-# have to answer yes again.
-docker volume prune
+# have to answer yes again. New versions of docker (but not podman) require the
+# '-a' flag, which does not exist in podman or older versions of docker.
+docker_major_version=$(docker version -f '{{index (split .Client.Version ".") 0}}')
+if command -v podman > /dev/null || [ $docker_major_version -lt 23 ]; then
+    docker volume prune
+else
+    docker volume prune -a
+fi
 
 # Delete config
 rm -f $SETUP_DATA_DIR/*.json $SETUP_DATA_DIR/*.txt

@@ -18,15 +18,7 @@
 				"cert_signed": "server_ssl_server_cert_signed_b64",
 				"private_key": "server_ssl_server_key_b64",
 				"private_key_signed": "server_ssl_server_key_signed_b64"
-			},
-			"node": {
-				"cert": "server_ssl_node_cert_b64",
-				"private_key": "server_ssl_node_key_b64"
 			}
-		},
-		"rabbit": {
-			"hostname": "sandfly-rabbit",
-			"node_password": "rabbit_node_password"
 		},
 		"api": {
 			"hostname": "api_hostname",

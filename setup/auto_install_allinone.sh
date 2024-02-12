@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2021 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) 2021, 2024 Sandfly Security LTD, All Rights Reserved.
 
 ## Exit codes:
 ##  0 = success
@@ -98,36 +98,11 @@ fi
 
 echo
 echo "******************************************************************************"
-echo "Waiting for RabbitMQ to configure and start. This will take about 60"
-echo "seconds."
-echo "******************************************************************************"
-echo
-cd ../start_scripts
-$SUDO ./start_rabbit.sh >/dev/null 2>&1
-# Wait a maximum of 2 minutes, double what we should need
-TIMER=120
-while true; do
-    docker logs sandfly-rabbit 2>&1 | grep "Server startup complete" > /dev/null
-    if [ $? -eq 0 ]; then
-        echo
-        break
-    fi
-    TIMER=$(expr $TIMER - 5)
-    if [ $TIMER -le 0 ]; then
-        echo "*** ERROR: the sandfly-rabbit container took too long to configure and start."
-        echo "*** Automatic setup could not complete."
-        exit 2
-    fi
-    echo -n "."
-    sleep 5
-done
-
-echo
-echo "******************************************************************************"
 echo "Waiting for Sandfly Server to configure and start. This will take about"
 echo "20 seconds."
 echo "******************************************************************************"
 echo
+cd ../start_scripts
 $SUDO ./start_server.sh >/dev/null 2>&1
 # Wait a maximum of 2 minutes, double what we should need
 TIMER=120
