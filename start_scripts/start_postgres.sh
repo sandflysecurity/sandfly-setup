@@ -214,7 +214,7 @@ docker run \
 --log-opt max-size=${LOG_MAX_SIZE} \
 --log-opt max-file=5 \
 -t \
-docker.io/library/postgres:14.9 \
+docker.io/library/postgres:14.11 \
 -c max_connections=$(($max_connections+10)) \
 -c shared_buffers=${shared_buffers}kB \
 -c effective_cache_size=${effective_cache_size}kB \
