@@ -134,7 +134,13 @@ POSTGRES_ADMIN_PASSWORD=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c40)
 echo "$POSTGRES_ADMIN_PASSWORD" > $SETUP_DATA_DIR/postgres.admin.password.txt
 echo "Starting Postgres database."
 ../start_scripts/start_postgres.sh
-sleep 5
+if [[ $? -ne 0 ]]
+then
+  echo "Error starting Postgres container. Aborting install."
+  exit 1
+else
+  sleep 5
+fi
 
 ./setup_scripts/setup_server.sh
 if [[ $? -ne 0 ]]

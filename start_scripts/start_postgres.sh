@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2021-2023 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) 2021-2024 Sandfly Security LTD, All Rights Reserved.
 
 # Make sure we run from the correct directory so relative paths work
 cd "$( dirname "${BASH_SOURCE[0]}" )"
@@ -231,5 +231,11 @@ docker.io/library/postgres:14.11 \
 -c max_parallel_workers_per_gather=$parallel_workers \
 -c max_parallel_workers=$cpu_count \
 -c max_parallel_maintenance_workers=$parallel_workers
+
+# Check the running state of the postgres container.
+pgresult=$(docker inspect --format="{{.State.Running}}" sandfly-postgres 2> /dev/null)
+if [ "${pgresult}z" != "truez" ]; then
+  exit 1
+fi
 
 exit $?
