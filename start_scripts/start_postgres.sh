@@ -5,6 +5,9 @@
 # Make sure we run from the correct directory so relative paths work
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
+IMAGE_BASE=${POSTGRES_IMAGE_BASE:-docker.io/library}
+VERSION=${POSTGRES_VERSION:-14.12}
+
 LOG_MAX_SIZE="20m"
 
 if [ -f "/snap/bin/docker" ]; then
@@ -214,7 +217,7 @@ docker run \
 --log-opt max-size=${LOG_MAX_SIZE} \
 --log-opt max-file=5 \
 -t \
-docker.io/library/postgres:14.11 \
+${IMAGE_BASE}/postgres:${VERSION} \
 -c max_connections=$(($max_connections+10)) \
 -c shared_buffers=${shared_buffers}kB \
 -c effective_cache_size=${effective_cache_size}kB \

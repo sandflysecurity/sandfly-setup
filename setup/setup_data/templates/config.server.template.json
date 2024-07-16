@@ -36,7 +36,10 @@
 		},
 		"options": {
 			"log_level": "info",
-			"disable_strict_tls_policy": false
+			"disable_strict_tls_policy": false,
+			"ui_session_timeout_minutes": 60,
+			"ui_session_expiration_minutes": 1440,
+			"ssh_hunter_view_refresh_timer_delay_seconds": 60
 		}
 	}
 }

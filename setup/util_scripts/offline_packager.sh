@@ -11,7 +11,7 @@
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 SF_VERSION=${SANDFLY_VERSION:-$(cat ../../VERSION)}
-PG_VERSION=${POSTGRES_VERSION:-$(grep -oP '^(docker.io/library/)?postgres:\K([0-9.]+)' ../../start_scripts/start_postgres.sh)}
+PG_VERSION=${POSTGRES_VERSION:-$(grep -oP 'POSTGRES_VERSION:-\K([0-9.]+)' ../../start_scripts/start_postgres.sh)}
 WHOAMI=$(whoami)
 
 if ! command -v docker >/dev/null 2>&1; then
