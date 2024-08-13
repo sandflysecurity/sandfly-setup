@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2016-2022 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) 2016-2024 Sandfly Security LTD, All Rights Reserved.
 
 # Make sure we run from the correct directory so relative paths work
 cd "$( dirname "${BASH_SOURCE[0]}" )"
@@ -42,6 +42,8 @@ mkdir -p setup_data/letsencrypt
 docker run -v /dev/urandom:/dev/random:ro \
 -v $PWD/setup_data:/opt/sandfly/install/setup_data \
 -v $PWD/setup_data/letsencrypt:/etc/letsencrypt \
+-e SSL_FQDN \
+-e SSL_EMAIL \
 --name sandfly-server-mgmt \
 --network sandfly-net \
 --publish 80:8000 \

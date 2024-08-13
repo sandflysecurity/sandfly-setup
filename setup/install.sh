@@ -186,6 +186,12 @@ EOF
       echo "Starting key signing script"
       ./setup_scripts/setup_ssl_signed.sh
   fi
+elif [ ! -z "$SSL_FQDN" ]; then
+  # Attempt an automated Let's Encrypt setup. The existing SSL_FQDN (and
+  # SSL_EMAIL) environment variables will flow through, causing the script
+  # to run in non-interactive mode.
+  echo "Starting automated key signing script"
+  ./setup_scripts/setup_ssl_signed.sh
 fi # if auto
 
 ./setup_scripts/setup_config_json.sh
