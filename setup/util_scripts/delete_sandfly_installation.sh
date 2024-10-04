@@ -42,15 +42,11 @@ fi
 # Our existing clean script will wipe containers and images
 $SETUP_DIR/clean_docker.sh
 
-# Now blow away docker volumes. We'll leave off the -f flag, so the user will
-# have to answer yes again. New versions of docker (but not podman) require the
-# '-a' flag, which does not exist in podman or older versions of docker.
-docker_major_version=$(docker version -f '{{index (split .Client.Version ".") 0}}')
-if command -v podman > /dev/null || [ $docker_major_version -lt 23 ]; then
-    docker volume prune
-else
-    docker volume prune -a
-fi
+# Now blow away our docker volume.
+docker volume rm sandfly-pg14-db-vol
+
+# Now blow away our docker network.
+docker network rm sandfly-net
 
 # Delete config
 rm -f $SETUP_DATA_DIR/*.json $SETUP_DATA_DIR/*.txt

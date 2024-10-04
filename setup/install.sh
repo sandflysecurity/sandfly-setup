@@ -129,6 +129,13 @@ EOF
 docker network create sandfly-net 2>/dev/null
 docker rm sandfly-server-mgmt 2>/dev/null
 
+# Load images if offline bundle is present and not already loaded
+./setup_scripts/load_images.sh
+if [ "$?" -ne 0 ]; then
+  echo "Error loading container images."
+  exit 1
+fi
+
 # The first time we start Postgres, we need to assign a superuser password.
 POSTGRES_ADMIN_PASSWORD=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c40)
 echo "$POSTGRES_ADMIN_PASSWORD" > $SETUP_DATA_DIR/postgres.admin.password.txt

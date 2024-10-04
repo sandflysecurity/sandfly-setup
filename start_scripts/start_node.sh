@@ -48,6 +48,17 @@ if [ ! -f $SETUP_DATA/config.node.json ]; then
     exit 1
 fi
 
+# See if we can run Docker
+which docker >/dev/null 2>&1 || { echo "Unable to locate docker binary; please install Docker."; exit 1; }
+docker version >/dev/null 2>&1 || { echo "This script must be run as root or as a user with access to the Docker daemon."; exit 1; }
+
+# Load images if offline bundle is present and not already loaded
+../setup/setup_scripts/load_images.sh
+if [ "$?" -ne 0 ]; then
+  echo "Error loading container images."
+  exit 1
+fi
+
 # Populate env variables.
 CONFIG_JSON=$(cat $SETUP_DATA/config.node.json)
 export CONFIG_JSON

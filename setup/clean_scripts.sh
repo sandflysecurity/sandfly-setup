@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2022-2023 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) 2022-2024 Sandfly Security LTD, All Rights Reserved.
 
 # Make sure we run from the correct directory so relative paths work
 cd "$( dirname "${BASH_SOURCE[0]}" )"
@@ -65,3 +65,10 @@ if [ -f migrate_es2pg.sh ]; then
     mv migrate_es2pg.sh $BACKUPFOLDER
 fi
 # End 5.0.0
+
+# 5.2.0 - Offline package now provided as part of release bundle
+if [ -f util_scripts/offline_packager.sh ]; then
+    mkdir -p $BACKUPFOLDER
+    mv util_scripts/offline_packager.sh $BACKUPFOLDER
+fi
+# End 5.2.0

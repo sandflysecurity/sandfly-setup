@@ -6,7 +6,7 @@
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 IMAGE_BASE=${POSTGRES_IMAGE_BASE:-docker.io/library}
-VERSION=${POSTGRES_VERSION:-14.12}
+VERSION=${POSTGRES_VERSION:-14.13}
 
 LOG_MAX_SIZE="20m"
 
@@ -23,6 +23,17 @@ if [ -f "/snap/bin/docker" ]; then
     echo "****************************** ERROR ******************************"
     echo ""
     exit 1
+fi
+
+# See if we can run Docker
+which docker >/dev/null 2>&1 || { echo "Unable to locate docker binary; please install Docker."; exit 1; }
+docker version >/dev/null 2>&1 || { echo "This script must be run as root or as a user with access to the Docker daemon."; exit 1; }
+
+# Load images if offline bundle is present and not already loaded
+../setup/setup_scripts/load_images.sh
+if [ "$?" -ne 0 ]; then
+  echo "Error loading container images."
+  exit 1
 fi
 
 # After the first time Postgres starts, the admin password will be set in the
