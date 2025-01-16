@@ -6,7 +6,7 @@
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 IMAGE_BASE=${POSTGRES_IMAGE_BASE:-docker.io/library}
-VERSION=${POSTGRES_VERSION:-14.13}
+VERSION=${POSTGRES_VERSION:-14.15}
 
 LOG_MAX_SIZE="20m"
 
@@ -250,6 +250,80 @@ ${IMAGE_BASE}/postgres:${VERSION} \
 pgresult=$(docker inspect --format="{{.State.Running}}" sandfly-postgres 2> /dev/null)
 if [ "${pgresult}z" != "truez" ]; then
   exit 1
+fi
+
+podman_command=$(command -v podman)
+if [ ! -z "${podman_command}" ]; then
+    docker_engine=$(docker version | grep "^Client:" | awk '{print tolower($2)}')
+    if [ "$docker_engine" != "docker" ]; then
+        t_cgroup_mgr=$(podman info --format='{{.Host.CgroupManager}}' 2>/dev/null)
+        echo "*** Podman cgroup manager : $t_cgroup_mgr"
+
+        CONTAINER_FILE=sandfly-postgres.container
+        if [[ -f $CONTAINER_FILE ]]; then
+            rm -f $CONTAINER_FILE
+        fi
+        echo "*** Generate $CONTAINER_FILE for sandfly-postgres"
+        echo "[Container]" > $CONTAINER_FILE
+        echo "ContainerName=sandfly-postgres" >> $CONTAINER_FILE
+        echo "Environment=POSTGRES_PASSWORD=${POSTGRES_ADMIN_PASSWORD} PGDATA=/var/lib/postgresql/data" >> $CONTAINER_FILE
+        echo "Exec=-c max_connections=$(($max_connections+10)) \
+-c shared_buffers=${shared_buffers}kB \
+-c effective_cache_size=${effective_cache_size}kB \
+-c maintenance_work_mem=${maintenance_work_mem}kB \
+-c checkpoint_completion_target=0.9 \
+-c wal_buffers=${wal_buffer}kB \
+-c default_statistics_target=100 \
+-c random_page_cost=2 \
+-c effective_io_concurrency=100 \
+-c work_mem=${work_mem}kB \
+-c min_wal_size=2GB \
+-c max_wal_size=8GB \
+-c max_worker_processes=$cpu_count \
+-c max_parallel_workers_per_gather=$parallel_workers \
+-c max_parallel_workers=$cpu_count \
+-c max_parallel_maintenance_workers=$parallel_workers" >> $CONTAINER_FILE
+        echo "Image=$IMAGE_BASE/postgres:$VERSION" >> $CONTAINER_FILE
+        echo "Label=sandfly-postgres=" >> $CONTAINER_FILE
+        echo "LogDriver=json-file" >> $CONTAINER_FILE
+        echo "Mount=type=volume,source=sandfly-pg14-db-vol,destination=/var/lib/postgresql/data" >> $CONTAINER_FILE
+        echo "Network=sandfly-net" >> $CONTAINER_FILE
+        if [ "$t_cgroup_mgr" != "systemd" ]; then
+            echo "PodmanArgs=--cgroups=enabled --log-opt 'max-size=${LOG_MAX_SIZE}' --log-opt 'max-file=5' --tty" >> $CONTAINER_FILE
+        else
+            echo "PodmanArgs=--log-opt 'max-size=${LOG_MAX_SIZE}' --log-opt 'max-file=5' --tty" >> $CONTAINER_FILE
+        fi
+        echo "ShmSize=${ram_total}k" >> $CONTAINER_FILE
+        echo "" >> $CONTAINER_FILE
+        echo "[Service]" >> $CONTAINER_FILE
+        echo "Restart=always" >> $CONTAINER_FILE
+        echo "" >> $CONTAINER_FILE
+        echo "[Install]" >> $CONTAINER_FILE
+        echo "WantedBy=default.target" >> $CONTAINER_FILE
+
+        SYSTEM_CTL="systemctl --user"
+        TARGET_DIR=~/.config/containers/systemd
+        if [ $(id -u) -eq 0 ]; then
+            SYSTEM_CTL="systemctl"
+            TARGET_DIR=/etc/containers/systemd
+            echo "*** Running as rootful user  : [$USER] : [$SYSTEM_CTL] : [$TARGET_DIR]"
+        else
+            echo "*** Running as rootless user : [$USER] : [$SYSTEM_CTL] : [$TARGET_DIR]"
+            linger_status=$(loginctl show-user $USER | grep ^Linger | awk -F= '{print $2}')
+            echo "*** Linger Status: [$linger_status]"
+            if [ "$linger_status" = "no" ]; then
+                echo "*** Enable Linger for user $USER"
+                loginctl enable-linger $USER
+            fi
+        fi
+        if [ ! -d $TARGET_DIR ]; then
+            mkdir -p $TARGET_DIR
+        fi
+        echo "*** Copy $CONTAINER_FILE to $TARGET_DIR"
+        cp $CONTAINER_FILE $TARGET_DIR
+        echo "*** $SYSTEM_CTL daemon-reload"
+        $SYSTEM_CTL daemon-reload
+    fi
 fi
 
 exit $?

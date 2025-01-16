@@ -163,4 +163,83 @@ docker run -v /dev/urandom:/dev/random:ro \
 --log-opt max-file=5 \
 -d $IMAGE_BASE/sandfly${IMAGE_SUFFIX}:"$VERSION" /opt/sandfly/start_api.sh
 
+podman_command=$(command -v podman)
+if [ ! -z "${podman_command}" ]; then
+    docker_engine=$(docker version | grep "^Client:" | awk '{print tolower($2)}')
+    if [ "$docker_engine" != "docker" ]; then
+        t_cgroup_mgr=$(podman info --format='{{.Host.CgroupManager}}' 2>/dev/null)
+        echo "*** Podman cgroup manager : $t_cgroup_mgr"
+
+        CONTAINER_FILE=sandfly-server.container
+        if [[ -f $CONTAINER_FILE ]]; then
+            rm -f $CONTAINER_FILE
+        fi
+        echo "*** Generate $CONTAINER_FILE for sandfly-server"
+        t_CONFIG_JSON=$(echo $CONFIG_JSON)
+        echo "[Container]" > $CONTAINER_FILE
+        echo "ContainerName=sandfly-server" >> $CONTAINER_FILE
+        echo "Environment=CONFIG_JSON='${t_CONFIG_JSON}'" >> $CONTAINER_FILE
+        if [ -f $SETUP_DATA/server_ssl_cert/cert.pem ]; then
+            t_CONFIG_SSL_CERT=$(cat $SETUP_DATA/server_ssl_cert/cert.pem | sed '$!s/$/\\n\\/')
+            echo "Environment=CONFIG_SSL_CERT='${t_CONFIG_SSL_CERT}'" >> $CONTAINER_FILE
+        else
+            echo "Environment=CONFIG_SSL_CERT=" >> $CONTAINER_FILE
+        fi
+        if [ -f $SETUP_DATA/server_ssl_cert/privatekey.pem ]; then
+            t_CONFIG_SSL_KEY=$(cat $SETUP_DATA/server_ssl_cert/privatekey.pem | sed '$!s/$/\\n\\/')
+            echo "Environment=CONFIG_SSL_KEY='${t_CONFIG_SSL_KEY}'" >> $CONTAINER_FILE
+        else
+            echo "Environment=CONFIG_SSL_KEY=" >> $CONTAINER_FILE
+        fi
+        echo "Exec=/opt/sandfly/start_api.sh" >> $CONTAINER_FILE
+        echo "Group=sandfly" >> $CONTAINER_FILE
+        echo "Image=$IMAGE_BASE/sandfly${IMAGE_SUFFIX}:$VERSION" >> $CONTAINER_FILE
+        echo "Label=sandfly-server=" >> $CONTAINER_FILE
+        echo "LogDriver=json-file" >> $CONTAINER_FILE
+        echo "Network=sandfly-net" >> $CONTAINER_FILE
+        if [ "$t_cgroup_mgr" != "systemd" ]; then
+            echo "PodmanArgs=--cgroups=enabled --disable-content-trust --log-opt 'max-size=${LOG_MAX_SIZE}' --log-opt 'max-file=5'" >> $CONTAINER_FILE
+        else
+            echo "PodmanArgs=--disable-content-trust --log-opt 'max-size=${LOG_MAX_SIZE}' --log-opt 'max-file=5'" >> $CONTAINER_FILE
+        fi
+        echo "PublishPort=443:8443" >> $CONTAINER_FILE
+        echo "PublishPort=80:8000" >> $CONTAINER_FILE
+        echo "User=sandfly" >> $CONTAINER_FILE
+        echo "Volume=/dev/urandom:/dev/random:ro" >> $CONTAINER_FILE
+        echo "" >> $CONTAINER_FILE
+        echo "[Unit]" >> $CONTAINER_FILE
+        echo "Requires=sandfly-postgres.service" >> $CONTAINER_FILE
+        echo "After=sandfly-postgres.service" >> $CONTAINER_FILE
+        echo "" >> $CONTAINER_FILE
+        echo "[Service]" >> $CONTAINER_FILE
+        echo "Restart=always" >> $CONTAINER_FILE
+        echo "" >> $CONTAINER_FILE
+        echo "[Install]" >> $CONTAINER_FILE
+        echo "WantedBy=default.target" >> $CONTAINER_FILE
+
+        SYSTEM_CTL="systemctl --user"
+        TARGET_DIR=~/.config/containers/systemd
+        if [ $(id -u) -eq 0 ]; then
+            SYSTEM_CTL="systemctl"
+            TARGET_DIR=/etc/containers/systemd
+            echo "*** Running as rootful user  : [$USER] : [$SYSTEM_CTL] : [$TARGET_DIR]"
+        else
+            echo "*** Running as rootless user : [$USER] : [$SYSTEM_CTL] : [$TARGET_DIR]"
+            linger_status=$(loginctl show-user $USER | grep ^Linger | awk -F= '{print $2}')
+            echo "*** Linger Status: [$linger_status]"
+            if [ "$linger_status" = "no" ]; then
+                echo "*** Enable Linger for user $USER"
+                loginctl enable-linger $USER
+            fi
+        fi
+        if [ ! -d $TARGET_DIR ]; then
+            mkdir -p $TARGET_DIR
+        fi
+        echo "*** Copy $CONTAINER_FILE to $TARGET_DIR"
+        cp $CONTAINER_FILE $TARGET_DIR
+        echo "*** $SYSTEM_CTL daemon-reload"
+        $SYSTEM_CTL daemon-reload
+    fi
+fi
+
 exit $?

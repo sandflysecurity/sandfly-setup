@@ -1,0 +1,39 @@
+{
+	"TimeGenerated": "2024-11-05T22:04:41Z",
+	"ServerName": "sandfly server host name",
+	"EventTime": "2024-11-05T22:04:41Z",
+	"HostName": "host name",
+	"IPAddress": "ip address",
+	"TargetAddress": "target address",
+	"SandflyName": "sandfly name",
+	"SandflyStatus": "alert pass fail",
+	"KeyData": "key forensic data",
+	"Explanation": "explanation text goes here",
+	"HostTags": [
+		"tag1",
+		"tag2",
+		"tag3"
+	],
+	"SandflyData": {
+		"Name": "sandfly name",
+		"Status": "alert pass fail",
+		"StatusMsg": "ok",
+		"Severity": 99,
+		"Type": "file directory process user",
+		"Engine": "sandfly engine",
+		"KeyData": "key forensic data",
+		"FirstSeen": "2024-11-05T22:04:41Z",
+		"LastSeen": "2024-11-05T22:04:41Z",
+		"SequenceID": 99999,
+		"RunID": "sandfly run id",
+		"ExternalID": "sandfly external id",
+		"Tags": [
+			"sandflyTag1",
+			"SandflyTag2"
+		]
+	},
+	"ResultsData": {
+		"containerized": false,
+		"explanation": "explanation text goes here"
+	}
+}

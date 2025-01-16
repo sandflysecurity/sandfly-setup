@@ -29,6 +29,6 @@ Documentation here:
 
 https://docs.sandflysecurity.com
 
-Copyright (c) 2016-2023 Sandfly Security LTD, All Rights Reserved.
+Copyright (c) 2016-2024 Sandfly Security LTD, All Rights Reserved.
 www.sandflysecurity.com
 

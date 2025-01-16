@@ -72,3 +72,10 @@ if [ -f util_scripts/offline_packager.sh ]; then
     mv util_scripts/offline_packager.sh $BACKUPFOLDER
 fi
 # End 5.2.0
+
+# 5.3.0 - unsupported installation method
+if [ -f auto_install_allinone.sh ]; then
+    mkdir -p $BACKUPFOLDER
+    mv auto_install_allinone.sh $BACKUPFOLDER
+fi
+# End of 5.3.0
