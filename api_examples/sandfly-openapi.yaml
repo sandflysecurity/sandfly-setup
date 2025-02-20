@@ -7,7 +7,7 @@ info:
     name: Sandfly Security, Ltd.
     url: https://www.sandflysecurity.com
   title: Sandfly API
-  version: 5.3.0
+  version: 5.3.1
 servers:
   - url: https://{sandfly-api-host}/v4
 security:
@@ -6632,6 +6632,7 @@ components:
       required:
         - process_id
         - process_name
+        - process_parent_id
         - process_path
         - process_user
         - network_type
@@ -6644,6 +6645,9 @@ components:
         process_name:
           type: string
           description: Name of the process bound to the listening port.
+        process_parent_id:
+          type: integer
+          description: Parent process ID.
         process_path:
           type: string
           description: Path of the process binary.
@@ -7555,6 +7559,25 @@ components:
           required:
             - features
           type: object
+        subscription:
+          type: object
+          required:
+            - renewing
+          properties:
+            manage_url:
+              type: string
+              format: uri
+              description: If present, a URL for the user to visit to manage this subscription or get additional information.
+            renewing:
+              type: boolean
+              description: Indicates if this subscription is currently set to automatically renew at the end of the current term.
+            term_end:
+              type: string
+              format: date-time
+              description: If present, the time the current subscription term ends. If the subscription is renewing, this is when the next subscription period will be billed; if not renewing, this is when the license will expire.
+            message:
+              type: string
+              description: If present and non-empty, any messages that should be displayed to users about the status of the Sandfly subscription.
         usage:
           allOf:
             - $ref: "#/components/schemas/LicenseLimits"
@@ -7588,6 +7611,7 @@ components:
       type: integer
       enum:
         - 0
+        - 1
         - 4
         - 8
     LicenseAdd:
@@ -7625,6 +7649,8 @@ components:
         - sso
         - demo
         - siem_sentinel
+        - trial
+        - threat_feed
     LicenseLimits:
       properties:
         alerts:
@@ -12178,6 +12204,9 @@ components:
         arch:
           title: Host.data.os.info.arch
           type: string
+        boot_cmdline:
+          title: Host.data.os.info.boot_cmdline
+          type: string
         kernel_tainted_state:
           items:
             type: string
@@ -12329,6 +12358,25 @@ components:
         release:
           title: Host.data.os.info.release
           type: string
+        selinux_context:
+          title: Host.data.os.info.selinux_context
+          type: string
+        selinux_status:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            enabled_mls:
+              type: boolean
+            enforce_mode_boot:
+              type: string
+            enforce_mode_current:
+              type: string
+          required:
+            - enabled
+            - enabled_mls
+            - enforce_mode_boot
+            - enforce_mode_current
         system:
           title: Host.data.os.info.system
           type: string
@@ -12361,6 +12409,8 @@ components:
         - platform
         - product_serial
         - release
+        - selinux_context
+        - selinux_status
         - system
         - uname
         - uptime_date
@@ -12598,6 +12648,7 @@ components:
             - username
             - gid
             - groupname
+            - selinux_context
             - size
             - size_byte_count
             - size_mismatch
@@ -12656,6 +12707,8 @@ components:
             gid:
               type: integer
             groupname:
+              type: string
+            selinux_context:
               type: string
             size:
               type: integer
@@ -12865,6 +12918,7 @@ components:
             - username
             - gid
             - groupname
+            - selinux_context
             - size
             - flags
             - container
@@ -12928,6 +12982,8 @@ components:
               type: string
             size:
               type: integer
+            selinux_context:
+              type: string
             flags:
               type: object
               required:
@@ -13270,6 +13326,7 @@ components:
             - entropy
             - state
             - system_uptime
+            - selinux_context
             - flags
             - file_descriptors
             - environ
@@ -13333,6 +13390,8 @@ components:
             system_uptime:
               type: string
               format: date-time
+            selinux_context:
+              type: string
             flags:
               type: object
               properties:

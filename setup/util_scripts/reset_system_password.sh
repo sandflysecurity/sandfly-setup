@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2016-2022 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) Sandfly Security LTD, All Rights Reserved.
 
 # Used to generate a new API password the scanning nodes use to post results
 # data. This shouldn't be used unless requested by Sandfly.

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sandfly Security LTD www.sandflysecurity.com
-# Copyright (c) 2016-2024 Sandfly Security LTD, All Rights Reserved.
+# Copyright (c) Sandfly Security LTD, All Rights Reserved.
 
 # This script will install the Sandfly server. By default, it will run
 # through an interactive setup process.
@@ -87,7 +87,7 @@ clear
 cat << EOF
 Installing Sandfly server version $VERSION.
 
-Copyright (c)2016-$(date +%Y) Sandfly Security Ltd.
+Copyright (c) Sandfly Security Ltd.
 
 Welcome to the Sandfly $VERSION server setup.
 

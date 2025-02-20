@@ -2,5 +2,5 @@
 setup/setup_data/admin.password.txt
 setup/setup_data/config.*
 
-docker-images
+docker_images
 
