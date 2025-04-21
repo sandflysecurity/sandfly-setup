@@ -295,7 +295,8 @@ then
   echo "Error starting Postgres container. Aborting install."
   exit 1
 else
-  sleep 5
+  echo "Waiting 15 seconds for database container creation..."
+  sleep 15
 fi
 
 ./setup_scripts/setup_server.sh
@@ -361,17 +362,24 @@ fi
 cat << EOF
 
 ******************************************************************************
-Setup Complete!
+Server Setup Complete!
 
-Your setup is complete. Please see below for the path to the admin password to
-login.
+Your server setup is complete. Please see below for the path to the admin
+password to login. Before you can add hosts and scan with Sandfly, you need
+to set up one or more scanning nodes as well.
 
-You will need to go to $(realpath $PWD/../start_scripts) and run the following to start the
-server:
+To start the server, go to $(realpath $PWD/../start_scripts)
+and run the Sandfly start script:
 
 ./start_sandfly.sh
 
-Your randomly generated password for the admin account is located under:
+*** YOU MUST ALSO START A SCANNING NODE TO USE SANDFLY.
+*** See the installation documentation for instructions on setting up the
+*** node on a separate server (recommended for production deployments),
+*** or start the node on this machine with the ./start_node.sh script
+*** in the start_scripts directory.
+
+Your randomly generated password for the admin account is located at:
 
 $PWD/setup_data/admin.password.txt
 ******************************************************************************

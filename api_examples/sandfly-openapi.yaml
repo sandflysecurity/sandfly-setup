@@ -7,7 +7,7 @@ info:
     name: Sandfly Security, Ltd.
     url: https://www.sandflysecurity.com
   title: Sandfly API
-  version: 5.3.1
+  version: 5.4.0
 servers:
   - url: https://{sandfly-api-host}/v4
 security:
@@ -2127,6 +2127,330 @@ paths:
       summary: Refresh license entitlement
       tags:
         - License
+  /notifications:
+    get:
+      summary: Get notifications
+      description: Get a list of all event notification configurations.
+      operationId: getNotifications
+      responses:
+        "200":
+          description: Notifications retrieved.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/TotalledResponse"
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/NotificationSummaries"
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+      tags:
+        - Notifications
+    post:
+      summary: Create notification
+      description: Create a new event notification configuration.
+      operationId: notificationAdd
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Notification"
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                type: integer
+                description: The ID of the new notification.
+          description: Notification created.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Invalid request body.
+        "402":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Cannot create new notification because the number of allowed notifications by the license has been reached.
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: User is not permitted to perform this action.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+      tags:
+        - Notifications
+  "/notifications/{id}":
+    get:
+      summary: Get notification details
+      description: Get details of an event notification configuration.
+      operationId: getNotification
+      parameters:
+        - description: Notification ID to get.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+          description: Notification retrieved.
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: User is not permitted to perform this action.
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Notification configuration not found.
+      tags:
+        - Notifications
+    put:
+      summary: Update notification
+      description: Change an existing event notification configuration.
+      operationId: updateNotification
+      parameters:
+        - description: Notification ID to replace.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Notification"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: integer
+                description: The ID of the updated notification.
+          description: Notification updated.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Invalid request body.
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: User is not permitted to perform this action.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+      tags:
+        - Notifications
+    delete:
+      summary: Delete notification
+      description: Delete an event notification configuration.
+      operationId: deleteNotification
+      parameters:
+        - description: Notification ID to delete.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Notification deleted.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Invalid delete request (e.g. non-integer ID in request).
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: User is not permitted to perform this action.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+      tags:
+        - Notifications
+  "/notifications/test/{id}":
+    post:
+      summary: Test notification
+      description: Attempt to send a test notification.
+      operationId: testNotification
+      parameters:
+        - description: Notification ID to test.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Notification test was sent successfully.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Invalid request.
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: User is not permitted to perform this action.
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: The test was not successful. Error details are in the response message.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+      tags:
+        - Notifications
+  /notifications/pause/:
+    put:
+      description: Pauses notifications by ID.
+      summary: Pause notifications
+      operationId: pauseNotifications
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationIDs"
+        description: List of notification_ids to pause.
+        required: true
+      responses:
+        "200":
+          content: {}
+          description: Notifications paused.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+      tags:
+        - Notifications
+  /notifications/unpause/:
+    put:
+      description: Unpauses notifications by ID.
+      summary: Unpause notifications
+      operationId: unpauseNotifications
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationIDs"
+        description: List of notification_ids to unpause.
+        required: true
+      responses:
+        "200":
+          content: {}
+          description: Notifications unpaused.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+      tags:
+        - Notifications
+  "/notifications/pause/{id}":
+    put:
+      description: Pause a notification.
+      operationId: pauseNotification
+      parameters:
+        - description: notification ID to pause
+          in: path
+          name: id
+          required: true
+          schema:
+            format: integer
+      responses:
+        "200":
+          content: {}
+          description: Notification paused
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+      summary: Pause notification
+      tags:
+        - Notifications
+  "/notifications/unpause/{id}":
+    put:
+      description: Unpause a notification.
+      operationId: unpauseNotification
+      parameters:
+        - description: notification ID to unpause
+          in: path
+          name: id
+          required: true
+          schema:
+            format: integer
+      responses:
+        "200":
+          content: {}
+          description: Notification unpaused
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+      summary: Unpause notification
+      tags:
+        - Notifications
   /reports/host_snapshot:
     get:
       description: Host snapshot report.
@@ -4824,6 +5148,191 @@ paths:
       summary: Get active queue names
       tags:
         - Status
+  /threatfeeds:
+    get:
+      summary: Get threat feeds
+      description: Get a list of all threat feed configurations.
+      operationId: getThreatfeeds
+      responses:
+        "200":
+          description: Threat feeds retrieved.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/TotalledResponse"
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ThreatFeed"
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+      tags:
+        - Threat Feeds
+    post:
+      summary: Create threat feed
+      description: Create a new threat feed configuration.
+      operationId: addThreatfeed
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ThreatFeedEdit"
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                type: integer
+                description: The ID of the new threat feed.
+          description: Threat feed created.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Invalid request body.
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: User is not permitted to perform this action.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+      tags:
+        - Threat Feeds
+  "/threatfeeds/{id}":
+    get:
+      summary: Get threat feed details
+      description: Get details of a threat feed configuration.
+      operationId: getThreatfeed
+      parameters:
+        - description: Threat feed ID to get.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ThreatFeed"
+          description: Threat feed retrieved.
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: User is not permitted to perform this action.
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Threat feed not found.
+      tags:
+        - Threat Feeds
+    put:
+      summary: Update threat feed
+      description: Change an existing threat feed configuration.
+      operationId: updateThreatfeed
+      parameters:
+        - description: Threat feed ID to replace.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ThreatFeedEdit"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: integer
+                description: The ID of the updated threat feed.
+          description: Threat feed updated.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Invalid request body.
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: User is not permitted to perform this action.
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Threat feed not found.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+      tags:
+        - Threat Feeds
+    delete:
+      summary: Delete threat feed
+      description: Delete a threat feed configuration.
+      operationId: deleteThreatfeed
+      parameters:
+        - description: Threat feed ID to delete.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Threat feed deleted.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Invalid delete request (e.g. non-integer ID in request).
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: User is not permitted to perform this action.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+      tags:
+        - Threat Feeds
   /users:
     get:
       operationId: getUsers
@@ -5649,6 +6158,12 @@ components:
         username:
           description: This is the username we can use to login.
           type: string
+        ima_signing_key_b64:
+          description: Base64-encoded PKCS#1, PKCS#8, or encrypted PKCS#8 PEM-format RSA private key. If present on a credential, when the credential is used to connect to a host, Sandfly will add an IMA signature to the scanning binary on the target host using this private key.
+          type: string
+        ima_signing_key_password:
+          description: If ima_signing_key_b64 contains an encrypted PKCS#8 private key, this password will be used to decrypt it. Do not set this property if ima_signing_key_b64 is empty.
+          type: string
       type: object
     CredentialsDelete:
       properties:
@@ -5695,6 +6210,10 @@ components:
         public_key:
           description: If this credential was generated by Sandfly, this is the public key to add to a host's authorized_keys file to allow Sandfly to connect with this credential.
           type: string
+        ima_key_present:
+          description: Indicates that this credential contains an IMA signing key and Sandfly will attempt to sign the scanning binary on target hosts that use this credential.
+          type: boolean
+          readOnly: true
       required:
         - id
         - credentials_id
@@ -6196,6 +6715,10 @@ components:
           description: Last time we successfully connected to and authenticated to this host.
           nullable: true
           type: string
+        override_directory:
+          title: Host.override_directory
+          description: Directory to run scan from instead of the node configuration values.
+          type: string
         first_seen_ip_addr:
           title: Host.first_seen_ip_addr
           description: First IP address we saw for this host.
@@ -6359,6 +6882,7 @@ components:
         - jump_hosts
         - last_seen_ip_addr
         - os
+        - override_directory
         - queue_name
         - results
         - run_id
@@ -6486,6 +7010,9 @@ components:
           type: string
           default: main
           example: main
+        override_directory:
+          description: Directory to run scan from instead of the node configuration values. An empty string means no override. For the behavior of an empty string in the node config file (where an empty string means use the home directory), enter"~" here.
+          type: string
         verify_host_key:
           default: false
           description: Verify host key when connecting to a host.
@@ -6953,6 +7480,7 @@ components:
         - os_performance_cpu_five_min_core_adjusted
         - os_performance_cpu_one_min
         - os_performance_cpu_one_min_core_adjusted
+        - override_directory
         - queue_name
         - ssh_key_fingerprint
         - ssh_port
@@ -7096,6 +7624,9 @@ components:
         os_performance_cpu_one_min_core_adjusted:
           type: number
           description: OS performance CPU one min core adjusted.
+        override_directory:
+          type: string
+          description: Directory to run scan from instead of the node configuration values.
         queue_name:
           type: string
           description: Queue name.
@@ -7393,6 +7924,10 @@ components:
             type: string
           nullable: true
           type: array
+        override_directory:
+          description: Directory to run scan from instead of the node configuration values.
+          type: string
+          nullable: true
         ssh_port:
           description: SSH port to use with host.
           format: int32
@@ -7677,6 +8212,10 @@ components:
           description: Number of named queues allowed.
           example: 100
           type: integer
+        notifications:
+          description: Number of notification event configurations allowed.
+          example: 100
+          type: integer
         schedules:
           description: Number of schedules allowed.
           example: 100
@@ -7696,6 +8235,7 @@ components:
         - hosts
         - jump_hosts
         - named_queues
+        - notifications
         - queues
         - reports
         - rules
@@ -7724,6 +8264,109 @@ components:
       example:
         - my_jump_host_name
       type: array
+    NotificationSummaries:
+      type: array
+      description: Array of Notification Summaries.
+      items:
+        $ref: "#/components/schemas/NotificationSummary"
+    NotificationSummary:
+      type: object
+      description: Event notification configuration summary.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          description: ID of notification configuration.
+        name:
+          type: string
+          description: Name of notification configuration.
+        event:
+          type: string
+          description: Event type for which this notification will fire.
+          enum:
+            - host_alert_rollup
+            - individual_alert
+            - notification_delivery_error
+        delivery:
+          type: string
+          description: Method used to deliver event notification.
+          enum:
+            - http_post
+        hosts_tags_include:
+          type: array
+          nullable: true
+          description: If present, only events that apply to the hosts that have the tag(s) will be sent by this notification.
+          items:
+            type: string
+        hosts_tags_include_operator:
+          type: string
+          description: If there are more than one hosts_tags_include tags, this operator controls the matching logic.
+          enum:
+            - and
+            - or
+          default: and
+        hosts_tags_exclude:
+          type: array
+          nullable: true
+          description: If present, events will NOT be sent for any hosts that have these tag(s). Exclude tags have priority over include tags.
+          items:
+            type: string
+        hosts_tags_exclude_operator:
+          type: string
+          description: If there are more than one hosts_tags_exclude tags, this operator controls the matching logic.
+          enum:
+            - and
+            - or
+          default: and
+        paused:
+          type: boolean
+          description: Holds the active status of the notification.
+          default: true
+      required:
+        - name
+        - event
+        - delivery
+        - config
+        - template
+        - hosts_tags_include
+        - hosts_tags_exclude
+    Notification:
+      type: object
+      description: Event notification configuration.
+      allOf:
+        - $ref: "#/components/schemas/NotificationSummary"
+      properties:
+        config:
+          oneOf:
+            - $ref: "#/components/schemas/NotificationPostConfig"
+          discriminator:
+            propertyName: delivery
+            mapping:
+              http_post: "#/components/schemas/NotificationPostConfig"
+        template:
+          type: string
+          description: The Go text/template template to format the notification content.
+    NotificationPostConfig:
+      type: object
+      properties:
+        url:
+          type: string
+          description: The URL to POST the notification to.
+        content_type:
+          type: string
+          description: The HTTP Content-Type header value to use in the POST request.
+        ignore_cert_errors:
+          type: boolean
+          description: If true, HTTP certificate errors will be ignored when connecting to the URL.
+          default: false
+    NotificationIDs:
+      properties:
+        notification_ids:
+          description: List of notification_ids.
+          items:
+            type: integer
+          type: array
+      type: object
     SshKeyTypes:
       type: string
       description: OpenSSH key type identifiers
@@ -10436,17 +11079,27 @@ components:
         sentinel_replication:
           required:
             - enabled
+            - ssh_enabled
+            - host_enabled
             - tenant_id
             - client_id
             - ingest_url
             - dcr_id
             - stream_name
+            - ssh_stream_name
+            - host_stream_name
             - alerts_only
           description: Microsoft Sentinel replication settings.
           properties:
             enabled:
               type: boolean
               description: Indicates if Sentinel replication is enabled or not.
+            ssh_enabled:
+              type: boolean
+              description: Indicates if Sentinel SSH Key replication is enabled or not.
+            host_enabled:
+              type: boolean
+              description: Indicates if Sentinel Hosts replication is enabled or not.
             tenant_id:
               format: string
               type: string
@@ -10466,7 +11119,15 @@ components:
             stream_name:
               format: string
               type: string
-              description: Sentinel Data collection rule custom table stream name.
+              description: Sentinel Data collection rule Results custom table stream name.
+            ssh_stream_name:
+              format: string
+              type: string
+              description: Sentinel Data collection rule SSH Key custom table stream name.
+            host_stream_name:
+              format: string
+              type: string
+              description: Sentinel Data collection rule Hosts custom table stream name.
             alerts_only:
               type: boolean
               description: Indicates type of results to send to Sentinel. True sends only alert and error results, false sends all results.
@@ -10542,6 +11203,9 @@ components:
       properties:
         detail:
           description: Extended explanation of status.
+          type: string
+        formattedDetail:
+          description: Optional additional details about the status (typically an error) that, if present and not an empty string, should be displayed as pre-formatted, monospaced text.
           type: string
         status:
           description: HTTP status code.
@@ -11051,6 +11715,70 @@ components:
               total:
                 type: integer
                 description: Number of nodes servicing this queue.
+    ThreatFeed:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/ThreatFeedEdit"
+      properties:
+        id:
+          type: integer
+          description: Database-assigned unique identifier for the threat feed.
+          readOnly: true
+        state:
+          type: string
+          description: Current state of the threat feed.
+          enum:
+            - disabled
+            - pending
+            - ok
+            - error
+          readOnly: true
+        last_update:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp of the last update, if the threat feed has ever been loaded.
+          readOnly: true
+        last_update_message:
+          type: string
+          description: Message from the last update.
+          readOnly: true
+      required:
+        - id
+        - state
+    ThreatFeedEdit:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the threat feed.
+        description:
+          type: string
+          description: Description of the threat feed.
+        active:
+          type: boolean
+          description: Indicates whether the threat feed is active.
+        url:
+          type: string
+          format: uri
+          description: URL of the threat feed.
+        ca_cert_base64:
+          type: string
+          description: Optional base64-encoded PEM-format CA certificate for the feed URL if using HTTPS and a custom CA is used.
+        lookup_url_template:
+          type: string
+          description: Template URL for lookup queries. If a non-empty string, this URL will be presented to users to look up more information about the threat on alert results. The string "$HASH" in the URL template will be replaced by the hash that matched.
+        interval_minutes:
+          type: integer
+          description: Interval in minutes to reload the feed from the source URL.
+      required:
+        - name
+        - description
+        - active
+        - url
+        - ca_cert_base64
+        - lookup_url_template
+        - interval_minutes
     User:
       required:
         - created_date
@@ -11206,6 +11934,7 @@ components:
       enum:
         - syslog
         - email
+        - webhook
     MachineRoles:
       type: string
       enum:
@@ -13331,6 +14060,7 @@ components:
             - file_descriptors
             - environ
             - map
+            - maps_list
             - stack
             - cgroup
             - container
@@ -13437,6 +14167,27 @@ components:
               type: array
               items:
                 type: string
+            maps_list:
+              type: array
+              items:
+                type: object
+                properties:
+                  path:
+                    type: string
+                  deleted:
+                    type: boolean
+                  pseudo_path:
+                    type: boolean
+                  inode:
+                    type: integer
+                  permissions:
+                    type: string
+                required:
+                  - path
+                  - deleted
+                  - pseudo_path
+                  - inode
+                  - permissions
             stack:
               type: array
               items:

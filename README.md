@@ -21,7 +21,7 @@ includes:
 - Digital Ocean Linux Images
 - etc.
 
-Find out more and get your free license here:
+Find out more and get your free trial license here:
 
 https://www.sandflysecurity.com.
 

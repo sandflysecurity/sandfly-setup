@@ -52,6 +52,8 @@ if [ "${esresult}z" != "truez" ]; then
         echo "*** ERROR: Error starting Postgres container; cannot proceed."
         exit 2
     fi
+    # Give Postgres a few seconds to start up
+    sleep 5
 else
     echo "*** Postgres container already running."
 fi
