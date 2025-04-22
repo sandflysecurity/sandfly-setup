@@ -7,7 +7,7 @@ info:
     name: Sandfly Security, Ltd.
     url: https://www.sandflysecurity.com
   title: Sandfly API
-  version: 5.4.0
+  version: 5.4.1
 servers:
   - url: https://{sandfly-api-host}/v4
 security:
