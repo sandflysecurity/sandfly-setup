@@ -1,0 +1,25 @@
+{
+	"TimeGenerated": "2025-03-13T15:04:41Z",
+	"ServerName": "sandfly server host name",
+	"FriendlyName": "friendly name here",
+	"KeyType": "key type",
+	"KeyStatus": "key status",
+	"KeyId": 999,
+	"FirstSeenTime": "2025-03-13T15:04:41Z",
+	"LastSeenTime": "2025-03-13T15:04:41Z",
+	"KeyTags": [
+		"tag1",
+		"tag2",
+		"tag3"
+	],
+	"KeyData": {
+		"FieldInt": 999,
+		"FieldOne": "field one",
+		"FieldTags": [
+			"tag1",
+			"tag2",
+			"tag3"
+		],
+		"FieldTwo": "field two"
+	}
+}

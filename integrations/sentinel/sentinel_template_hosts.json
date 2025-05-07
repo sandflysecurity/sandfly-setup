@@ -1,0 +1,27 @@
+{
+	"TimeGenerated": "2025-03-13T15:04:41Z",
+	"ServerName": "sandfly server host name",
+	"HostName": "host/node name",
+	"TargetAddress": "target address",
+	"IPAddress": "ip address",
+	"OSDistro": "os distribution",
+	"OSRelease": "os release",
+	"LastScanDate": "2025-03-13T15:04:41Z",
+	"FirstSeenDate": "2025-03-13T15:04:41Z",
+	"HostId": "sandfly host id",
+	"HostTags": [
+		"tag1",
+		"tag2",
+		"tag3"
+	],
+	"HostData": {
+		"FieldInt": 999,
+		"FieldOne": "field one",
+		"FieldTags": [
+			"tag1",
+			"tag2",
+			"tag3"
+		],
+		"FieldTwo": "field two"
+	}
+}
