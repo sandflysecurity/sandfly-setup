@@ -7,7 +7,7 @@ info:
     name: Sandfly Security, Ltd.
     url: https://www.sandflysecurity.com
   title: Sandfly API
-  version: 5.4.1
+  version: 5.4.2
 servers:
   - url: https://{sandfly-api-host}/v4
 security:
@@ -11089,6 +11089,7 @@ components:
             - ssh_stream_name
             - host_stream_name
             - alerts_only
+            - auth_method
           description: Microsoft Sentinel replication settings.
           properties:
             enabled:
@@ -11131,10 +11132,19 @@ components:
             alerts_only:
               type: boolean
               description: Indicates type of results to send to Sentinel. True sends only alert and error results, false sends all results.
+            auth_method:
+              type: string
+              description: Whether to use a client secret or certificate credentials for authentication.
+              enum:
+                - client_secret
+                - certificate_credentials
+            auth_certificate:
+              type: string
+              description: Only used when auth_method is certificate_credentials. x509 certificate, in PEM format, that matches a certificate in the Azure app registration for Sandfly to authenticate with Azure. Azure requires that the certificate use RSA keys.
             password:
               format: string
               type: string
-              description: Sentinel Client Secret value. Will be stored encrypted in the Sandfly database and not returned in getconfig calls. Leave as null when updating configuration to not replace the existing saved secret value.
+              description: When auth_method is client_secret, this is the Client Secret value to log in to Azure with. When auth_method is certificate_credentials, this is an unencrypted private key in PEM format associated with auth_certificate. In both cases, will be stored encrypted in the Sandfly database and not returned in getconfig calls. Leave as null when updating configuration to not replace the existing saved secret value.
           type: object
         sso:
           description: SSO configuration options.
