@@ -7,7 +7,7 @@ info:
     name: Sandfly Security, Ltd.
     url: https://www.sandflysecurity.com
   title: Sandfly API
-  version: 5.4.2
+  version: 5.5.0
 servers:
   - url: https://{sandfly-api-host}/v4
 security:
@@ -627,18 +627,24 @@ paths:
         description: Credentials json blob.
         required: true
       responses:
-        "201":
+        "200":
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/StandardResponse"
-          description: Remote credentials updated, encrypted, and inserted.
+          description: Configuration updated.
         "400":
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/StandardResponse"
-          description: Remote credentials already exist. Not overwritten.
+          description: Configuration failed validation. Configuration not updated.
+        "502":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Testing connectivity to a remote system failed. Configuration not updated.
         default:
           content:
             application/json:
@@ -2127,6 +2133,320 @@ paths:
       summary: Refresh license entitlement
       tags:
         - License
+  /llmanalysis:
+    get:
+      summary: Get LLM analyses
+      description: Get list of all LLM analyses. The returned list will be in reverse chronological order of modification date. If a hostid or resultid query parameter is supplies, the results will be limited to that result and/or host ID (if both are provided, they are treated as "or").
+      operationId: getLlmAnalyses
+      tags:
+        - LLM Analysis
+      parameters:
+        - description: number of analyses per page
+          in: query
+          name: size
+          required: false
+          schema:
+            type: integer
+            default: 100
+        - description: page number of analyses to retrieve
+          in: query
+          name: page
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - description: Host sequence ID to limit list to
+          in: query
+          name: hostid
+          required: false
+          schema:
+            type: integer
+        - description: Result ID to limit list to
+          in: query
+          name: resultid
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ScrollingResponse"
+                properties:
+                  data:
+                    description: List of LLM analyses
+                    items:
+                      $ref: "#/components/schemas/LlmAnalysisSummary"
+                    type: array
+                required:
+                  - data
+                type: object
+          description: LLM analyses retrieved.
+        "400":
+          description: Page or size query parameter is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+    post:
+      summary: Begin LLM analysis
+      description: Begin a new LLM analysis for a host or result(s).
+      operationId: beginLlmAnalysis
+      tags:
+        - LLM Analysis
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LlmAnalysisAdd"
+      responses:
+        "201":
+          description: LLM analysis created.
+          content:
+            application/json:
+              schema:
+                type: integer
+                description: ID of the newly created LLM analysis.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Invalid request body.
+        "403":
+          description: LLM integration is not enabled in the server configuration.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: The host ID or result IDs were not found.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+  /llmanalysis/bulkdelete:
+    post:
+      summary: Bulk delete LLM analyses
+      description: Bulk delete LLM analyses. Call is idempotent; will return OK even if LLM analysis ID does not exist.
+      tags:
+        - LLM Analysis
+      operationId: deleteLlmAnalysisBulk
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: integer
+                    description: LLM analysis ID to delete.
+                  description: LLM analysis IDs to delete.
+              required:
+                - ids
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LlmAnalysis"
+          description: LLM analyses deleted.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Invalid request body.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+  "/llmanalysis/{id}":
+    get:
+      summary: Get LLM analysis
+      description: Get an LLM analysis, with its metadata and model response(s).
+      operationId: getLlmAnalysis
+      tags:
+        - LLM Analysis
+      parameters:
+        - description: LLM analysis ID to get.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LlmAnalysis"
+          description: LLM analysis retrieved.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Invalid LLM analysis ID in path.
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: LLM analysis ID not found.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+    delete:
+      summary: Delete LLM analysis
+      description: Delete an LLM analysis. Call is idempotent; will return OK even if LLM analysis ID does not exist.
+      operationId: deleteLlmAnalysis
+      tags:
+        - LLM Analysis
+      parameters:
+        - description: LLM analysis ID to delete.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LlmAnalysis"
+          description: LLM analysis deleted.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Invalid LLM analysis ID in path.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+  "/llmanalysis/{id}/chat":
+    put:
+      summary: Add chat to LLM analysis
+      description: Add a new user chat message to an LLM analysis and submit to the model to get a response. The LLM analysis must be in the "ready" state.
+      operationId: addLlmAnalysisChat
+      tags:
+        - LLM Analysis
+      parameters:
+        - description: LLM analysis ID to add chat message to.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LlmAnalysisChatAdd"
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                type: integer
+                description: ID of the LLM analysis the chat was added to.
+          description: Chat added to LLM analysis.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Bad request.
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: LLM analysis ID not found.
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: The LLM analysis is not in a state that allows the additional of new chat message.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+  "/llmanalysis/{id}/wait":
+    get:
+      summary: Wait for LLM analysis
+      description: Wait for an LLM analysis to complete. This endpoint will not return until the requested LLM analysis ID has returned to a "ready" or "error" state.
+      tags:
+        - LLM Analysis
+      operationId: waitLlmAnalysisComplete
+      parameters:
+        - description: LLM analysis ID to wait for.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: integer
+                description: ID of the LLM analysis that completed.
+          description: LLM analysis is complete.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Invalid ID parameter in query path.
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: LLM analysis ID not found.
+        "504":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Server timeout; will return after 30 minutes. The client may begin a new wait request to continue waiting.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
   /notifications:
     get:
       summary: Get notifications
@@ -3982,6 +4302,16 @@ paths:
           schema:
             format: string
             type: string
+        - name: mode
+          in: query
+          description: "Execution mode: 'immediate' (default) or 'trickle'. Only applicable to scan schedules; discovery schedules are always run in immediate mode."
+          required: false
+          schema:
+            type: string
+            enum:
+              - immediate
+              - trickle
+            default: immediate
       responses:
         "200":
           content:
@@ -4200,6 +4530,33 @@ paths:
       summary: Update scheduled scan
       tags:
         - Schedule
+  "/schedule/{schedule_name}/abort":
+    put:
+      summary: Abort schedule run
+      description: Abort an active schedule run, preventing additional hosts from being added to the scan queue during this run.Note that this only prevents new hosts from being added to the scan queue, it does not affect scans that have already begun.
+      operationId: abortSchedule
+      tags:
+        - Schedule
+      parameters:
+        - description: schedule name to abort
+          in: path
+          name: schedule_name
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Schedule run aborted. Note that this API call always returns 200, regardless of if the schedule exists or is currently running.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
   "/sshhunter/graph/{type}/{id}":
     get:
       description: Get graph of relationships between SSH public keys, hosts, and users from SSH Hunter.
@@ -4970,9 +5327,14 @@ paths:
               schema:
                 required:
                   - nodes
+                  - schedules
                 properties:
                   nodes:
                     $ref: "#/components/schemas/StatusNodes"
+                  schedules:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/StatusSchedule"
                 type: object
           description: Status retrieved.
         "400":
@@ -6036,6 +6398,7 @@ components:
         - access_token_data
         - access_token_expire_date
         - access_token_issue_date
+        - llm
         - refresh_token
         - refresh_token_data
         - refresh_token_expire_date
@@ -6056,6 +6419,9 @@ components:
         access_token_issue_date:
           description: Access token issue date.
           type: string
+        llm:
+          description: Current LLM configuration
+          $ref: "#/components/schemas/LlmLoginInfo"
         refresh_token:
           description: Refresh token.
           type: string
@@ -6101,6 +6467,9 @@ components:
           $ref: "#/components/schemas/User"
         license:
           $ref: "#/components/schemas/License"
+        llm:
+          description: Current LLM configuration
+          $ref: "#/components/schemas/LlmLoginInfo"
       type: object
     AuthLogin:
       properties:
@@ -6430,6 +6799,9 @@ components:
         more_hosts:
           type: boolean
           description: Is this key on more than just the hosts listed in the hosts property?
+    DeletedData:
+      enum:
+        - "[deleted]"
     EmailAlertsConfig:
       required:
         - mail_password
@@ -8264,6 +8636,287 @@ components:
       example:
         - my_jump_host_name
       type: array
+    LlmAnalysisAdd:
+      description: Request to begin a new LLM analysis of a host or results.
+      type: object
+      properties:
+        mode:
+          description: The analysis mode. Determines which other fields are required.
+          $ref: "#/components/schemas/LlmAnalysisMode"
+        host_sequence_id:
+          type: integer
+          description: The host sequence ID. Required if mode is 'host', ignored otherwise.
+        result_ids:
+          type: array
+          items:
+            type: integer
+            format: int64
+          description: A list of result IDs. At least one result ID is required if mode is 'results', ignored otherwise.
+      required:
+        - mode
+    LlmAnalysisChatAdd:
+      description: Chat message to add to an existing LLM analysis.
+      type: object
+      properties:
+        text:
+          type: string
+          description: The user chat message.
+      required:
+        - text
+    LlmAnalysisState:
+      type: string
+      enum:
+        - pending
+        - pending_followup
+        - ready
+        - error
+      description: Represents the state of an LLM analysis. New analysis requests begin in the 'pending' state, which should then transition to either 'ready' or 'error' after the model response is received. If a user adds an additional question to the chat, the state will be 'pending-followup', followed again by 'ready' or 'error'.
+    LlmAnalysisMode:
+      type: string
+      enum:
+        - host
+        - results
+      description: Represents the mode of an LLM analysis. 'host' indicates the analysis was started on a host; 'results' indicates the analysis was started on one or more results.
+    LlmChatEntryRole:
+      type: string
+      enum:
+        - user
+        - model
+        - error
+      description: Indicates the source of a chat entry. Follow-up user-entered chat is 'user', model responses are 'model', and error messages are 'error'.
+    LlmChatEntry:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp of the chat entry.
+        role:
+          $ref: "#/components/schemas/LlmChatEntryRole"
+        userid:
+          type: string
+          description: User ID (Sandfly login) associated with the chat entry. Blank for errors and model responses.
+        username:
+          type: string
+          description: User full name associated with the chat entry. Blank for errors and model responses.
+        text:
+          type: string
+          description: The text content of the chat entry. Should be Markdown format.
+      required:
+        - timestamp
+        - role
+        - text
+    LlmAnalysisResult:
+      type: object
+      description: A result associated with an LLM analysis.
+      properties:
+        result_id:
+          type: integer
+          format: int64
+          description: Result ID.
+        sandfly:
+          type: string
+          description: Name of the Sandfly for this result. May be '[deleted]' if the result no longer exists.
+        status:
+          description: Status of the result. May be '[deleted]' if the result no longer exists.
+          oneOf:
+            - $ref: "#/components/schemas/ResultStatus"
+        key_data:
+          type: string
+          description: Key data element of the result. May be '[deleted]' if the result no longer exists.
+        sandfly_engine:
+          description: Engine of the sandfly for the result. May be '[deleted]' if the result no longer exists.
+          $ref: "#/components/schemas/SandflyEngineType"
+        sandfly_tags:
+          type: array
+          items:
+            type: string
+          description: Tags of the sandfly for this result.
+        seen_count:
+          type: integer
+          description: Seen count for result. Will be 0 if result is deleted.
+        superseded:
+          type: boolean
+          description: Superseded flag for result. Will always be true if result is deleted.
+        first_seen:
+          type: string
+          description: First seen timestamp of result. May be '[deleted]' if the result no longer exists.
+        last_seen:
+          type: string
+          description: Last seen timestamp of result. May be '[deleted]' if the result no longer exists.
+      required:
+        - result_id
+        - sandfly
+        - status
+        - key_data
+        - sandfly_engine
+        - sandfly_tags
+        - seen_count
+        - superseded
+        - first_seen
+        - last_seen
+    LlmAnalysisResultDeleted:
+      type: object
+      description: A result associated with an LLM analysis.
+      properties:
+        result_id:
+          type: integer
+          format: int64
+          description: Result ID.
+        sandfly:
+          $ref: "#/components/schemas/DeletedData"
+        status:
+          $ref: "#/components/schemas/DeletedData"
+        key_data:
+          $ref: "#/components/schemas/DeletedData"
+        sandfly_engine:
+          $ref: "#/components/schemas/DeletedData"
+        sandfly_tags:
+          type: array
+        seen_count:
+          enum:
+            - 0
+        superseded:
+          enum:
+            - true
+        first_seen:
+          $ref: "#/components/schemas/DeletedData"
+        last_seen:
+          $ref: "#/components/schemas/DeletedData"
+      required:
+        - result_id
+        - sandfly
+        - status
+        - key_data
+        - sandfly_engine
+        - sandfly_tags
+        - seen_count
+        - superseded
+        - first_seen
+        - last_seen
+    LlmAnalysisHost:
+      type: object
+      description: A host related to the LLM analysis.
+      properties:
+        host_sequence_id:
+          type: integer
+          description: Host sequence ID.
+        target_address:
+          type: string
+          description: Target address (e.g., IP or hostname) of the host. May be '[deleted]' if the host no longer exists.
+        node_name:
+          type: string
+          description: OS node name (hostname) of the host. May be '[deleted]' if the result no longer exists.
+        os_release_pretty_name:
+          type: string
+          description: OS release name.
+      required:
+        - host_sequence_id
+        - target_address
+        - node_name
+        - os_release_pretty_name
+    LlmAnalysisHostDeleted:
+      type: object
+      description: A host related to the LLM analysis.
+      properties:
+        host_sequence_id:
+          type: integer
+          description: Host sequence ID.
+        target_address:
+          $ref: "#/components/schemas/DeletedData"
+        node_name:
+          $ref: "#/components/schemas/DeletedData"
+        os_release_pretty_name:
+          $ref: "#/components/schemas/DeletedData"
+      required:
+        - host_sequence_id
+        - target_address
+        - node_name
+        - os_release_pretty_name
+    LlmAnalysisSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the LLM analysis.
+        state:
+          $ref: "#/components/schemas/LlmAnalysisState"
+        mode:
+          $ref: "#/components/schemas/LlmAnalysisMode"
+        hosts:
+          type: array
+          items:
+            oneOf:
+              - $ref: "#/components/schemas/LlmAnalysisHost"
+              - $ref: "#/components/schemas/LlmAnalysisHostDeleted"
+          description: List of hosts involved in the analysis.
+        results:
+          type: array
+          items:
+            oneOf:
+              - $ref: "#/components/schemas/LlmAnalysisResult"
+              - $ref: "#/components/schemas/LlmAnalysisResultDeleted"
+            discriminator:
+              propertyName: statis
+              mapping:
+                alert: "#/components/schemas/LlmAnalysisResult"
+                error: "#/components/schemas/LlmAnalysisResult"
+                pass: "#/components/schemas/LlmAnalysisResult"
+                "[deleted]": "#/components/schemas/LlmAnalysisResultDeleted"
+          description: List of results involved in the analysis, if any.
+        userid:
+          type: string
+          description: User ID (Sandfly login) of the user who initiated the analysis.
+        username:
+          type: string
+          description: Full name of the user who initiated the analysis.
+        brief:
+          type: string
+          description: Brief one-sentence summary of LLM analysis, if available. Will be an empty string if the first response is not yet available, or if no brief was found.
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when the analysis was created.
+        modified_at:
+          type: string
+          format: date-time
+          description: Timestamp when the analysis was last modified.
+      required:
+        - id
+        - state
+        - mode
+        - hosts
+        - results
+        - userid
+        - username
+        - brief
+        - created_at
+        - modified_at
+    LlmAnalysis:
+      allOf:
+        - $ref: "#/components/schemas/LlmAnalysisSummary"
+        - type: object
+          properties:
+            chat_entries:
+              type: array
+              items:
+                $ref: "#/components/schemas/LlmChatEntry"
+              description: Chronological list of chat entries related to the analysis.
+          required:
+            - chat_entries
+    LlmLoginInfo:
+      type: object
+      description: LLM configuration summary returned during login.
+      required:
+        - enabled
+        - results_limit
+      properties:
+        enabled:
+          type: boolean
+          description: LLM analysis is enabled.
+        results_limit:
+          type: integer
+          description: Maximum number of results allowed in an LLM analysis request.
     NotificationSummaries:
       type: array
       description: Array of Notification Summaries.
@@ -10517,6 +11170,7 @@ components:
       type: string
       enum:
         - template
+        - incident
     SandflyTypeSystem:
       description: What kind of sandfly is this (directory, file, user, dependency, recon)?
       type: string
@@ -10910,10 +11564,14 @@ components:
         - tags_exclude_operator
         - tags_operator
         - priority
+        - all_hosts_immediately
       allOf:
         - $ref: "#/components/schemas/ScheduleConfigCommon"
         - $ref: "#/components/schemas/ScheduleAddCommon"
       properties:
+        all_hosts_immediately:
+          description: If true, immediately start scan on all hosts covered by this schedule. If false, scans will be spread out across hosts over the scan schedule interval.
+          type: boolean
         priority:
           description: (scan schedule) Nice compatible priority of scan on target hosts.
           format: int32
@@ -11015,20 +11673,21 @@ components:
           required:
             - enabled
             - url
-            - ca_cert_b64
+            - ca_cert
             - username
           description: ElasticSearch replication settings.
           properties:
-            ca_cert_b64:
+            ca_cert:
               format: string
               type: string
-              description: Trusted CA certificate when connecting to HTTPS Elastic endpoint, in base64 format.
+              description: Trusted CA certificate when connecting to HTTPS Elastic endpoint, in PEM format.
             enabled:
               type: boolean
               description: Whether or not ElasticSearch replication is enabled.
             password:
               format: string
               type: string
+              nullable: true
               description: Login password for ElasticSearch. Will be stored encrypted in the Sandfly database and not returned in getconfig API calls. When updating configuration, leave null to not replace existing saved password.
             url:
               format: string
@@ -11039,6 +11698,47 @@ components:
               type: string
               description: ElasticSearch login username.
           type: object
+        llm_analysis:
+          type: object
+          required:
+            - enabled
+            - provider
+            - model
+            - results_limit
+          properties:
+            enabled:
+              type: boolean
+              description: Indicates of LLM analysis integration is enabled or not.
+            provider:
+              type: string
+              description: LLM API service to use.
+              enum:
+                - custom
+                - Gemini
+                - OpenAI
+                - xAI
+            password:
+              type: string
+              nullable: true
+              description: API key for the LLM provider. Will be stored encrypted in the Sandfly database and not returned in getconfig calls. Leave as null when updating configuration to not replace the existing saved password.
+            model:
+              type: string
+              description: Model name to use.
+            available_models:
+              type: array
+              items:
+                type: string
+              readOnly: true
+              description: After saving the configuration with enabled=true, the server will make an API call to the selected provider to get the list of available models. The next time the config is retrieved, this array will have the updated list of available models.
+            url:
+              type: string
+              description: URL of the custom API. Only allowed to be present when provider = custom
+            ca_cert:
+              type: string
+              description: Optional trusted CA certificate, in PEM format, to use with the custom API. Ignored when provider is not custom
+            results_limit:
+              type: integer
+              description: Maximum number of results a user is allowed to select for a single analysis.
         maintenance_hour:
           format: int64
           type: integer
@@ -11070,6 +11770,7 @@ components:
             password:
               format: string
               type: string
+              nullable: true
               description: PostrgeSQL login password. Will be stored encrypted in the Sandfly database and not returned in getconfig calls. Leave as null when updating configuration to not replace the existing saved password.
             username:
               format: string
@@ -11144,6 +11845,7 @@ components:
             password:
               format: string
               type: string
+              nullable: true
               description: When auth_method is client_secret, this is the Client Secret value to log in to Azure with. When auth_method is certificate_credentials, this is an unencrypted private key in PEM format associated with auth_certificate. In both cases, will be stored encrypted in the Sandfly database and not returned in getconfig calls. Leave as null when updating configuration to not replace the existing saved secret value.
           type: object
         sso:
@@ -11285,6 +11987,36 @@ components:
           description: Total number of hosts in queue.
           type: integer
       type: object
+    StatusSchedule:
+      type: object
+      description: Information about a schedule that is currently running and adding hosts to the scan queue.
+      required:
+        - id
+        - name
+        - start_time
+        - finish_time
+        - total_hosts
+        - remaining_hosts
+      properties:
+        id:
+          type: string
+          description: ID of the active schedule.
+        name:
+          type: string
+          description: Name of the active schedule.
+        start_time:
+          type: string
+          format: date-time
+          description: Time this schedule ran began.
+        finish_time:
+          type: string
+          description: Time this schedule run will finish.
+        total_hosts:
+          type: integer
+          description: Number of hosts in this schedule run.
+        remaining_hosts:
+          type: integer
+          description: Number of hosts remaining to be added to the scan queue.
     StatusSystem:
       type: object
       required:
@@ -13251,10 +13983,35 @@ components:
         performance:
           $ref: "#/components/schemas/PerformanceTelemetry"
           title: Os.performance
+        time:
+          type: object
+          required:
+            - system_clock_time
+            - system_clock_time_unix
+            - sandfly_node_time
+            - sandfly_node_time_unix
+          properties:
+            system_clock_time:
+              type: string
+              format: date-time
+              description: The time on the host when the scan started.
+            system_clock_time_unix:
+              type: integer
+              format: int64
+              description: The time on the host when the scan started, in Unix time format.
+            sandfly_node_time:
+              type: string
+              format: date-time
+              description: The time on the sandfly node when the scan started.
+            sandfly_node_time_unix:
+              type: integer
+              format: int64
+              description: The time on the sandfly node when the scan started, in Unix time format.
       required:
         - hardware
         - info
         - performance
+        - time
       additionalProperties: false
       title: Os
       type: object
@@ -14161,6 +14918,46 @@ components:
                     type: string
                   class:
                     type: string
+                  class_data_socket_packet:
+                    type: object
+                    properties:
+                      type:
+                        type: integer
+                      type_text:
+                        type: string
+                      protocol:
+                        type: string
+                      protocol_text:
+                        type: string
+                      inode:
+                        type: integer
+                      uid:
+                        type: integer
+                      interface:
+                        type: integer
+                  class_data_socket_unix:
+                    type: object
+                    properties:
+                      type:
+                        type: integer
+                      type_text:
+                        type: string
+                      protocol:
+                        type: string
+                      protocol_text:
+                        type: string
+                      inode:
+                        type: integer
+                      flags:
+                        type: string
+                      state:
+                        type: integer
+                      state_text:
+                        type: string
+                      path:
+                        type: string
+                      abstract:
+                        type: boolean
                   hidden:
                     type: boolean
                 required:
@@ -15138,8 +15935,6 @@ components:
                     - present
                     - duplicate_found
                     - total
-                    - data
-                    - file
                   properties:
                     present:
                       type: boolean
@@ -15158,8 +15953,6 @@ components:
                   required:
                     - present
                     - total
-                    - data
-                    - file
                   properties:
                     present:
                       type: boolean

@@ -34,6 +34,8 @@ mkdir -p setup_data/letsencrypt
 docker run -v /dev/urandom:/dev/random:ro \
 -v $PWD/setup_data:/opt/sandfly/install/setup_data \
 -v $PWD/setup_data/letsencrypt:/etc/letsencrypt \
+-e SSL_FQDN \
+-e SSL_EMAIL \
 --name sandfly-server-mgmt \
 --network sandfly-net \
 --publish 80:8000 \
