@@ -7,7 +7,7 @@ info:
     name: Sandfly Security, Ltd.
     url: https://www.sandflysecurity.com
   title: Sandfly API
-  version: 5.5.1
+  version: 5.5.4
 servers:
   - url: https://{sandfly-api-host}/v4
 security:
@@ -14542,6 +14542,7 @@ components:
             - taints_list
             - kernel_taint_missing
             - hidden
+            - vmalloc_artifact
             - missing_file
             - dependencies
             - module_file_path
@@ -14572,6 +14573,9 @@ components:
               type: boolean
             hidden:
               type: boolean
+            vmalloc_artifact:
+              type: boolean
+              description: Indicates that this kernel module is a name that we saw in /proc/vmallocinfo but we don't see the module name in the loaded modules list.
             missing_file:
               type: boolean
             dependencies:
