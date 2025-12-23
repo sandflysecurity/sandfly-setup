@@ -8,29 +8,23 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
+# Install some required utilities.
 apt update
 apt install \
     thin-provisioning-tools \
-    lvm2
-
-# Allows apt to use HTTPS and other tools.
-apt install \
-    apt-transport-https \
+    lvm2 \
     ca-certificates \
-    curl \
-    software-properties-common \
-    gnupg
+    curl
 
-# Docker PGP key add
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+# Install Docker PGP key.
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+chmod a+r /etc/apt/keyrings/docker.asc
 
-add-apt-repository \
-    "deb [arch=amd64] https://download.docker.com/linux/debian \
-    $(lsb_release -cs) \
-    stable"
+# Add Docker source repository.
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 apt update
-
-apt install docker-ce docker-ce-cli containerd.io 
+apt install docker-ce docker-ce-cli containerd.io
 
 service docker start
