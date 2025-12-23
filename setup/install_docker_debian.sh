@@ -2,29 +2,29 @@
 # Sandfly Security LTD www.sandflysecurity.com
 # Copyright (c) Sandfly Security LTD, All Rights Reserved.
 
-sudo apt update
-sudo apt install \
- thin-provisioning-tools \ 
- lvm2
+# Only execute if we have root access.
+if [[ $EUID -ne 0 ]]; then
+    echo "This script must be run as root (sudo "${BASH_SOURCE}")."
+    exit 1
+fi
 
-# Allows apt to use HTTPS and other tools.
-sudo apt install \
-    apt-transport-https \
+# Install some required utilities.
+apt update
+apt install \
+    thin-provisioning-tools \
+    lvm2 \
     ca-certificates \
-    curl \
-    software-properties-common \
-    gnupg
+    curl
 
-# Docker PGP key add
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+# Install Docker PGP key.
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+chmod a+r /etc/apt/keyrings/docker.asc
 
-sudo add-apt-repository \
-   "deb [arch=amd64] https://download.docker.com/linux/debian \
-   $(lsb_release -cs) \
-   stable"
+# Add Docker source repository.
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-sudo apt update
+apt update
+apt install docker-ce docker-ce-cli containerd.io
 
-sudo apt install docker-ce docker-ce-cli containerd.io 
-
-sudo service docker start
+service docker start
