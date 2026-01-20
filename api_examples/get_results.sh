@@ -11,7 +11,7 @@ Sandfly API Reference Script Example
 
 This script will attempt to authenticate and get up to 10 alarm results.
 
-DOC: https://api.sandflysecurity.com/#post-/results
+DOC: https://docs.sandflysecurity.com/reference/getresults
 ******************************************************************************
 
 EOF

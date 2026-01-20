@@ -11,7 +11,7 @@ Sandfly API Reference Script Example
 
 This script will attempt to authenticate and output all hosts.
 
-DOC: https://api.sandflysecurity.com/#get-/hosts
+DOC: https://docs.sandflysecurity.com/reference/gethosts
 ******************************************************************************
 
 EOF

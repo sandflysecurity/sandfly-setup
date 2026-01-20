@@ -7,7 +7,7 @@ info:
     name: Sandfly Security, Ltd.
     url: https://www.sandflysecurity.com
   title: Sandfly API
-  version: 5.5.4
+  version: 5.6.0
 servers:
   - url: https://{sandfly-api-host}/v4
 security:
@@ -623,8 +623,8 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ServerConfiguration"
-        description: Credentials json blob.
+              $ref: "#/components/schemas/ServerConfigurationUpdate"
+        description: Server configuration json object to update
         required: true
       responses:
         "200":
@@ -1018,7 +1018,7 @@ paths:
           required: false
           schema:
             type: integer
-        - description: Only supported when `summary=true`. Number of results per page.
+        - description: Only supported when `summary=true`. Number of results per page. Support a maximum page size of 100,000.
           in: query
           name: size
           required: false
@@ -1046,13 +1046,8 @@ paths:
                   data:
                     description: List of hosts
                     oneOf:
-                      - items:
-                          $ref: "#/components/schemas/Host"
-                        type: array
-                      - type: array
-                        items:
-                          allOf:
-                            - $ref: "#/components/schemas/HostSummaryRollup"
+                      - $ref: "#/components/schemas/Hosts"
+                      - $ref: "#/components/schemas/HostSummaryRollups"
                   key_names:
                     description: If the `key_filter` parameter contains one more key IDs, this property will be present and contain a map of key IDs to friendly key names. If there is no key_filter parameter, this property will not exist in the response.
                     type: object
@@ -3183,7 +3178,7 @@ paths:
     get:
       summary: Get result profiles
       description: Get summary list of all result profiles.
-      operationId: getResultProfiles
+      operationId: getProfiles
       responses:
         "200":
           content:
@@ -3194,7 +3189,9 @@ paths:
                 type: object
                 properties:
                   data:
-                    $ref: "#/components/schemas/ResultProfileSummaries"
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ProfileSummary"
           description: Result profile information retrieved
         default:
           content:
@@ -3203,22 +3200,18 @@ paths:
                 $ref: "#/components/schemas/StandardResponse"
           description: Unexpected error
       tags:
+        - Drift Detection
         - Result Profiles
     post:
       summary: Create new result profile
       description: Create new result profile. One or more host IDs and/or result IDs must be included in the request, which will add the associated eligible results to the result profile.
-      operationId: createResultProfile
+      operationId: createProfile
+      deprecated: true
       requestBody:
         content:
           application/json:
             schema:
-              description: Result profile details.
-              allOf:
-                - $ref: "#/components/schemas/ResultProfile"
-                - $ref: "#/components/schemas/ResultProfileAddResultsRequest"
-              properties:
-                associations:
-                  $ref: "#/components/schemas/ResultProfileAssociations"
+              $ref: "#/components/schemas/ProfileCreateRequest"
         required: true
       responses:
         "201":
@@ -3227,7 +3220,7 @@ paths:
               schema:
                 type: integer
                 description: The ID of the new result profile.
-          description: Result profile information retrieved
+          description: Result profile created
         "400":
           content:
             application/json:
@@ -3247,12 +3240,257 @@ paths:
                 $ref: "#/components/schemas/StandardResponse"
           description: Unexpected error
       tags:
+        - Drift Detection
         - Result Profiles
+  /resultprofiles/autodrift:
+    post:
+      summary: Create auto-drift profile
+      description: Create a new result profile that will automatically gather results from a set of model hosts for a period of time before applying them as a drift (and optionally whitelist) profile on a set of covered hosts.
+      operationId: createProfileAutoDrift
+      tags:
+        - Drift Detection
+        - Result Profiles
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AutoDriftCreateRequest"
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                type: integer
+                description: The ID of the new auto-drift result profile.
+          description: Auto-drift profile created
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Invalid request body.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+  "/resultprofiles/autodrift/{id}":
+    put:
+      summary: Edit autodrift profile
+      description: Edit an autodrift profile. Optionally edit different parts of the profile by setting the objects non-null; null objects (or keys left out) indicate that that portion of the profile will not be modified.
+      operationId: editAutoDriftProfile
+      tags:
+        - Drift Detection
+        - Result Profiles
+      parameters:
+        - description: Result profile ID to edit.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AutoDriftEditRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Auto-drift profile successfully updated
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Invalid request body.
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Autodrift profile not found
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+  "/resultprofiles/autodrift/{id}/gather":
+    delete:
+      summary: Remove gather configuration
+      description: Remove gather configuration from an autodrift profile.
+      operationId: deleteAutoDriftGather
+      tags:
+        - Drift Detection
+        - Result Profiles
+      parameters:
+        - description: Result profile ID to edit.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Gather configuration removed.
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Result profile not found.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+  "/resultprofiles/autodrift/{id}/enforce":
+    put:
+      summary: Switch to enforce mode
+      description: Immediately transition an autodrift profile to enforce mode.
+      operationId: enforceAutoDriftProfile
+      tags:
+        - Drift Detection
+        - Result Profiles
+      parameters:
+        - description: Result profile ID to change to enforce mode.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Profile switched to enforce mode.
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Result profile not found.
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Result profile is not an autodrift profile.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+  "/resultprofiles/autodrift/{id}/restartgather":
+    put:
+      summary: Restart gather period
+      description: Restart/re-enter gather period on an autodrift profile.
+      operationId: restartAutoDriftGather
+      tags:
+        - Drift Detection
+        - Result Profiles
+      parameters:
+        - description: Result profile ID to restart gather on.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Gather configuration entered/restarted.
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Result profile not found.
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Result profile is not an autodrift profile, or does not have a gather configuration defined, or there are no more model hosts on the profile.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+  "/resultprofiles/autodrift/{id}/schedule":
+    delete:
+      summary: Remove schedule configuration
+      description: Remove scan schedule configuration from an autodrift profile.
+      operationId: deleteAutoDriftSchedule
+      tags:
+        - Drift Detection
+        - Result Profiles
+      parameters:
+        - description: Result profile ID to edit.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Scan schedule configuration removed.
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Result profile not found.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+  /resultprofiles/autodrifttemplates:
+    get:
+      summary: Get auto-drift templates
+      description: Get recommended auto-drift result profile templates for various use cases.
+      operationId: getAutoDriftTemplates
+      tags:
+        - Drift Detection
+        - Result Profiles
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProfileAutoDriftTemplate"
+          description: Result profile details retrieved.
   "/resultprofiles/{id}":
     get:
       summary: Get a result profile
       description: Get details of a result profile by ID.
-      operationId: getResultProfile
+      operationId: getProfile
       parameters:
         - description: Result profile ID to get.
           in: path
@@ -3265,7 +3503,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResultProfileDetail"
+                $ref: "#/components/schemas/Profile"
           description: Result profile details retrieved.
         "404":
           content:
@@ -3280,11 +3518,13 @@ paths:
                 $ref: "#/components/schemas/StandardResponse"
           description: Unexpected error
       tags:
+        - Drift Detection
         - Result Profiles
     put:
       summary: Update result profile
       description: Update the details and associations of a result profile. This replaces all existing associations on the result profile.
-      operationId: updateResultProfile
+      operationId: updateProfile
+      deprecated: true
       parameters:
         - description: Result profile ID to update.
           in: path
@@ -3296,12 +3536,7 @@ paths:
         content:
           application/json:
             schema:
-              description: Result profile details.
-              allOf:
-                - $ref: "#/components/schemas/ResultProfile"
-              properties:
-                associations:
-                  $ref: "#/components/schemas/ResultProfileAssociations"
+              $ref: "#/components/schemas/ProfileUpdateRequest"
         required: true
       responses:
         "200":
@@ -3323,11 +3558,12 @@ paths:
                 $ref: "#/components/schemas/StandardResponse"
           description: Unexpected error
       tags:
+        - Drift Detection
         - Result Profiles
     delete:
       summary: Delete a result profile
       description: Delete a single result profile by ID.
-      operationId: deleteResultProfile
+      operationId: deleteProfile
       parameters:
         - description: Result profile ID to delete.
           in: path
@@ -3355,11 +3591,12 @@ paths:
                 $ref: "#/components/schemas/StandardResponse"
           description: Unexpected error
       tags:
+        - Drift Detection
         - Result Profiles
   "/resultprofiles/{id}/append":
     post:
       summary: Append results to result profile
-      operationId: appendResultProfile
+      operationId: appendProfile
       description: Append additional results from model host(s) and/or result IDs to an existing result profile.
       parameters:
         - description: Result profile ID to append results to.
@@ -3368,13 +3605,19 @@ paths:
           required: true
           schema:
             type: integer
+        - description: Enable safe mode - only add drift results for sandflies that are already enabled for drift in the result profile.
+          in: query
+          name: safemode
+          required: false
+          schema:
+            type: boolean
       requestBody:
         content:
           application/json:
             schema:
               description: Host ID(s) and/or result ID(s) to snapshot and append to the result profile.
               allOf:
-                - $ref: "#/components/schemas/ResultProfileAddResultsRequest"
+                - $ref: "#/components/schemas/ProfileAppendRequest"
         required: true
       responses:
         "200":
@@ -3402,12 +3645,300 @@ paths:
                 $ref: "#/components/schemas/StandardResponse"
           description: Unexpected error
       tags:
+        - Drift Detection
         - Result Profiles
+  "/resultprofiles/{id}/autoappend":
+    post:
+      summary: Automatically append results to an autodrift profile
+      operationId: autoappendProfile
+      description: Append all current results from the previously configured model hosts to an existing auto-drift profile.
+      parameters:
+        - description: Result profile ID to append results to. Must be a profile for which autodrift=true.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AutoDriftAutoAppendRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Result profile updated.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Invalid result profile append request.
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Result profile ID not found.
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: The autodrift profile no longer has any model hosts in the system.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+      tags:
+        - Drift Detection
+        - Result Profiles
+  "/resultprofiles/{id}/sandfly/{sandfly}":
+    get:
+      summary: Get result profile sandfly results
+      description: Get a list of results that are part of a result profile for a given sandfly.
+      operationId: getProfileSandfly
+      tags:
+        - Drift Detection
+        - Result Profiles
+      parameters:
+        - description: Result profile ID to get.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - description: Sandfly name to get.
+          in: path
+          name: sandfly
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileSandflyResults"
+          description: Result profile details retrieved.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Bad request -- profile ID or sandfly name format invalid
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Result profile not found or sandfly not found in profile.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+    delete:
+      summary: Delete a sandfly from a result profile
+      description: Delete all of the results for a sandfly on a result profile, removing enforcement of drift/whitelisting for the sandfly from the profile.
+      operationId: deleteProfileSandfly
+      tags:
+        - Drift Detection
+        - Result Profiles
+      parameters:
+        - description: Result profile ID to delete from.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - description: Sandfly name to delete from profile.
+          in: path
+          name: sandfly
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Sandfly deleted from profile.
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Profile or sandfly on profile not found.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+  "/resultprofiles/{id}/deletesandflies":
+    post:
+      summary: Bulk delete sandflies from profile
+      description: Bulk delete sandflies from a result profile.
+      operationId: bulkDeleteProfileSandflies
+      tags:
+        - Drift Detection
+        - Result Profiles
+      parameters:
+        - description: Result profile ID to delete from.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              description: Sandfly names to delete from profile.
+              type: object
+              required:
+                - sandflies
+              properties:
+                sandflies:
+                  type: array
+                  items:
+                    type: string
+                    description: Sandfly name to delete.
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Sandfly deleted from profile.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Invalid request.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+  "/resultprofiles/{id}/sandfly/{sandfly}/{hash}":
+    delete:
+      summary: Delete result hash from result profile.
+      description: Delete a specific result hash from a sandfly on a result profile.
+      operationId: deleteProfileResult
+      tags:
+        - Drift Detection
+        - Result Profiles
+      parameters:
+        - description: Result profile ID to delete from.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - description: Sandfly name to delete result from.
+          in: path
+          name: sandfly
+          required: true
+          schema:
+            type: string
+        - description: Result hash to delete. May be a blank string, indicating a drift entry for 'no results' on the sandfly.
+          in: path
+          name: hash
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Result(s) deleted from profile.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Bad request -- sandfly name format invalid or hash format invalid
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+  "/resultprofiles/{id}/sandfly/{sandfly}/deleteresults":
+    post:
+      summary: Bulk delete results from profile
+      description: Bulk delete results from a sandfly on a result profile.
+      operationId: bulkDeleteProfileResults
+      tags:
+        - Drift Detection
+        - Result Profiles
+      parameters:
+        - description: Result profile ID to delete from.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - description: Sandfly name to delete results from.
+          in: path
+          name: sandfly
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              description: Result hashes to delete from sandfly on profile.
+              type: object
+              required:
+                - hashes
+              properties:
+                hashes:
+                  type: array
+                  items:
+                    type: string
+                    description: Hash (or empty string, in the case of 'no results' drift results) to delete.
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Results deleted from profile.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Invalid request.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
   "/resultprofiles/host/{host_id}":
     get:
       summary: Get result profiles for host
       description: Get summary of all result profiles that apply to this host ID.
-      operationId: getResultProfilesForHost
+      operationId: getProfilesForHost
       parameters:
         - description: Host to retrieve. Accepts a host_id or host_sequence_id.
           in: path
@@ -3426,12 +3957,13 @@ paths:
           content:
             application/json:
               schema:
+                type: object
                 properties:
                   data:
                     description: List of result profiles.
                     type: array
                     items:
-                      $ref: "#/components/schemas/ResultProfileForHost"
+                      $ref: "#/components/schemas/ProfileForHost"
                   total:
                     description: Total number of result profiles.
                     type: integer
@@ -3452,19 +3984,21 @@ paths:
                 $ref: "#/components/schemas/StandardResponse"
           description: Unexpected error
       tags:
+        - Drift Detection
         - Result Profiles
   /resultprofiles/export:
     post:
-      operationId: exportResultProfiles
+      operationId: exportProfiles
       description: Export selected result profiles for backup or to move to another system.
       summary: Export result profiles
       tags:
+        - Drift Detection
         - Result Profiles
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ResultProfilesIDList"
+              $ref: "#/components/schemas/ProfilesIDList"
         description: Result profile IDs to export.
         required: true
       responses:
@@ -3473,7 +4007,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResultProfilesExport"
+                type: object
         default:
           description: Unexpected error
           content:
@@ -3482,10 +4016,11 @@ paths:
                 $ref: "#/components/schemas/StandardResponse"
   /resultprofiles/import:
     post:
-      operationId: importResultProfiles
+      operationId: importProfiles
       description: Import selected result profiles from backup.
       summary: Import result profiles
       tags:
+        - Drift Detection
         - Result Profiles
       parameters:
         - description: If true, deletes old tag and host associations when replacing an existing result profile before importing the associations saved in the backup that is being imported. Otherwise, merge the associations currently on the server with those in the backup being uploaded. Default value is false.
@@ -3498,7 +4033,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ResultProfilesExport"
+              type: object
       responses:
         "200":
           description: Profiles imported
@@ -3512,16 +4047,128 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/StandardResponse"
+  /resultprofiles/pause/:
+    put:
+      summary: Bulk pause result profiles
+      operationId: bulkPauseProfiles
+      description: Pause result profiles in bulk, preventing them from creating drift alerts or whitelisting incoming results.
+      tags:
+        - Drift Detection
+        - Result Profiles
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfilesIDList"
+        description: List of result profile IDs to pause.
+        required: true
+      responses:
+        "200":
+          content: {}
+          description: Result profiles paused.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+  /resultprofiles/unpause/:
+    put:
+      summary: Bulk unpause result profiles
+      operationId: bulkunPauseProfiles
+      description: Unpause result profiles in bulk.
+      tags:
+        - Drift Detection
+        - Result Profiles
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfilesIDList"
+        description: List of result profile IDs to unpause.
+        required: true
+      responses:
+        "200":
+          content: {}
+          description: Result profiles unpaused.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+  "/resultprofiles/pause/{id}":
+    put:
+      summary: Pause result profile
+      operationId: pauseProfile
+      description: Pause a result profile, preventing it from creating drift alerts or whitelisting incoming results.
+      tags:
+        - Drift Detection
+        - Result Profiles
+      parameters:
+        - description: Result profile ID to pause.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          content: {}
+          description: Result profile paused
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Result profile not found
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+  "/resultprofiles/unpause/{id}":
+    put:
+      summary: Unpause result profile
+      operationId: unpauseProfile
+      description: Unause a result profile.
+      tags:
+        - Drift Detection
+        - Result Profiles
+      parameters:
+        - description: Result profile ID to unpause.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          content: {}
+          description: Result profile unpaused
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Result profile not found
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
   /resultprofilesDelete:
     post:
       summary: Delete result profiles
-      operationId: deleteResultProfiles
+      operationId: deleteProfiles
       description: Bulk delete result profiles with a list of result profile IDs.
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ResultProfilesIDList"
+              $ref: "#/components/schemas/ProfilesIDList"
         description: Result profile IDs to delete.
         required: true
       responses:
@@ -3544,7 +4191,55 @@ paths:
                 $ref: "#/components/schemas/StandardResponse"
           description: Unexpected error
       tags:
+        - Drift Detection
         - Result Profiles
+  "/resultprofileresult/{id}":
+    get:
+      summary: Get result profile result
+      description: Get result JSON for a result profile result ID.
+      operationId: getProfileResultJSON
+      tags:
+        - Drift Detection
+        - Result Profiles
+      parameters:
+        - description: Result profile result ID to get.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - result
+                properties:
+                  result:
+                    type: object
+                    additionalProperties: true
+                    description: Result JSON
+          description: Result found.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Result ID is not an integer.
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Result not found.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
   "/resultsummary/host/{host_id}":
     get:
       description: Gets results grouped by sandfly for a particular host.
@@ -3650,6 +4345,12 @@ paths:
         - description: Only includes sandflies with at least one result in the database.
           in: query
           name: resultsOnly
+          required: false
+          schema:
+            type: boolean
+        - description: Only includes sandflies that can be included in schedules.
+          in: query
+          name: schedulable
           required: false
           schema:
             type: boolean
@@ -4201,7 +4902,7 @@ paths:
         - Scan
   /schedule:
     delete:
-      description: Deletes all schedule_ids passed into the body as a bulk operation.
+      description: Deletes all schedule_ids passed into the body as a bulk operation. Schedules that don't exist will be ignored without error; schedules that are of type result_profile_gather will not be deleted, but any current trickle run will be canceled.
       operationId: deleteSchedules
       requestBody:
         content:
@@ -4216,7 +4917,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/StandardResponse"
-          description: Credentials deleted
+          description: Schedule(s) deleted
         "400":
           content:
             application/json:
@@ -4247,7 +4948,7 @@ paths:
                     description: List of schedules
                     type: array
                     items:
-                      $ref: "#/components/schemas/Schedule"
+                      $ref: "#/components/schemas/ScheduleSummary"
                 required:
                   - data
                 type: object
@@ -4434,7 +5135,7 @@ paths:
         - Schedule
   "/schedule/{schedule_name}":
     delete:
-      description: Deletes a schedule by schedule_name.
+      description: Deletes a schedule by schedule_name. Only schedules of type scan and discovery can be deleted, result_profile_gather schedules can only be removed by editing or deleting the related result profile.
       operationId: deleteSchedule
       parameters:
         - description: schedule_name to delete
@@ -4457,6 +5158,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/StandardResponse"
           description: Error deleting schedule.
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Cannot delete a schedule of type result_profile_gather.
         default:
           content:
             application/json:
@@ -4567,7 +5274,7 @@ paths:
           name: type
           required: true
           schema:
-            $ref: "#/components/schemas/SshGraphType"
+            $ref: "#/components/schemas/SshMode"
         - description: The ID of the entity of the root graph node
           in: path
           name: id
@@ -5325,17 +6032,7 @@ paths:
           content:
             application/json:
               schema:
-                required:
-                  - nodes
-                  - schedules
-                properties:
-                  nodes:
-                    $ref: "#/components/schemas/StatusNodes"
-                  schedules:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/StatusSchedule"
-                type: object
+                $ref: "#/components/schemas/StatusByNodes"
           description: Status retrieved.
         "400":
           content:
@@ -5751,11 +6448,11 @@ paths:
         description: User json blob.
         required: true
       responses:
-        "200":
+        "201":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
+                $ref: "#/components/schemas/StandardResponse"
           description: User password updated.
         "400":
           content:
@@ -6493,6 +7190,88 @@ components:
       type: object
     AuthLogout:
       type: object
+    AutoDriftCreateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the auto-drift result profile.
+        description:
+          type: string
+          description: A description of the auto-drift result profile.
+        user_note:
+          type: string
+          description: A user-provided note to record in the profile's history log.
+        scope:
+          $ref: "#/components/schemas/ProfileAutoScope"
+        model_hosts:
+          description: The hosts to use as the model (i.e. template) hosts for expected results.
+          $ref: "#/components/schemas/ProfileAutoHosts"
+        covered_hosts:
+          description: The hosts that this profile should detect drift on (and optionally whitelist) after the results from the model host(s) are gathered.
+          $ref: "#/components/schemas/ProfileAutoHosts"
+        gather_options:
+          description: When present, this profile will enter gather mode and run gather schedules as configured. If null, no gather schedule will be created and the profile will immediately enter enforcing mode.
+          nullable: true
+          $ref: "#/components/schemas/ProfileGatherOptions"
+        schedule_options:
+          description: When present, the new profile will automatically have a scan schedule associated with it that scans the covered hosts with the selected sandflies for drift detection. If null, no scan schedule will be created.
+          nullable: true
+          $ref: "#/components/schemas/ProfileScheduleOptions"
+      required:
+        - name
+        - scope
+        - model_hosts
+        - covered_hosts
+        - gather_options
+        - schedule_options
+    AutoDriftEditRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the auto-drift result profile. If null or an empty string, the name will remain unchanged.
+          nullable: true
+        description:
+          type: string
+          description: A description of the auto-drift result profile. If null, will not change the existing description. If an empty string, will erase the existing description.
+          nullable: true
+        user_note:
+          type: string
+          description: A user-provided note to record in the profile's history log.
+          nullable: true
+        scope:
+          $ref: "#/components/schemas/ProfileAutoScope"
+          nullable: true
+        model_hosts:
+          description: The hosts to use as the model (i.e. template) hosts for expected results.
+          $ref: "#/components/schemas/ProfileAutoHosts"
+          nullable: true
+        covered_hosts:
+          description: The hosts that this profile should detect drift on (and optionally whitelist) after the results from the model host(s) are gathered.
+          $ref: "#/components/schemas/ProfileAutoHosts"
+          nullable: true
+        gather_options:
+          description: When present, this profile will enter gather mode and run gather schedules as configured. If null, no gather schedule will be created and the profile will immediately enter enforcing mode.
+          nullable: true
+          $ref: "#/components/schemas/ProfileGatherOptions"
+        schedule_options:
+          description: When present, the new profile will automatically have a scan schedule associated with it that scans the covered hosts with the selected sandflies for drift detection. If null, no scan schedule will be created.
+          nullable: true
+          $ref: "#/components/schemas/ProfileScheduleOptions"
+      required:
+        - name
+        - scope
+        - model_hosts
+        - covered_hosts
+        - gather_options
+        - schedule_options
+    AutoDriftAutoAppendRequest:
+      type: object
+      properties:
+        user_note:
+          type: string
+          description: User-provided descriptive note explaining the results that are being added. (Optional)
     CredentialConfiguration:
       required:
         - credentials_type
@@ -7267,6 +8046,11 @@ components:
       additionalProperties: false
       title: Host
       type: object
+    Hosts:
+      type: array
+      items:
+        $ref: "#/components/schemas/Host"
+      description: Array of host objects.
     HostBulkTag:
       type: object
       properties:
@@ -8042,6 +8826,11 @@ components:
       allOf:
         - $ref: "#/components/schemas/HostSummary"
         - $ref: "#/components/schemas/SshHostSummarySSHInfo"
+    HostSummaryRollups:
+      type: array
+      items:
+        $ref: "#/components/schemas/HostSummaryRollup"
+      description: Array of host summary rollups.
     HostSnapshot:
       type: object
       required:
@@ -8773,6 +9562,8 @@ components:
           $ref: "#/components/schemas/DeletedData"
         sandfly_tags:
           type: array
+          items:
+            type: string
         seen_count:
           enum:
             - 0
@@ -9054,6 +9845,7 @@ components:
         - friendly_name
         - key_type
         - hash
+        - sha256_fingerprint
         - key_value
         - first_seen
         - last_seen
@@ -9089,6 +9881,9 @@ components:
             sha512:
               type: string
               description: SHA512 hash of the public key value.
+        sha256_fingerprint:
+          type: string
+          description: Standard SHA256 fingerprint representation for this public key.
         key_value:
           type: string
           description: The public key.
@@ -10311,17 +11106,17 @@ components:
         - $ref: "#/components/schemas/ResultEngineFile"
         - $ref: "#/components/schemas/ResultEngineKModule"
         - $ref: "#/components/schemas/ResultEngineLastLog"
-        - $ref: "#/components/schemas/ResultEngineLogTamperingLastLogHistoryMissingRecord"
-        - $ref: "#/components/schemas/ResultEngineLogTamperingLastLogWtmpMissingRecord"
+        - $ref: "#/components/schemas/ResultEngineLastLog"
+        - $ref: "#/components/schemas/ResultEngineLastLog"
         - $ref: "#/components/schemas/ResultEngineOsIdentify"
         - $ref: "#/components/schemas/ResultEngineProcess"
-        - $ref: "#/components/schemas/ResultEngineProcessMasqueradeBinaryMismatched"
-        - $ref: "#/components/schemas/ResultEngineProcessMasqueradeBinaryRenamed"
-        - $ref: "#/components/schemas/ResultEngineProcessMasqueradeMixedCase"
+        - $ref: "#/components/schemas/ResultEngineProcess"
+        - $ref: "#/components/schemas/ResultEngineProcess"
+        - $ref: "#/components/schemas/ResultEngineProcess"
         - $ref: "#/components/schemas/ResultEngineSystemdSession"
         - $ref: "#/components/schemas/ResultEngineSystemd"
-        - $ref: "#/components/schemas/ResultEngineUserPasswordAuditor"
-        - $ref: "#/components/schemas/ResultEngineUserPasswordHashDuplicates"
+        - $ref: "#/components/schemas/ResultEngineUser"
+        - $ref: "#/components/schemas/ResultEngineUser"
         - $ref: "#/components/schemas/ResultEngineUser"
         - $ref: "#/components/schemas/ResultEngineUtmp"
         - $ref: "#/components/schemas/ResultEngineWtmp"
@@ -10866,7 +11661,6 @@ components:
             - rules
             - engines
             - explanation
-            - always_pass
           type: object
           properties:
             rules:
@@ -10884,6 +11678,7 @@ components:
               $ref: "#/components/schemas/SandflyRuleOperator"
             always_pass:
               type: boolean
+              default: false
             explanation:
               type: string
             os_exclude:
@@ -10908,8 +11703,27 @@ components:
                     suspend:
                       type: boolean
                       description: Whether to suspend the process or not.
-              additionalProperties:
-                type: object
+            match_hash_extras:
+              type: object
+              description: Extra options to include in match hash values for results from this sandfly.
+              properties:
+                values:
+                  description: List of expr expressions that produce strings which will be appended, in the order of this array, to the selected match hash types.
+                  type: array
+                  items:
+                    type: string
+                    description: An expr expression that returns a string. This value will be appended to the hash input for the selected match hash types.
+                apply_permissive:
+                  type: boolean
+                  description: Apply this value to the permissive match hash.
+                apply_moderate:
+                  type: boolean
+                  description: Apply this value to the moderate match hash.
+                apply_strict:
+                  type: boolean
+                  description: Apply this value to the strict (deduplication) match hash.
+            additionalProperties:
+              type: object
         severity:
           $ref: "#/components/schemas/SandflySeverity"
         tags:
@@ -11143,6 +11957,36 @@ components:
         - results_passes
         - results_total
       type: object
+    SandflyBriefSummary:
+      type: object
+      required:
+        - name
+        - description
+        - type
+        - custom
+        - active
+        - tags
+      properties:
+        name:
+          description: The name of the sandfly.
+          type: string
+        description:
+          description: A description of the sandfly.
+          type: string
+        type:
+          description: The type of the sandfly.
+          $ref: "#/components/schemas/SandflyType"
+        custom:
+          description: Indicates if the sandfly is a custom type.
+          type: boolean
+        active:
+          description: Indicates if the sandfly is active.
+          type: boolean
+        tags:
+          description: A list of tags associated with the sandfly.
+          type: array
+          items:
+            type: string
     SandflyTags:
       items:
         type: string
@@ -11170,7 +12014,6 @@ components:
       type: string
       enum:
         - template
-        - incident
     SandflyTypeSystem:
       description: What kind of sandfly is this (directory, file, user, dependency, recon)?
       type: string
@@ -11384,11 +12227,35 @@ components:
           type: integer
           description: Number of pass results.
     ScheduleType:
-      description: "The type of schedule: scan or discover."
+      description: "The type of schedule: scan or discover. gather and drift are reserved for system-managed schedules used by auto-drift profiles and cannot be directly created by users."
       type: string
       enum:
         - scan
         - discover
+        - gather
+        - drift
+    ScheduleCommon:
+      type: object
+      required:
+        - hosts
+        - sandflies
+        - all_hosts_immediately
+      properties:
+        all_hosts_immediately:
+          description: If true, immediately start scan on all hosts covered by this schedule. If false, scans will be spread out across hosts over the scan schedule interval.
+          type: boolean
+        hosts:
+          description: Only present when retrieving individual schedule detail. If specific hosts are included by ID in this schedule, then summary hosts details are listed here.
+          readOnly: true
+          type: array
+          items:
+            $ref: "#/components/schemas/HostBriefInfo"
+        sandflies:
+          description: Only present when retrieving individual schedule detail. If specific sandflies are included by ID in this schedule, then summary sandfly details are listed here.
+          readOnly: true
+          type: array
+          items:
+            $ref: "#/components/schemas/SandflyBriefSummary"
     ScheduleMeta:
       required:
         - id
@@ -11397,6 +12264,7 @@ components:
         - date_last_run
         - date_next_run
         - paused
+        - system_managed
       properties:
         id:
           type: string
@@ -11420,20 +12288,91 @@ components:
         paused:
           description: Is schedule paused?
           type: boolean
+        system_managed:
+          description: This schedule is managed by the system (e.g. for an autodrift profile) and cannot be edited or deleted directly. It can be paused/unpaused and manually run.
+          type: boolean
       type: object
-    ScheduleScan:
+    ScheduleTypeScan:
       type: object
       allOf:
         - $ref: "#/components/schemas/ScheduleConfigScan"
+        - $ref: "#/components/schemas/ScheduleCommon"
         - $ref: "#/components/schemas/ScheduleAddCommon"
         - $ref: "#/components/schemas/ScheduleMeta"
-    ScheduleDiscovery:
+      required:
+        - covered_hosts
+        - candidate_sandflies
+      properties:
+        covered_hosts:
+          description: Only present when retrieving individual schedule details. Lists details of all hosts covered by this schedule.
+          readOnly: true
+          type: array
+          items:
+            $ref: "#/components/schemas/HostSummaryRollup"
+        candidate_sandflies:
+          description: Only present when retrieving individual schedule details. Lists details of all sandflies that can be used during scans by this schedule.
+          readOnly: true
+          type: array
+          items:
+            $ref: "#/components/schemas/SandflySummary"
+    ScheduleTypeDrift:
       type: object
       allOf:
+        - $ref: "#/components/schemas/ScheduleTypeScan"
+      required:
+        - result_profile_id
+      properties:
+        result_profile_id:
+          description: If this is a schedule related to a result profile, this will be the ID of the associated result profile. Otherwise, this field will not be present.
+          type: integer
+    ScheduleTypeGather:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/ScheduleTypeScan"
+      required:
+        - gather_finish
+        - result_profile_id
+      properties:
+        gather_finish:
+          readOnly: true
+          description: The approximate time this gather schedule will end and the associated result profile will switch to enforcing mode.
+          type: string
+          format: date-time
+        result_profile_id:
+          description: If this is a schedule related to a result profile, this will be the ID of the associated result profile. Otherwise, this field will not be present.
+          type: integer
+    ScheduleTypeDiscovery:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/ScheduleConfigDiscoveryIplist"
+        - $ref: "#/components/schemas/ScheduleConfigDiscoveryNetblock"
+        - $ref: "#/components/schemas/ScheduleAddCommon"
+        - $ref: "#/components/schemas/ScheduleCommon"
+        - $ref: "#/components/schemas/ScheduleMeta"
+    ScheduleSummary:
+      discriminator:
+        propertyName: schedule_type
+        mapping:
+          scan: "#/components/schemas/ScheduleSummaryScan"
+          discover: "#/components/schemas/ScheduleSummaryDiscover"
+          gather: "#/components/schemas/ScheduleSummaryGather"
+          drift: "#/components/schemas/ScheduleSummaryDrift"
+      oneOf:
+        - $ref: "#/components/schemas/ScheduleSummaryScan"
+        - $ref: "#/components/schemas/ScheduleSummaryDiscover"
+        - $ref: "#/components/schemas/ScheduleSummaryGather"
+        - $ref: "#/components/schemas/ScheduleSummaryDrift"
+    ScheduleSummaryScan:
+      allOf:
         - $ref: "#/components/schemas/ScheduleConfigDiscovery"
+        - $ref: "#/components/schemas/ScheduleConfigScan"
+        - $ref: "#/components/schemas/HostConnectionCommon"
+        - $ref: "#/components/schemas/LinkedCredential"
         - $ref: "#/components/schemas/ScheduleAddCommon"
         - $ref: "#/components/schemas/ScheduleMeta"
-    Schedule:
+        - $ref: "#/components/schemas/HostConnectionRange"
+        - $ref: "#/components/schemas/HostConnectionList"
+    ScheduleSummaryDrift:
       allOf:
         - $ref: "#/components/schemas/ScheduleConfigDiscovery"
         - $ref: "#/components/schemas/ScheduleConfigScan"
@@ -11444,6 +12383,67 @@ components:
         - $ref: "#/components/schemas/HostConnectionRange"
         - $ref: "#/components/schemas/HostConnectionList"
       type: object
+      required:
+        - result_profile_id
+      properties:
+        result_profile_id:
+          description: If this is a schedule related to a result profile, this will be the ID of the associated result profile. Otherwise, this field will not be present.
+          type: integer
+    ScheduleSummaryDiscover:
+      allOf:
+        - $ref: "#/components/schemas/ScheduleConfigDiscovery"
+        - $ref: "#/components/schemas/ScheduleConfigScan"
+        - $ref: "#/components/schemas/HostConnectionCommon"
+        - $ref: "#/components/schemas/LinkedCredential"
+        - $ref: "#/components/schemas/ScheduleAddCommon"
+        - $ref: "#/components/schemas/ScheduleMeta"
+        - $ref: "#/components/schemas/HostConnectionRange"
+        - $ref: "#/components/schemas/HostConnectionList"
+      type: object
+      required:
+        - all_hosts_immediately
+      properties:
+        all_hosts_immediately:
+          description: If true, immediately start scan on all hosts covered by this schedule. If false, scans will be spread out across hosts over the scan schedule interval.
+          type: boolean
+    ScheduleSummaryGather:
+      allOf:
+        - $ref: "#/components/schemas/ScheduleConfigDiscovery"
+        - $ref: "#/components/schemas/ScheduleConfigScan"
+        - $ref: "#/components/schemas/HostConnectionCommon"
+        - $ref: "#/components/schemas/LinkedCredential"
+        - $ref: "#/components/schemas/ScheduleAddCommon"
+        - $ref: "#/components/schemas/ScheduleMeta"
+        - $ref: "#/components/schemas/HostConnectionRange"
+        - $ref: "#/components/schemas/HostConnectionList"
+      type: object
+      required:
+        - all_hosts_immediately
+      properties:
+        all_hosts_immediately:
+          description: If true, immediately start scan on all hosts covered by this schedule. If false, scans will be spread out across hosts over the scan schedule interval.
+          type: boolean
+        gather_finish:
+          description: The approximate time this gather schedule will end and the associated result profile will switch to enforcing mode.
+          type: string
+          format: date-time
+        result_profile_id:
+          description: If this is a schedule related to a result profile, this will be the ID of the associated result profile. Otherwise, this field will not be present.
+          type: integer
+    Schedule:
+      discriminator:
+        propertyName: schedule_type
+        mapping:
+          scan: "#/components/schemas/ScheduleTypeScan"
+          discover: "#/components/schemas/ScheduleTypeDiscovery"
+          gather: "#/components/schemas/ScheduleTypeGather"
+          drift: "#/components/schemas/ScheduleTypeDrift"
+      oneOf:
+        - $ref: "#/components/schemas/ScheduleTypeScan"
+        - $ref: "#/components/schemas/ScheduleTypeDiscovery"
+        - $ref: "#/components/schemas/ScheduleTypeGather"
+        - $ref: "#/components/schemas/ScheduleTypeDrift"
+      type: object
     ScheduleAdd:
       type: object
       discriminator:
@@ -11451,6 +12451,7 @@ components:
         mapping:
           scan: "#/components/schemas/ScheduleConfigScan"
           discover: "#/components/schemas/ScheduleConfigDiscovery"
+          gather: "#/components/schemas/ScheduleConfigScan"
       oneOf:
         - $ref: "#/components/schemas/ScheduleConfigScan"
         - $ref: "#/components/schemas/ScheduleConfigDiscovery"
@@ -11540,6 +12541,10 @@ components:
           default: false
           description: Verify host key when connecting to a host.
           type: boolean
+        override_directory:
+          description: Directory to run scan from instead of the node configuration values. An empty string means no override. For the behavior of an empty string in the node config file (where an empty string means use the home directory), enter"~" here.
+          type: string
+          default: ""
       type: object
     ScheduleConfigDiscoveryIplist:
       allOf:
@@ -11585,6 +12590,28 @@ components:
           items:
             $ref: "#/components/schemas/SandflyTypeGeneral"
           type: array
+        sandfly_tags:
+          description: (scan schedule) List of sandfly tags to include in this scan. If sandfly_types is also populated, these sandfly tags will act as a filter on the sandflies selected by type. If no sandfly_type list is present, then all active sandflies with the requested tags will be candidates for this scan.
+          type: array
+          items:
+            type: string
+        sandfly_tags_operator:
+          description: "(scan schedule) How to interpret the sandfly_tags field: 'and' if all tags must be present on the sandfly to qualify for this scan, or 'or' if any tag qualifies the sandfly."
+          $ref: "#/components/schemas/ScanTagOperators"
+        sandfly_tags_exclude:
+          description: (scan schedule) List of sandfly tags to exclude in this scan. These take precendent over inclusion based on the 'sandfly_type' and 'sandfly_tag' fields.
+          type: array
+          items:
+            type: string
+        sandfly_tags_exclude_operator:
+          description: "(scan schedule) How to interpret the sandfly_tags_exclude field: 'and' if all tags must be present on the sandfly to exclude for this scan, or 'or' if any tag excludes the sandfly."
+          $ref: "#/components/schemas/ScanTagOperators"
+        sandfly_ids:
+          description: (scan schedule) Names (IDs) of specific sandflies to always include in this scan. These sandflies will be included even if they are inactive, and this list is not filtered by the include/exclude type or tag criteria configured for this scan. Furthermore, these sandflies are guaranteed to always run and are not part of the sandfly_selection_percent amount.
+          type: array
+          items:
+            type: string
+            description: Sandfly name.
         tags:
           description: (scan schedule) Host tags to include in this scan.
           items:
@@ -11648,251 +12675,331 @@ components:
         - total
       type: object
     ServerConfiguration:
+      allOf:
+        - $ref: "#/components/schemas/ServerConfigCommon"
+        - $ref: "#/components/schemas/ServerConfigGeneral"
+        - $ref: "#/components/schemas/ServerConfigSectionElastic"
+        - $ref: "#/components/schemas/ServerConfigSectionLLM"
+        - $ref: "#/components/schemas/ServerConfigSectionPostgres"
+        - $ref: "#/components/schemas/ServerConfigSectionSentinel"
+        - $ref: "#/components/schemas/ServerConfigSectionSSO"
+      type: object
+    ServerConfigurationUpdate:
+      allOf:
+        - $ref: "#/components/schemas/ServerConfigCommon"
+        - $ref: "#/components/schemas/ServerConfigUpdateSections"
+    ServerConfigUpdateSections:
+      type: object
+      anyOf:
+        - $ref: "#/components/schemas/ServerConfigGeneral"
+        - $ref: "#/components/schemas/ServerConfigSectionElastic"
+        - $ref: "#/components/schemas/ServerConfigSectionLLM"
+        - $ref: "#/components/schemas/ServerConfigSectionPostgres"
+        - $ref: "#/components/schemas/ServerConfigSectionSentinel"
+        - $ref: "#/components/schemas/ServerConfigSectionSSO"
+    ServerConfigSectionElastic:
+      type: object
+      required:
+        - elastic_replication
+      properties:
+        elastic_replication:
+          $ref: "#/components/schemas/ServerConfigElastic"
+    ServerConfigSectionLLM:
+      type: object
+      required:
+        - llm_analysis
+      properties:
+        llm_analysis:
+          $ref: "#/components/schemas/ServerConfigLLM"
+    ServerConfigSectionPostgres:
+      type: object
+      required:
+        - postgres_replication
+      properties:
+        postgres_replication:
+          $ref: "#/components/schemas/ServerConfigPostgres"
+    ServerConfigSectionSentinel:
+      type: object
+      required:
+        - sentinel_replication
+      properties:
+        sentinel_replication:
+          $ref: "#/components/schemas/ServerConfigSentinel"
+    ServerConfigSectionSSO:
+      type: object
+      required:
+        - sso
+      properties:
+        sso:
+          $ref: "#/components/schemas/ServerConfigSSO"
+    ServerConfigCommon:
+      required:
+        - config_revision
+      type: object
+      properties:
+        config_revision:
+          format: int64
+          type: integer
+          description: Configuration revision number. Must be echoed back to the server. Provides optimistic concurrency control to prevent two users from altering configuration simultaneously.
+    ServerConfigGeneral:
+      type: object
+      required:
+        - agent_names
+        - data_retention_days
+        - pass_retention_days
+        - shared_url_keep_days
+        - maintenance_hour
+        - agent_reverse_dns_lookup
       properties:
         agent_names:
           format: string
           type: string
           description: Comma-separated list of names to use for the Sandfly binary that is sent to target hosts.
-        config_revision:
-          format: int64
-          type: integer
-          description: Configuration revision number. Must be echoed back to the server. Provides optimistic concurrency control to prevent two users from altering configuration simultaneously.
+          default: sandfly
         data_retention_days:
           format: int64
           type: integer
           description: Number of days to keep alert results and other data.
+          default: 30
         pass_retention_days:
           format: int64
           type: integer
           description: Number of days to keep pass results.
+          default: 3
         shared_url_keep_days:
           format: int64
           type: integer
           description: Number of days to keep "share" URL links generated in the UI.
-        elastic_replication:
-          required:
-            - enabled
-            - url
-            - ca_cert
-            - username
-          description: ElasticSearch replication settings.
-          properties:
-            ca_cert:
-              format: string
-              type: string
-              description: Trusted CA certificate when connecting to HTTPS Elastic endpoint, in PEM format.
-            enabled:
-              type: boolean
-              description: Whether or not ElasticSearch replication is enabled.
-            password:
-              format: string
-              type: string
-              nullable: true
-              description: Login password for ElasticSearch. Will be stored encrypted in the Sandfly database and not returned in getconfig API calls. When updating configuration, leave null to not replace existing saved password.
-            url:
-              format: string
-              type: string
-              description: ElasticSearch HTTP/HTTPS URL.
-            username:
-              format: string
-              type: string
-              description: ElasticSearch login username.
-          type: object
-        llm_analysis:
-          type: object
-          required:
-            - enabled
-            - provider
-            - model
-            - results_limit
-          properties:
-            enabled:
-              type: boolean
-              description: Indicates of LLM analysis integration is enabled or not.
-            provider:
-              type: string
-              description: LLM API service to use.
-              enum:
-                - custom
-                - Gemini
-                - OpenAI
-                - xAI
-            password:
-              type: string
-              nullable: true
-              description: API key for the LLM provider. Will be stored encrypted in the Sandfly database and not returned in getconfig calls. Leave as null when updating configuration to not replace the existing saved password.
-            model:
-              type: string
-              description: Model name to use.
-            available_models:
-              type: array
-              items:
-                type: string
-              readOnly: true
-              description: After saving the configuration with enabled=true, the server will make an API call to the selected provider to get the list of available models. The next time the config is retrieved, this array will have the updated list of available models.
-            url:
-              type: string
-              description: URL of the custom API. Only allowed to be present when provider = custom
-            ca_cert:
-              type: string
-              description: Optional trusted CA certificate, in PEM format, to use with the custom API. Ignored when provider is not custom
-            results_limit:
-              type: integer
-              description: Maximum number of results a user is allowed to select for a single analysis.
+          default: 90
         maintenance_hour:
           format: int64
           type: integer
           description: Hour of the day, on the 24-hour UTC clock, to perform daily system maintenance tasks.
-        postgres_replication:
-          required:
-            - enabled
-            - username
-            - database
-            - host
-            - extra_options
-          description: PostgreSQL replication settings.
-          properties:
-            enabled:
-              type: boolean
-              description: Indicates if PostgreSQL replication is enabled or not.
-            database:
-              format: string
-              type: string
-              description: Database name on the target PostgreSQL server.
-            extra_options:
-              format: string
-              type: string
-              description: Extra options to include in the connection string to PostgreSQL. Must be in the 'option=value option2=value2 ...' format.
-            host:
-              format: string
-              type: string
-              description: PostgreSQL hostname or IP address.
-            password:
-              format: string
-              type: string
-              nullable: true
-              description: PostrgeSQL login password. Will be stored encrypted in the Sandfly database and not returned in getconfig calls. Leave as null when updating configuration to not replace the existing saved password.
-            username:
-              format: string
-              type: string
-              description: PostgreSQL login username.
-          type: object
-        sentinel_replication:
-          required:
-            - enabled
-            - ssh_enabled
-            - host_enabled
-            - tenant_id
-            - client_id
-            - ingest_url
-            - dcr_id
-            - stream_name
-            - ssh_stream_name
-            - host_stream_name
-            - alerts_only
-            - auth_method
-          description: Microsoft Sentinel replication settings.
-          properties:
-            enabled:
-              type: boolean
-              description: Indicates if Sentinel replication is enabled or not.
-            ssh_enabled:
-              type: boolean
-              description: Indicates if Sentinel SSH Key replication is enabled or not.
-            host_enabled:
-              type: boolean
-              description: Indicates if Sentinel Hosts replication is enabled or not.
-            tenant_id:
-              format: string
-              type: string
-              description: Microsoft Azure Tenant ID GUID.
-            client_id:
-              format: string
-              type: string
-              description: Microsoft Azure Application Client ID GUID.
-            ingest_url:
-              format: string
-              type: string
-              description: Sentinel Data collection endpoint logs ingestion base URL.
-            dcr_id:
-              format: string
-              type: string
-              description: Sentinel Data collection rule immutable ID.
-            stream_name:
-              format: string
-              type: string
-              description: Sentinel Data collection rule Results custom table stream name.
-            ssh_stream_name:
-              format: string
-              type: string
-              description: Sentinel Data collection rule SSH Key custom table stream name.
-            host_stream_name:
-              format: string
-              type: string
-              description: Sentinel Data collection rule Hosts custom table stream name.
-            alerts_only:
-              type: boolean
-              description: Indicates type of results to send to Sentinel. True sends only alert and error results, false sends all results.
-            auth_method:
-              type: string
-              description: Whether to use a client secret or certificate credentials for authentication.
-              enum:
-                - client_secret
-                - certificate_credentials
-            auth_certificate:
-              type: string
-              description: Only used when auth_method is certificate_credentials. x509 certificate, in PEM format, that matches a certificate in the Azure app registration for Sandfly to authenticate with Azure. Azure requires that the certificate use RSA keys.
-            password:
-              format: string
-              type: string
-              nullable: true
-              description: When auth_method is client_secret, this is the Client Secret value to log in to Azure with. When auth_method is certificate_credentials, this is an unencrypted private key in PEM format associated with auth_certificate. In both cases, will be stored encrypted in the Sandfly database and not returned in getconfig calls. Leave as null when updating configuration to not replace the existing saved secret value.
-          type: object
-        sso:
-          description: SSO configuration options.
-          required:
-            - saml_enabled
-            - idp_entity_id
-            - idp_certificate
-            - idp_sso_binding
-            - request_signature_method
-            - sp_entity_id
-            - sp_certificate
-            - sp_private_key
-          properties:
-            idp_certificate:
-              format: string
-              type: string
-              description: IDP certificate (IDP X509 Certificate provided in the IDP's SAML metadata).
-            idp_entity_id:
-              format: string
-              type: string
-              description: IDP entity ID (entityID attribute on the EntityDescriptor element of the IDP's SAML metadata).
-            idp_sso_binding:
-              format: string
-              type: string
-              description: IDP SSO binding URL.
-            request_signature_method:
-              $ref: "#/components/schemas/RequestSignatureMethod"
-            sp_certificate:
-              format: string
-              type: string
-              description: If request signing is used, this Sandfly system's certificate.
-            sp_entity_id:
-              format: string
-              type: string
-              description: This Sandfly system's client entity ID.
-            sp_private_key:
-              format: string
-              type: string
-              description: If request signing is used, this Sandfly system's private key.
-            saml_enabled:
-              type: boolean
-              description: Is SAML SSO enabled for this Sandfly instance.
-          type: object
-      required:
-        - config_revision
+        agent_reverse_dns_lookup:
+          type: boolean
+          description: Configure node to perform a Reverse DNS lookup on IP addresses
+    ServerConfigLLM:
       type: object
+      required:
+        - enabled
+        - provider
+        - model
+        - available_models
+        - url
+        - ca_cert
+        - results_limit
+      properties:
+        enabled:
+          type: boolean
+          description: Indicates of LLM analysis integration is enabled or not.
+        provider:
+          type: string
+          description: LLM API service to use.
+          enum:
+            - custom
+            - DigitalOcean
+            - Gemini
+            - OpenAI
+            - xAI
+        password:
+          type: string
+          nullable: true
+          description: API key for the LLM provider. Will be stored encrypted in the Sandfly database and not returned in getconfig calls. Leave as null when updating configuration to not replace the existing saved password.
+        model:
+          type: string
+          description: Model name to use.
+        available_models:
+          type: array
+          items:
+            type: string
+          readOnly: true
+          description: After saving the configuration with enabled=true, the server will make an API call to the selected provider to get the list of available models. The next time the config is retrieved, this array will have the updated list of available models.
+        url:
+          type: string
+          description: URL of the custom API. Only allowed to be present when provider = custom
+        ca_cert:
+          type: string
+          description: Optional trusted CA certificate, in PEM format, to use with the custom API. Ignored when provider is not custom
+        results_limit:
+          type: integer
+          description: Maximum number of results a user is allowed to select for a single analysis.
+    ServerConfigElastic:
+      required:
+        - enabled
+        - url
+        - ca_cert
+        - username
+      description: ElasticSearch replication settings.
+      type: object
+      properties:
+        ca_cert:
+          format: string
+          type: string
+          description: Trusted CA certificate when connecting to HTTPS Elastic endpoint, in PEM format.
+        enabled:
+          type: boolean
+          description: Whether or not ElasticSearch replication is enabled.
+        password:
+          format: string
+          type: string
+          nullable: true
+          description: Login password for ElasticSearch. Will be stored encrypted in the Sandfly database and not returned in getconfig API calls. When updating configuration, leave null to not replace existing saved password.
+        url:
+          format: string
+          type: string
+          description: ElasticSearch HTTP/HTTPS URL.
+        username:
+          format: string
+          type: string
+          description: ElasticSearch login username.
+    ServerConfigPostgres:
+      type: object
+      required:
+        - enabled
+        - username
+        - database
+        - host
+        - extra_options
+      description: PostgreSQL replication settings.
+      properties:
+        enabled:
+          type: boolean
+          description: Indicates if PostgreSQL replication is enabled or not.
+        database:
+          format: string
+          type: string
+          description: Database name on the target PostgreSQL server.
+        extra_options:
+          format: string
+          type: string
+          description: Extra options to include in the connection string to PostgreSQL. Must be in the 'option=value option2=value2 ...' format.
+        host:
+          format: string
+          type: string
+          description: PostgreSQL hostname or IP address.
+        password:
+          format: string
+          type: string
+          nullable: true
+          description: PostrgeSQL login password. Will be stored encrypted in the Sandfly database and not returned in getconfig calls. Leave as null when updating configuration to not replace the existing saved password.
+        username:
+          format: string
+          type: string
+          description: PostgreSQL login username.
+    ServerConfigSentinel:
+      type: object
+      required:
+        - enabled
+        - ssh_enabled
+        - host_enabled
+        - tenant_id
+        - client_id
+        - ingest_url
+        - dcr_id
+        - stream_name
+        - ssh_stream_name
+        - host_stream_name
+        - alerts_only
+        - auth_method
+        - auth_certificate
+      description: Microsoft Sentinel replication settings.
+      properties:
+        enabled:
+          type: boolean
+          description: Indicates if Sentinel replication is enabled or not.
+        ssh_enabled:
+          type: boolean
+          description: Indicates if Sentinel SSH Key replication is enabled or not.
+        host_enabled:
+          type: boolean
+          description: Indicates if Sentinel Hosts replication is enabled or not.
+        tenant_id:
+          format: string
+          type: string
+          description: Microsoft Azure Tenant ID GUID.
+        client_id:
+          format: string
+          type: string
+          description: Microsoft Azure Application Client ID GUID.
+        ingest_url:
+          format: string
+          type: string
+          description: Sentinel Data collection endpoint logs ingestion base URL.
+        dcr_id:
+          format: string
+          type: string
+          description: Sentinel Data collection rule immutable ID.
+        stream_name:
+          format: string
+          type: string
+          description: Sentinel Data collection rule Results custom table stream name.
+        ssh_stream_name:
+          format: string
+          type: string
+          description: Sentinel Data collection rule SSH Key custom table stream name.
+        host_stream_name:
+          format: string
+          type: string
+          description: Sentinel Data collection rule Hosts custom table stream name.
+        alerts_only:
+          type: boolean
+          description: Indicates type of results to send to Sentinel. True sends only alert and error results, false sends all results.
+        auth_method:
+          type: string
+          description: Whether to use a client secret or certificate credentials for authentication.
+          enum:
+            - client_secret
+            - certificate_credentials
+        auth_certificate:
+          type: string
+          description: Only used when auth_method is certificate_credentials. x509 certificate, in PEM format, that matches a certificate in the Azure app registration for Sandfly to authenticate with Azure. Azure requires that the certificate use RSA keys.
+        password:
+          format: string
+          type: string
+          nullable: true
+          description: When auth_method is client_secret, this is the Client Secret value to log in to Azure with. When auth_method is certificate_credentials, this is an unencrypted private key in PEM format associated with auth_certificate. In both cases, will be stored encrypted in the Sandfly database and not returned in getconfig calls. Leave as null when updating configuration to not replace the existing saved secret value.
+    ServerConfigSSO:
+      type: object
+      description: SSO configuration options.
+      required:
+        - saml_enabled
+        - idp_entity_id
+        - idp_certificate
+        - idp_sso_binding
+        - request_signature_method
+        - sp_entity_id
+        - sp_certificate
+        - sp_private_key
+      properties:
+        idp_certificate:
+          format: string
+          type: string
+          description: IDP certificate (IDP X509 Certificate provided in the IDP's SAML metadata).
+        idp_entity_id:
+          format: string
+          type: string
+          description: IDP entity ID (entityID attribute on the EntityDescriptor element of the IDP's SAML metadata).
+        idp_sso_binding:
+          format: string
+          type: string
+          description: IDP SSO binding URL.
+        request_signature_method:
+          $ref: "#/components/schemas/RequestSignatureMethod"
+        sp_certificate:
+          format: string
+          type: string
+          description: If request signing is used, this Sandfly system's certificate.
+        sp_entity_id:
+          format: string
+          type: string
+          description: This Sandfly system's client entity ID.
+        sp_private_key:
+          format: string
+          type: string
+          description: If request signing is used, this Sandfly system's private key.
+        saml_enabled:
+          type: boolean
+          description: Is SAML SSO enabled for this Sandfly instance.
     RequestSignatureMethod:
       type: string
       enum:
@@ -12054,6 +13161,32 @@ components:
                   $ref: "#/components/schemas/StandardTimeBasedGraphData"
                 all:
                   $ref: "#/components/schemas/StandardTimeBasedGraphData"
+    StatusByNodes:
+      required:
+        - nodes
+        - schedules
+        - nightly_maintenance_running
+        - nightly_maintenance_start
+        - ingest_queue_depth
+      properties:
+        nodes:
+          $ref: "#/components/schemas/StatusNodes"
+        schedules:
+          type: array
+          items:
+            $ref: "#/components/schemas/StatusSchedule"
+        nightly_maintenance_running:
+          type: boolean
+          description: The nightly maintenance is running.
+        nightly_maintenance_start:
+          type: string
+          format: date-time
+          description: If maintenance is running, the time is started. Null if not running.
+          nullable: true
+        ingest_queue_depth:
+          type: integer
+          description: The number of finished scans that are waiting in the server result ingestion queue to be imported into the database.
+      type: object
     StatusByTags:
       required:
         - Collection
@@ -12839,7 +13972,7 @@ components:
           type: object
           description: Dictionary of hosts by ID
           additionalProperties:
-            $ref: "#/components/schemas/WhitelistHostInfo"
+            $ref: "#/components/schemas/HostBriefInfo"
     WhitelistRuleOperator:
       type: string
       enum:
@@ -12905,7 +14038,7 @@ components:
           type: string
           description: A descriptive comment about this whitelist rule.
           default: ""
-    WhitelistHostInfo:
+    HostBriefInfo:
       type: object
       required:
         - id
@@ -12945,23 +14078,67 @@ components:
             type: integer
           type: array
       type: object
-    ResultProfile:
+    ProfileType:
+      type: string
+      readOnly: true
+      enum:
+        - legacy_profile
+        - autodrift_profile
+      description: Legacy or autodrift profile.
+    ProfileMeta:
       type: object
       properties:
+        type:
+          $ref: "#/components/schemas/ProfileType"
         id:
           type: integer
           readOnly: true
           description: Unique ID assigned by the server for this result profile.
+        state:
+          $ref: "#/components/schemas/ProfileState"
+        paused:
+          type: boolean
+          default: false
+          description: Indicates if this profile is paused. When paused, no drift alerts will be generated on the associated hosts, nor will results be whitelisted.
+        scan_schedule:
+          type: boolean
+          readOnly: true
+          description: Indicates if this is a drift profile that is configured to have an associated drift scan schedule.
+        create_date:
+          type: string
+          readOnly: true
+          description: Date this result profile was created.
+        hosts_covered_whitelist:
+          type: integer
+          description: The number of distinct hosts, either directly or via tags, that this result profile applies to in 'whitelist' mode.
+        hosts_covered_drift:
+          type: integer
+          description: The number of distinct hosts, either directly or via tags, that this result profile applies to in 'drift' mode.
+        total_sandflies:
+          type: integer
+          description: The number of distinct sandflies that this result profile includes results for.
+      required:
+        - id
+        - state
+        - paused
+        - create_date
+        - type
+    ProfileState:
+      type: string
+      readOnly: true
+      description: Whether this profile is in gather or enforce mode.
+      enum:
+        - gather
+        - enforce
+    ProfileCommon:
+      type: object
+      properties:
         name:
           type: string
           description: Display name of this result profile.
         description:
           type: string
           description: Description of this result profile.
-        create_date:
-          type: string
-          readOnly: true
-          description: Date this result profile was created.
       required:
         - name
     HostLink:
@@ -12980,19 +14157,45 @@ components:
             host_sequence_id:
               type: integer
               description: Host sequence_id. If host_id is populated, this cannot be populated.
-    ResultProfileAddResultsRequest:
+    ProfileAppendRequest:
+      oneOf:
+        - $ref: "#/components/schemas/ProfileAppendHostsResults"
+        - $ref: "#/components/schemas/ProfileAppendResults"
+        - $ref: "#/components/schemas/ProfileAppendHostsSandflies"
+    ProfileAppendHostsResults:
       type: object
+      required:
+        - hosts
+        - user_note
       properties:
         hosts:
           description: List of Host IDs to take a results snapshot of for this result profile.
           type: array
           items:
             $ref: "#/components/schemas/HostLink"
+        user_note:
+          description: User-provided descriptive note explaining the results that are being added.
+          type: string
+    ProfileAppendResults:
+      type: object
+      required:
+        - result_ids
+        - user_note
+      properties:
         result_ids:
           description: List of individual result IDs to take a snapshot of for this result profile.
           type: array
           items:
             type: integer
+        user_note:
+          description: User-provided descriptive note explaining the results that are being added.
+          type: string
+    ProfileAppendHostsSandflies:
+      type: object
+      required:
+        - host_sandflies
+        - user_note
+      properties:
         host_sandflies:
           description: Sandflies on a specific host to take a snapshot of for this result profiles.
           type: object
@@ -13009,29 +14212,228 @@ components:
         user_note:
           description: User-provided descriptive note explaining the results that are being added.
           type: string
-    ResultProfileSummaries:
-      type: array
-      description: Array of Result Profile Summaries.
-      items:
-        $ref: "#/components/schemas/ResultProfileSummary"
-    ResultProfileSummary:
-      type: object
+    ProfileCreateRequest:
+      description: Result profile details.
       allOf:
-        - $ref: "#/components/schemas/ResultProfile"
+        - $ref: "#/components/schemas/ProfileCommon"
+        - $ref: "#/components/schemas/ProfileAppendRequest"
       properties:
-        hosts_covered_whitelist:
-          type: integer
-          description: The number of distinct hosts, either directly or via tags, that this result profile applies to in 'whitelist' mode.
-        hosts_covered_drift:
-          type: integer
-          description: The number of distinct hosts, either directly or via tags, that this result profile applies to in 'drift' mode.
-        total_sandflies:
-          type: integer
-          description: The number of distinct sandflies that this result profile includes results for.
-    ResultProfileDetail:
+        associations:
+          $ref: "#/components/schemas/ProfileAssociations"
+    ProfileAutoDriftOptions:
       type: object
+      description: Options that are only relevant for auto-drift result profiles.
+      required:
+        - scope
+        - model_hosts
+        - covered_hosts
+        - gather_options
+        - schedule_options
+      properties:
+        scope:
+          $ref: "#/components/schemas/ProfileAutoScope"
+        model_hosts:
+          description: The hosts to use as the model (i.e. template) hosts for expected results.
+          $ref: "#/components/schemas/ProfileAutoHosts"
+        covered_hosts:
+          description: The hosts that this profile should detect drift on (and optionally whitelist) after the results from the model host(s) are gathered.
+          $ref: "#/components/schemas/ProfileAutoHosts"
+        gather_options:
+          description: When present, this profile will enter gather mode and run gather schedules as configured. If null, no gather schedule will be created and the profile will immediately enter enforcing mode.
+          nullable: true
+          $ref: "#/components/schemas/ProfileGatherOptions"
+        schedule_options:
+          description: When present, the new profile will automatically have a scan schedule associated with it that scans the covered hosts with the selected sandflies for drift detection. If null, no scan schedule will be created.
+          nullable: true
+          $ref: "#/components/schemas/ProfileScheduleOptions"
+    ProfileAutoHosts:
+      type: object
+      description: Hosts, included by tag or specific host IDs, to use as the model or covered hosts in an auto-drift result profile.
+      required:
+        - host_sequence_ids
+        - host_tags
+        - apply_host_tags
+      properties:
+        host_sequence_ids:
+          type: array
+          items:
+            type: integer
+          description: A list of host sequence IDs.
+        host_tags:
+          type: array
+          items:
+            type: string
+          description: A list of host tags.
+        apply_host_tags:
+          type: array
+          items:
+            type: string
+          description: Tags in this array will be applied (added to) the listed host IDs. This allows users to select some hosts and add new tags to them at the same time instead of needing to separately tag hosts first. When tags are present in this list, the individual hosts will be removed from the final profile associations and be included by tag instead.
+    ProfileAutoDriftTemplate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the template.
+        description:
+          type: string
+          description: A description of the template's purpose.
+        sandflies:
+          type: array
+          description: A list of sandflies associated with the template.
+          items:
+            type: string
+        ignore_containers:
+          type: boolean
+          description: Ignore container results for the profile.
+        strictness:
+          $ref: "#/components/schemas/ProfileHashType"
+        whitelist:
+          type: boolean
+          description: In addition to drift, should the resulting profile whitelist alerts found on the model hosts.
+      required:
+        - name
+        - description
+        - ignore_containers
+        - sandflies
+        - strictness
+        - whitelist
+    ProfileAutoScope:
+      type: object
+      description: Scope definition for autodrift profiles.
+      required:
+        - sandflies
+        - strictness
+        - whitelist
+        - ignore_containers
+      properties:
+        sandflies:
+          type: array
+          items:
+            type: string
+          description: The list of sandflies to use for drift detection.
+        strictness:
+          $ref: "#/components/schemas/ProfileHashType"
+        whitelist:
+          type: boolean
+          default: false
+          description: If true, any alert results on the model host(s) will be whitelisted on the covered host(s) by the profile.
+        ignore_containers:
+          description: When true, container results will not be affected by this profile.
+          type: boolean
+          default: false
+    ProfileGatherOptions:
+      type: object
+      description: Options to control the result gathering schedule for an auto-drift profile.
+      properties:
+        gather_hours:
+          type: integer
+          description: How many hours to run scans to gather results for this auto-drift profile before automatically switching to 'enforcing' mode and generating drift alerts on the covered host(s). Typical values may be 24 or 48 hours.
+        scan_minutes:
+          type: integer
+          description: How often, in minutes, to run scans against the model host(s) during the gather period. All of the specified sandflies will be run against the host at this interval. Typical values may be 20, 30, 60, etc. minutes.
+        full_scan:
+          type: boolean
+          default: false
+          description: If true, the gather scans on the model hosts will run *all* active sandflies for every scan, not only the requested drift detection recon sandflies. If whitelist is true, this may be desired to whitelist as many expected alerts as possible if any alert on the model host(s) should be considered to be false positives by virtue of the model host(s) being known to be clean, correct model systems.
+      required:
+        - gather_hours
+        - scan_minutes
+        - whitelist
+        - full_scan
+    ProfileScheduleOptions:
+      type: object
+      description: Options to control the scan schedule that is created to scan the covered hosts of a drift profile.
+      properties:
+        minutes_timer_high:
+          description: Upper limit minutes to wait between scans.
+          format: int32
+          type: integer
+        minutes_timer_low:
+          description: Lower limit of minutes to wait between scans.
+          format: int32
+          type: integer
+        restrict_begin_hour:
+          description: nil or -1 to disable, or a number between 0-24 to indicate the beginning hour (UTC) of the window of time during which this schedule will not run.
+          format: int32
+          type: integer
+        restrict_end_hour:
+          description: nil or -1 to disable, or a number between 0-24 to indicate the end hour (UTC) of the window of time during which this schedule will not run.
+          format: int32
+          type: integer
+        priority:
+          description: Nice-compatible priority of scan on target hosts.
+          format: int32
+          type: integer
+        all_hosts_immediately:
+          description: If true, immediately start scan on all hosts covered by this schedule. If false, scans will be spread out across hosts over the scan schedule interval.
+          type: boolean
+      required:
+        - minutes_timer_low
+        - minutes_timer_high
+        - restrict_begin_hour
+        - restrict_end_hour
+        - priority
+        - all_hosts_immediately
+    ProfileSandflyResults:
+      type: object
+      description: Details of results for a sandfly on a result profile.
+      required:
+        - sandfly
+        - results
+      properties:
+        sandfly:
+          type: string
+          description: Sandfly name.
+        results:
+          type: array
+          description: Results associated with the sandfly in the profile.
+          items:
+            type: object
+            description: Result associated with the sandfly in the profile.
+            required:
+              - type
+              - hash_type
+              - hash
+              - key_data
+              - result_profile_result_id
+            properties:
+              type:
+                type: string
+                enum:
+                  - whitelist
+                  - drift
+                description: Type of profile matching this result may be used for.
+              hash_type:
+                description: Enforcement level this result supports.
+                $ref: "#/components/schemas/ProfileHashType"
+              hash:
+                type: string
+                description: Match hash for this result. May be an empty string for a "no results" entry in the drift profile on this sandfly.
+              key_data:
+                type: string
+                description: Key data element from the result.
+              result_profile_result_id:
+                type: integer
+                description: Result profile result JSON ID.
+    ProfileSummary:
+      type: object
+      description: ""
       allOf:
-        - $ref: "#/components/schemas/ResultProfileSummary"
+        - $ref: "#/components/schemas/ProfileCommon"
+        - $ref: "#/components/schemas/ProfileMeta"
+    Profile:
+      type: object
+      discriminator:
+        propertyName: type
+        mapping:
+          legacy_profile: "#/components/schemas/ProfileLegacy"
+          autodrift_profile: "#/components/schemas/ProfileAutoDrift"
+      oneOf:
+        - $ref: "#/components/schemas/ProfileLegacy"
+        - $ref: "#/components/schemas/ProfileAutoDrift"
+    ProfileDetails:
+      type: object
       required:
         - associations
         - host_info
@@ -13039,30 +14441,78 @@ components:
         - sandflies
       properties:
         associations:
-          $ref: "#/components/schemas/ResultProfileAssociations"
+          $ref: "#/components/schemas/ProfileAssociations"
         host_info:
           type: array
           items:
-            $ref: "#/components/schemas/ResultProfileHostSummary"
+            $ref: "#/components/schemas/ProfileHostSummary"
         history:
           type: array
           items:
-            $ref: "#/components/schemas/ResultProfileHistory"
+            $ref: "#/components/schemas/ProfileHistory"
         sandflies:
           description: The sandflies for which this result profiles has results for.
           type: array
           items:
-            $ref: "#/components/schemas/ResultProfileSandflySummary"
-    ResultProfileForHost:
+            $ref: "#/components/schemas/ProfileSandflySummary"
+    ProfileUpdateRequest:
+      description: Result profile details.
       type: object
       allOf:
-        - $ref: "#/components/schemas/ResultProfile"
+        - $ref: "#/components/schemas/ProfileCommon"
+      properties:
+        associations:
+          $ref: "#/components/schemas/ProfileAssociations"
+    ProfileLegacy:
+      type: object
+      deprecated: true
+      allOf:
+        - $ref: "#/components/schemas/ProfileCommon"
+        - $ref: "#/components/schemas/ProfileMeta"
+        - $ref: "#/components/schemas/ProfileDetails"
+    ProfileAutoDrift:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/ProfileCommon"
+        - $ref: "#/components/schemas/ProfileMeta"
+        - $ref: "#/components/schemas/ProfileDetails"
+      required:
+        - auto_drift_options
+      properties:
+        auto_drift_options:
+          description: Only present if the profile is an auto-drift profile.
+          allOf:
+            - $ref: "#/components/schemas/ProfileAutoDriftOptions"
+            - $ref: "#/components/schemas/ProfileAutoDriftStats"
+    ProfileAutoDriftStats:
+      type: object
+      description: Server-provided statistics/data for an auto-drift profile.
+      required:
+        - gather_start_time
+        - schedule_id
+      properties:
+        gather_start_time:
+          type: string
+          format: date-time
+          nullable: true
+          description: The time gathering for this auto-drift profile last began (e.g. at initial creation time, or if a later edit re-enters gathering mode, the most recent occurrence). Null if there is no gather schedule.
+        schedule_id:
+          type: string
+          nullable: true
+          description: If there is currently a system-managed schedule (gather or scan) associated with this auto-drift profile, this is the name (ID) of the schedule. If there is no schedule, will be null.
+    ProfileForHost:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/ProfileSummary"
+      required:
+        - mode
+        - hash_type
       properties:
         mode:
-          $ref: "#/components/schemas/ResultProfileMode"
+          $ref: "#/components/schemas/ProfileMode"
         hash_type:
-          $ref: "#/components/schemas/ResultProfileHashType"
-    ResultProfileHostSummary:
+          $ref: "#/components/schemas/ProfileHashType"
+    ProfileHostSummary:
       type: object
       properties:
         id:
@@ -13085,10 +14535,12 @@ components:
           description: The IP address this host was last seen at.
           type: string
         mode:
-          $ref: "#/components/schemas/ResultProfileMode"
+          $ref: "#/components/schemas/ProfileMode"
         hash_type:
-          $ref: "#/components/schemas/ResultProfileHashType"
-    ResultProfileSandflySummary:
+          $ref: "#/components/schemas/ProfileHashType"
+        ignore_containers:
+          $ref: "#/components/schemas/ProfileIgnoreContainers"
+    ProfileSandflySummary:
       type: object
       properties:
         name:
@@ -13100,9 +14552,15 @@ components:
         whitelist_results:
           type: boolean
           description: Indicates if the profile has results for whitelisting this sandfly.
+        whitelist_results_count:
+          type: integer
+          description: Number of whitelisting results for this profile.
         drift_results:
           type: boolean
           description: Indicates if the profile has results to use for drift detection on this sandfly.
+        drift_results_count:
+          type: integer
+          description: Number of drift detection results for this profile.
         type:
           type: string
           description: Sandfly type.
@@ -13121,25 +14579,31 @@ components:
         - name
         - description
         - whitelist_results
+        - whitelist_results_count
         - drift_results
+        - drift_results_count
         - type
         - custom
         - active
         - tags
-    ResultProfileMode:
+    ProfileIgnoreContainers:
+      description: When true, container results will not be affected by this profile.
+      type: boolean
+      default: false
+    ProfileMode:
       description: Whether this result profile association will suppress alerts (whitelist), create alerts (drift), or both on the associated hosts.
       type: string
       enum:
         - whitelist
         - drift
         - both
-    ResultProfileHashType:
-      description: The type of hash, permissive or moderate, to use to apply this result profile to the associated host(s)
+    ProfileHashType:
+      description: The type of hash, permissive or restrictive, to use to apply this result profile to the associated host(s)
       type: string
       enum:
         - permissive
-        - moderate
-    ResultProfileAssociations:
+        - restrictive
+    ProfileAssociations:
       description: Individual hosts and tags to which to apply this result profile.
       type: object
       required:
@@ -13149,40 +14613,46 @@ components:
         hosts:
           type: array
           items:
-            $ref: "#/components/schemas/ResultProfileAssociationHost"
+            $ref: "#/components/schemas/ProfileAssociationHost"
         tags:
           type: array
           items:
-            $ref: "#/components/schemas/ResultProfileAssociationTag"
-    ResultProfileAssociationHost:
+            $ref: "#/components/schemas/ProfileAssociationTag"
+    ProfileAssociationHost:
       description: Host IDs to apply this result profile to.
       type: object
       required:
         - host_id
         - mode
         - hash_type
+        - ignore_containers
       properties:
         host_id:
           type: string
         mode:
-          $ref: "#/components/schemas/ResultProfileMode"
+          $ref: "#/components/schemas/ProfileMode"
         hash_type:
-          $ref: "#/components/schemas/ResultProfileHashType"
-    ResultProfileAssociationTag:
+          $ref: "#/components/schemas/ProfileHashType"
+        ignore_containers:
+          $ref: "#/components/schemas/ProfileIgnoreContainers"
+    ProfileAssociationTag:
       description: Host tags to apply this result profile to.
       type: object
       required:
         - tag
         - mode
         - hash_type
+        - ignore_containers
       properties:
         tag:
           type: string
         mode:
-          $ref: "#/components/schemas/ResultProfileMode"
+          $ref: "#/components/schemas/ProfileMode"
         hash_type:
-          $ref: "#/components/schemas/ResultProfileHashType"
-    ResultProfileHistory:
+          $ref: "#/components/schemas/ProfileHashType"
+        ignore_containers:
+          $ref: "#/components/schemas/ProfileIgnoreContainers"
+    ProfileHistory:
       description: Log of each time this result profile had results added to it.
       type: object
       properties:
@@ -13198,7 +14668,7 @@ components:
         user_note:
           description: Notes the user provided when performing the action.
           type: string
-    ResultProfilesIDList:
+    ProfilesIDList:
       type: object
       required:
         - result_profile_ids
@@ -13209,63 +14679,6 @@ components:
           items:
             type: integer
             description: Result profile ID
-    ResultProfilesExport:
-      type: array
-      description: Result profiles data for backup/restore.
-      items:
-        type: object
-        required:
-          - name
-        properties:
-          name:
-            type: string
-            description: Result profile name.
-          description:
-            type: string
-            description: Result profile description.
-          history:
-            type: array
-            description: History of this profile.
-            items:
-              $ref: "#/components/schemas/ResultProfileHistory"
-          associations:
-            $ref: "#/components/schemas/ResultProfileAssociations"
-          results:
-            type: array
-            description: Results saved in this profile.
-            items:
-              type: object
-              required:
-                - sandfly
-                - status
-                - hash_type
-                - hash
-              properties:
-                sandfly:
-                  type: string
-                  description: Sandfly name.
-                status:
-                  type: string
-                  description: Result status.
-                  enum:
-                    - alert
-                    - error
-                    - pass
-                hash_type:
-                  type: string
-                  description: Type of match hash.
-                  enum:
-                    - permissive
-                    - moderate
-                hash:
-                  type: string
-                  description: Match hash value.
-                host_id:
-                  type: string
-                  description: First host ID that contributed this result to the profile.
-                key_data:
-                  type: string
-                  description: Result key forensic data value.
     HostResultTimeline:
       description: Timeline of result alert/pass status for a host.
       type: object
@@ -14206,6 +15619,25 @@ components:
               type: string
             selinux_context:
               type: string
+            capabilities:
+              type: object
+              description: libcap capabilties stored in the file's security.capability xattr.
+              properties:
+                permitted:
+                  description: Decoded list of permitted capabilities
+                  type: array
+                  items:
+                    type: string
+                inheritable:
+                  description: Decoded list of inheritable capabilities
+                  type: array
+                  items:
+                    type: string
+                effective:
+                  description: Decoded list of effective capabilities
+                  type: array
+                  items:
+                    type: string
             size:
               type: integer
             size_byte_count:
@@ -14388,6 +15820,9 @@ components:
               type: string
             entry:
               type: string
+            non_utf8_data:
+              type: string
+              description: Indicates that this is a dummy placeholder entry from a crontab file that has a text string which is not valid UTF-8 encoded text. This property will only be present if true.
     DirEngineResponse:
       type: object
       required:
@@ -15313,6 +16748,8 @@ components:
                   type: integer
                 exit_code:
                   type: integer
+                empty:
+                  type: boolean
               required:
                 - pid
                 - comm
@@ -15366,6 +16803,7 @@ components:
                 - env_start
                 - env_end
                 - exit_code
+                - empty
             status:
               type: object
               properties:
@@ -15501,6 +16939,26 @@ components:
                   type: object
                   additionalProperties:
                     type: boolean
+                empty:
+                  type: boolean
+            capabilities:
+              type: object
+              properties:
+                permitted:
+                  description: Decoded list of permitted capabilities
+                  type: array
+                  items:
+                    type: string
+                inheritable:
+                  description: Decoded list of inheritable capabilities
+                  type: array
+                  items:
+                    type: string
+                effective:
+                  description: Decoded list of effective capabilities
+                  type: array
+                  items:
+                    type: string
     SystemdSessionEngineResponse:
       type: object
       required:

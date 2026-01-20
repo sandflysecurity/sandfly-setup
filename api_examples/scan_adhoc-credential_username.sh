@@ -12,7 +12,7 @@ Sandfly API Reference Script Example
 This script will attempt to authenticate, do adhoc scan, and output results.
 ITERATION: Uses the "username" credentials_type for the host credentials.
 
-DOC: https://api.sandflysecurity.com/#post-/scan/adhoc
+DOC: https://docs.sandflysecurity.com/reference/startadhocscan
 ******************************************************************************
 
 EOF
@@ -24,7 +24,7 @@ JQFILTER="."                # Filter for jq in the output section
 REQUESTMETHOD="POST"        # HTTP request method for data calls
 REQUESTDATA='{'\
 '"hosts":{'\
-'"ip_list":['\
+'"ip_range":['\
 '"192.168.1.0/24"'\
 '],'\
 '"ssh_port":22,'\

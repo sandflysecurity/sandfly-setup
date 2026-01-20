@@ -10,6 +10,14 @@
 # Make sure we run from the correct directory so relative paths work
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
+# Set CONTAINERMGR variable
+. ../setup_scripts/container_command.sh
+if [ $? -ne 0 ]; then
+    # Failed to find container runtime. The container_command script will
+    # have printed an error.
+    exit 1
+fi
+
 SETUP_DATA=../setup_data
 VERSION=${SANDFLY_VERSION:-$(cat ../../VERSION)}
 IMAGE_BASE=${SANDFLY_IMAGE_BASE:-quay.io/sandfly}
@@ -30,37 +38,28 @@ else
     exit 1
 fi
 
-# Determine if we need to use the sudo command to control Docker
-SUDO=""
-if [ $(id -u) -ne 0 ]; then
-    docker version >/dev/null 2>&1
-    if [ $? -ne 0 ]; then
-        SUDO="sudo"
-    fi
-fi
-
 # Check the state of the sandfly-server container
-esresult=$($SUDO docker inspect --format="{{.State.Running}}" sandfly-server 2> /dev/null)
+esresult=$($CONTAINERMGR inspect --format="{{.State.Running}}" sandfly-server 2> /dev/null)
 if [ "${esresult}z" = "truez" ]; then
     echo ""
     echo "****************************** ERROR ******************************"
     echo "* The Sandfly server container is running.                        *"
     echo "*                                                                 *"
     echo "* The container must be stopped with the following command:       *"
-    echo "*   docker stop sandfly-server                                    *"
+    echo "*   $CONTAINERMGR stop sandfly-server                                    *"
     echo "*                                                                 *"
     echo "* IMPORTANT: That command will take the UI and scanning offline!  *"
     echo "*                                                                 *"
     echo "* Then run this script again. Once it has finished, restore       *"
     echo "* the Sandfly server container with the following command:        *"
-    echo "*   docker start sandfly-server                                   *"
+    echo "*   $CONTAINERMGR start sandfly-server                                   *"
     echo "****************************** ERROR ******************************"
     echo ""
     exit 1
 fi
 
 # Check the state of the sandfly-postgres container
-esresult=$($SUDO docker inspect --format="{{.State.Running}}" sandfly-postgres 2> /dev/null)
+esresult=$($CONTAINERMGR inspect --format="{{.State.Running}}" sandfly-postgres 2> /dev/null)
 if [ "${esresult}z" != "truez" ]; then
     echo ""
     echo "****************************** ERROR ******************************"
@@ -75,10 +74,11 @@ if [ "${esresult}z" != "truez" ]; then
     exit 1
 fi
 
-docker network create sandfly-net 2>/dev/null
-docker rm sandfly-server-mgmt 2>/dev/null
+$CONTAINERMGR network create sandfly-net 2>/dev/null
+$CONTAINERMGR rm sandfly-server-mgmt 2>/dev/null
 
-docker run --name sandfly-server-mgmt \
+$CONTAINERMGR run --name sandfly-server-mgmt \
 --network sandfly-net \
 -e CONFIG_JSON \
+-u root \
 -it $IMAGE_BASE/sandfly${IMAGE_SUFFIX}:"$VERSION" /opt/sandfly/utils/init_data_db.sh

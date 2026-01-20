@@ -11,7 +11,7 @@ Sandfly API Reference Script Example
 
 This script will attempt to authenticate and add a credential.
 
-DOC: https://api.sandflysecurity.com/#post-/credentials/-credentials_id-
+DOC: https://docs.sandflysecurity.com/reference/addcredential
 ******************************************************************************
 
 EOF

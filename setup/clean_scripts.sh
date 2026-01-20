@@ -79,3 +79,24 @@ if [ -f auto_install_allinone.sh ]; then
     mv auto_install_allinone.sh $BACKUPFOLDER
 fi
 # End of 5.3.0
+
+# 5.6.0
+if [ -f ../api_examples/get_sandflies.sh ]; then
+    mkdir -p $BACKUPFOLDER
+    mv ../api_examples/get_sandflies.sh $BACKUPFOLDER
+fi
+
+if [ -f ../api_examples/scan_adhoc.sh ]; then
+    mkdir -p $BACKUPFOLDER
+    mv ../api_examples/scan_adhoc.sh $BACKUPFOLDER
+fi
+
+for x in install_docker_amazon.sh install_docker_centos7.sh \
+  install_docker_debian.sh install_docker_ubuntu18.sh \
+  install_docker_ubuntu20.sh; do
+    if [ -f $x ]; then
+        mkdir -p $BACKUPFOLDER
+        mv $x $BACKUPFOLDER
+    fi
+done
+# End of 5.6.0

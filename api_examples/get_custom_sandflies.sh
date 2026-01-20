@@ -11,7 +11,7 @@ Sandfly API Reference Script Example
 
 This script will attempt to authenticate and output all custom sandflies.
 
-DOC: https://api.sandflysecurity.com/#get-/sandflies/backup
+DOC: https://docs.sandflysecurity.com/reference/backupsandflies
 ******************************************************************************
 
 EOF

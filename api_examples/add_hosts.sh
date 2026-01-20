@@ -11,7 +11,7 @@ Sandfly API Reference Script Example
 
 This script will attempt to authenticate and add one or more hosts.
 
-DOC: https://api.sandflysecurity.com/#post-/hosts
+DOC: https://docs.sandflysecurity.com/reference/addhosts
 ******************************************************************************
 
 EOF

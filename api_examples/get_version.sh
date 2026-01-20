@@ -11,7 +11,7 @@ Sandfly API Reference Script Example
 
 This script will attempt to authenticate, get version data, and output it.
 
-DOC: https://api.sandflysecurity.com/#get-/version
+DOC: https://docs.sandflysecurity.com/reference/getsystemversion
 ******************************************************************************
 
 EOF

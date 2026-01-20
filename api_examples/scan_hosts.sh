@@ -11,7 +11,7 @@ Sandfly API Reference Script Example
 
 This script will attempt to authenticate and start host scanning tasks.
 
-DOC: https://api.sandflysecurity.com/#post-/scan
+DOC: https://docs.sandflysecurity.com/reference/startscan
 ******************************************************************************
 
 EOF

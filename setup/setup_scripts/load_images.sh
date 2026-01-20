@@ -6,29 +6,40 @@
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 SF_VERSION=${SANDFLY_VERSION:-$(cat ../../VERSION)}
-PG_VERSION=${POSTGRES_VERSION:-$(grep -oP 'POSTGRES_VERSION:-\K([0-9.]+)' ../../start_scripts/start_postgres.sh)}
+PG_VERSION_14=$(grep -oP 'VERSION=\K(14\.[0-9]+)' ../../start_scripts/start_postgres.sh)
+PG_VERSION_18=$(grep -oP 'VERSION=\K(18\.[0-9]+)' ../../start_scripts/start_postgres.sh)
+
+# Newer installation get Postgres 18
+PG_VERSION=$PG_VERSION_18
+
+# But older installs still use Postgres 14
+if [ -f ../setup_data/config.server.json ]; then
+    if ! grep -q '"config_version": 4,' ../setup_data/config.server.json >/dev/null; then
+        PG_VERSION=$PG_VERSION_14
+    fi
+fi
 
 # If we don't have the offline package, there's nothing to do
 if [ ! -f ../../docker_images/sandfly-docker-images-${SF_VERSION}.tgz ]; then
     exit
 fi
 
-# See if we can run Docker (or the podman compatability shim) as the current
-# user.
-docker version >/dev/null 2>&1
+# Set CONTAINERMGR variable
+. ./container_command.sh
 if [ $? -ne 0 ]; then
-    echo "This script must be run as root or as a user with access to the Docker daemon."
+    # Failed to find container runtime. The container_command script will
+    # have printed an error.
     exit 1
 fi
 
 NEED_IMAGES=0
 
-docker inspect quay.io/sandfly/sandfly:${SF_VERSION} >/dev/null 2>&1
+$CONTAINERMGR inspect quay.io/sandfly/sandfly:${SF_VERSION} >/dev/null 2>&1
 if [ "$?" -ne 0 ]; then
     NEED_IMAGES=1
 fi
 
-docker inspect docker.io/library/postgres:${PG_VERSION} >/dev/null 2>&1
+$CONTAINERMGR inspect docker.io/library/postgres:${PG_VERSION} >/dev/null 2>&1
 if [ "$?" -ne 0 ]; then
     NEED_IMAGES=1
 fi
@@ -39,7 +50,7 @@ if [ "$NEED_IMAGES" -gt 0 ]; then
     echo "** ../../docker_images/sandfly-docker-images-${SF_VERSION}.tgz"
     echo "** There will be a slight delay before further output..."
     zcat ../../docker_images/sandfly-docker-images-${SF_VERSION}.tgz | \
-        docker image load
+        $CONTAINERMGR image load
     if [ "$?" -ne 0 ]; then
         echo "** ERROR loading container images."
         echo ""
@@ -63,9 +74,9 @@ if [ "$NEED_IMAGES" -gt 0 ]; then
     # If restoring with podman, the postgres image may not get restored with
     # the prefix docker.io/library. Look for the right postgres image version
     # and tag it properly if it's not already there.
-    docker inspect docker.io/library/postgres:${PG_VERSION} >/dev/null 2>&1
+    $CONTAINERMGR inspect docker.io/library/postgres:${PG_VERSION} >/dev/null 2>&1
     if [ "$?" -ne 0 ]; then
-        postgres_id=$(docker images -q postgres:${PG_VERSION})
-        docker tag $postgres_id docker.io/library/postgres:${PG_VERSION}
+        postgres_id=$($CONTAINERMGR images -q postgres:${PG_VERSION})
+        $CONTAINERMGR tag $postgres_id docker.io/library/postgres:${PG_VERSION}
     fi
 fi

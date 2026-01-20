@@ -24,18 +24,11 @@ VERSION=${SANDFLY_SETUP_VERSION:-$(cat ../VERSION)}
 DOCKER_BASE=${SANDFLY_SETUP_DOCKER_BASE:-quay.io/sandfly}
 export SANDFLY_MGMT_DOCKER_IMAGE="$DOCKER_BASE/sandfly${IMAGE_SUFFIX}:$VERSION"
 
-if [ -f "/snap/bin/docker" ]; then
-    echo ""
-    echo "****************************** ERROR ******************************"
-    echo "*                                                                 *"
-    echo "* A version of Docker appears to be installed via Snap.           *"
-    echo "*                                                                 *"
-    echo "* Sandfly is only compatible with the apt version of Docker.      *"
-    echo "* Having both versions installed will conflict with Sandfly.      *"
-    echo "* Please remove the snap version before installing Sandfly.       *"
-    echo "*                                                                 *"
-    echo "****************************** ERROR ******************************"
-    echo ""
+# Set CONTAINERMGR variable
+. ./setup_scripts/container_command.sh
+if [ $? -ne 0 ]; then
+    # Failed to find container runtime. The container_command script will
+    # have printed an error.
     exit 1
 fi
 
@@ -47,7 +40,9 @@ if [ -f $SETUP_DATA_DIR/config.server.json ]; then
     echo "* Sandfly is already installed (there is a config.server.json file in     *"
     echo "* the setup_data directory).                                              *"
     echo "*                                                                         *"
-    echo "* If you are upgrading to a new version of Sandfly, please use upgrade.sh *"
+    echo "* If you are upgrading to a new version of Sandfly, please follow the     *"
+    echo "* instructions at:                                                        *"
+    echo "* https://docs.sandflysecurity.com/docs/upgrading-sandfly                 *"
     echo "*                                                                         *"
     echo "* If you wish to completely delete your old Sandfly configuration and     *"
     echo "* database, please use delete_sandfly_installation.sh in the util_scripts *"
@@ -93,12 +88,8 @@ Welcome to the Sandfly $VERSION server setup.
 
 EOF
 
-# See if we can run Docker
-which docker >/dev/null 2>&1 || { echo "Unable to locate docker binary; please install Docker."; exit 1; }
-docker version >/dev/null 2>&1 || { echo "This script must be run as root or as a user with access to the Docker daemon."; exit 1; }
-
 # Sandfly Postgres Docker volume already exists?
-docker inspect sandfly-pg14-db-vol >/dev/null 2>&1
+$CONTAINERMGR inspect sandfly-pg14-db-vol >/dev/null 2>&1
 if [[ $? -eq 0 ]]
 then
     echo ""
@@ -118,150 +109,156 @@ then
     exit 1
 fi
 
-# Are we using the Podman engine under Docker emulation mode
-#
-podman_command=$(command -v podman)
-if [ ! -z "${podman_command}" ]; then
-    docker_engine=$(docker version | grep "^Client:" | awk '{print tolower($2)}')
-    if [ "$docker_engine" != "docker" ]; then
-        if [ $(id -u) -eq 0 ]; then
-            echo ""
-            echo "********************************* WARNING *********************************"
-            echo "*                                                                         *"
-            echo "* You appear to be running the Podman engine in rootful user mode.        *"
-            echo "*                                                                         *"
-            echo "* To install using Podman as a rootful user, we will need to do the       *"
-            echo "* following actions                                                       *"
-            echo "*                                                                         *"
-            echo "* 1. If SELinux is running we will need to set the context of the         *"
-            echo "*    setup_data folder to allow the container write access                *"
-            echo "* 2. Create container files in the /etc/containers/systemd folder         *"
-            echo "*    to allow systemd to start the containers at boot time                *"
-            echo "*                                                                         *"
-            echo "********************************* WARNING *********************************"
-            echo ""
-        else
-            echo ""
-            echo "********************************* WARNING *********************************"
-            echo "*                                                                         *"
-            echo "* You appear to be running the Podman engine in rootless user mode.       *"
-            echo "*                                                                         *"
-            echo "* To install using Podman as a rootless user, we will need to do the      *"
-            echo "* following actions                                                       *"
-            echo "*                                                                         *"
-            echo "* 1. If SELinux is running we will need to set the context of the         *"
-            echo "*    setup_data folder to allow the container write access                *"
-            echo "* 2. Modify sysctl.conf to allow an unprivileged process to bind to       *"
-            echo "*    ports 80 and 443 (requires root access via sudo)                     *"
-            echo "* 3. Enable Linger mode for the current user to prevent containers from   *"
-            echo "*    shutting down at logout and to start containers at boot time         *"
-            echo "* 4. Create container files in the ~/.config/containers/systemd folder    *"
-            echo "*    to allow systemd to start the containers at boot time                *"
-            echo "* 5. If Podman is version 5 or later and the default Rootless Network     *"
-            echo "*    Cmd is configured to use 'pasta' we will create or modify the        *"
-            echo "*    ~/.config/containers/containers.conf file to use 'slirp4netns'       *"
-            echo "*    as the default_rootless_network_cmd.                                 *"
-            echo "*                                                                         *"
-            echo "********************************* WARNING *********************************"
-            echo ""
-        fi
+# Are we using Podman?
+if [ "$CONTAINERMGR" = "podman" ]; then
+    if [ $(id -u) -eq 0 ]; then
+        echo ""
+        echo "********************************* WARNING *********************************"
+        echo "*                                                                         *"
+        echo "* You appear to be running the Podman engine in rootful user mode.        *"
+        echo "*                                                                         *"
+        echo "* To install using Podman as a rootful user, we will need to do the       *"
+        echo "* following actions                                                       *"
+        echo "*                                                                         *"
+        echo "* 1. If SELinux is running we will need to set the context of the         *"
+        echo "*    setup_data folder to allow the container write access                *"
+        echo "* 2. Create container files in the /etc/containers/systemd folder         *"
+        echo "*    to allow systemd to start the containers at boot time                *"
+        echo "*                                                                         *"
+        echo "********************************* WARNING *********************************"
+        echo ""
+    else
+        echo ""
+        echo "********************************* WARNING *********************************"
+        echo "*                                                                         *"
+        echo "* You appear to be running the Podman engine in rootless user mode.       *"
+        echo "*                                                                         *"
+        echo "* To install using Podman as a rootless user, we will need to do the      *"
+        echo "* following actions                                                       *"
+        echo "*                                                                         *"
+        echo "* 1. If SELinux is running we will need to set the context of the         *"
+        echo "*    setup_data folder to allow the container write access                *"
+        echo "* 2. Modify sysctl.conf to allow an unprivileged process to bind to       *"
+        echo "*    ports 80 and 443 (requires root access via sudo)                     *"
+        echo "* 3. Enable Linger mode for the current user to prevent containers from   *"
+        echo "*    shutting down at logout and to start containers at boot time         *"
+        echo "* 4. Create container files in the ~/.config/containers/systemd folder    *"
+        echo "*    to allow systemd to start the containers at boot time                *"
+        echo "* 5. If Podman is version 5 or later and the default Rootless Network     *"
+        echo "*    Cmd is configured to use 'pasta' we will create or modify the        *"
+        echo "*    ~/.config/containers/containers.conf file to use 'slirp4netns'       *"
+        echo "*    as the default_rootless_network_cmd.                                 *"
+        echo "*                                                                         *"
+        echo "********************************* WARNING *********************************"
+        echo ""
+    fi
 
-        read -p "Continue installing under Podman (type YES)? " PODMAN_RESPONSE
-        if [[ "$PODMAN_RESPONSE" != "YES" ]]; then
-            echo ""
-            echo "Aborting install."
-            exit 1
-        fi
+    read -p "Continue installing under Podman (type YES)? " PODMAN_RESPONSE
+    if [ "$PODMAN_RESPONSE" != "YES" ]; then
+        echo ""
+        echo "Aborting install."
+        exit 1
+    fi
 
-        # set setup_data context to allow containers to write to the directory
-        #
-        selinux_status=$(sestatus 2>/dev/null | grep "SELinux status:" | awk '{print $3}')
-        if [ ! -z "${selinux_status}" ]; then
-            if [ $selinux_status = "enabled" ]; then
-                if [ -d setup_data ] ; then
-                    echo "Set SELinux context of setup_data directory"
-                    chcon -v -Rt svirt_sandbox_file_t setup_data
-                fi
+    # set setup_data context to allow containers to write to the directory
+    #
+    selinux_status=$(sestatus 2>/dev/null | grep "SELinux status:" | awk '{print $3}')
+    if [ ! -z "${selinux_status}" ]; then
+        if [ $selinux_status = "enabled" ]; then
+            if [ -d setup_data ] ; then
+                echo "Set SELinux context of setup_data directory"
+                chcon -v -Rt svirt_sandbox_file_t setup_data
             fi
         fi
+    fi
 
-        # change unprivileged_port_start to allow non-root process to bind to ports
-        #   80 and 443 (requires sudo)
-        # enable Linger for non-root user
-        # configure 'slirp4netns' as the default_rootless_network_cmd
-        #
-        if [ $(id -u) -ne 0 ]; then
-            live_port_start=$(sudo sysctl --values net.ipv4.ip_unprivileged_port_start)
-            if [ ! -z "${live_port_start}" ]; then
-                if [ $live_port_start -gt 80 ]; then
-                    echo "Configure sysctl to allow containers that bind to ports < 1024"
-                    sudo sysctl net.ipv4.ip_unprivileged_port_start=80
-                fi
+    # change unprivileged_port_start to allow non-root process to bind to ports
+    #   80 and 443 (requires sudo)
+    # enable Linger for non-root user
+    # configure 'slirp4netns' as the default_rootless_network_cmd
+    #
+    if [ $(id -u) -ne 0 ]; then
+        live_port_start=$(sudo sysctl --values net.ipv4.ip_unprivileged_port_start)
+        if [ ! -z "${live_port_start}" ]; then
+            if [ $live_port_start -gt 80 ]; then
+                echo "Configure sysctl to allow containers that bind to ports < 1024"
+                sudo sysctl net.ipv4.ip_unprivileged_port_start=80
             fi
+        fi
 
-            conf_port_start=$(cat /etc/sysctl.conf | grep net.ipv4.ip_unprivileged_port_start)
-            if [ -z "${conf_port_start}" ]; then
-                echo "Configure /etc/sysctl.conf to allow containers that bind to ports < 1024"
-                echo "net.ipv4.ip_unprivileged_port_start=80" | sudo tee -a /etc/sysctl.conf
-            fi
+        conf_port_start=$(cat /etc/sysctl.conf | grep net.ipv4.ip_unprivileged_port_start)
+        if [ -z "${conf_port_start}" ]; then
+            echo "Configure /etc/sysctl.conf to allow containers that bind to ports < 1024"
+            echo "net.ipv4.ip_unprivileged_port_start=80" | sudo tee -a /etc/sysctl.conf
+        fi
 
-            linger_status=$(loginctl show-user $USER | grep ^Linger | awk -F= '{print $2}')
-            if [ "$linger_status" = "no" ]; then
-                echo "Enable Linger for user $USER"
-                loginctl enable-linger $USER
-            fi
+        echo "Enable Linger for user $USER"
+        loginctl enable-linger $USER
 
-            containers_conf=~/.config/containers/containers.conf
-            podman_version=$(podman version -f '{{.Client.Version}}' 2>/dev/null)
-            podman_major_version=$(podman version -f '{{index (split .Client.Version ".") 0}}' 2>/dev/null)
-            if [ ! -z "${podman_major_version}" ]; then
-                if [ $podman_major_version -gt 4 ]; then
-                    t_podman_network=$(podman info --format='{{.Host.RootlessNetworkCmd}}' 2>/dev/null)
-                    echo "Podman rootless network cmd : $t_podman_network"
-                    if [ ! "$t_podman_network" == "slirp4netns" ]; then
-                        echo "WARNING: must use slirp4netns as rootlessNetworkCmd"
-                        if [ -f ${containers_conf} ]; then
-                            # Save a copy of the original containers.conf file
-                            cp -f -p -v ${containers_conf} ${containers_conf}.bak
+        containers_conf=~/.config/containers/containers.conf
+        mkdir -p ~/.config/containers
+        podman_version=$(podman version -f '{{.Client.Version}}' 2>/dev/null)
+        podman_major_version=$(podman version -f '{{index (split .Client.Version ".") 0}}' 2>/dev/null)
+        if [ ! -z "${podman_major_version}" ]; then
+            if [ $podman_major_version -gt 4 ]; then
+                t_podman_network=$(podman info --format='{{.Host.RootlessNetworkCmd}}' 2>/dev/null)
+                echo "Podman rootless network cmd : $t_podman_network"
+                if [ ! "$t_podman_network" == "slirp4netns" ]; then
+                    if ! command -v slirp4netns >/dev/null 2>&1; then
+                        echo ""
+                        echo "********************************** ERROR **********************************"
+                        echo "*                                                                         *"
+                        echo "* slirp4netns is required for networking when using rootless Podman.      *"
+                        echo "*                                                                         *"
+                        echo "* Please install the slirp4netns package (e.g. 'dnf install slirp4netns') *"
+                        echo "* and try again.                                                          *"
+                        echo "*                                                                         *"
+                        echo "********************************** ERROR **********************************"
+                        echo ""
+                        exit 1
+                    fi
+                    echo "INFO: will use slirp4netns as rootlessNetworkCmd"
+                    if [ -f ${containers_conf} ]; then
+                        # Save a copy of the original containers.conf file
+                        cp -f -p -v ${containers_conf} ${containers_conf}.bak
 
-                            # Remove any previously configured default_rootless_network_cmd entries:
-                            sed -i '/^default_rootless_network_cmd/d' ${containers_conf}
+                        # Remove any previously configured default_rootless_network_cmd entries:
+                        sed -i '/^default_rootless_network_cmd/d' ${containers_conf}
 
-                            diff -c ${containers_conf}.bak ${containers_conf}
+                        diff -c ${containers_conf}.bak ${containers_conf}
 
-                            # Make sure we have a [network] stanza in the containers.conf file
-                            t_network=$(grep "^\[network\]" ${containers_conf} | wc -l)
-                            if [ $t_network -eq 0 ]; then
-                                echo "[network]" >> ${containers_conf}
-                            fi
+                        # Make sure we have a [network] stanza in the containers.conf file
+                        t_network=$(grep "^\[network\]" ${containers_conf} | wc -l)
+                        if [ $t_network -eq 0 ]; then
+                            echo "[network]" >> ${containers_conf}
+                        fi
 
-                            # Configure slirp4netns as default_rootless_network_cmd
-                            t_count=$(grep "^#default_rootless_network_cmd =" ${containers_conf} | wc -l)
-                            if [ $t_count -ge 1 ]; then
-                                sed -i '/^#default_rootless_network_cmd/a default_rootless_network_cmd = "slirp4netns"' ${containers_conf}
-                            else
-                                sed -i '/^\[network\]/a default_rootless_network_cmd = "slirp4netns"' ${containers_conf}
-                            fi
-
-                            diff -c ${containers_conf}.bak ${containers_conf}
+                        # Configure slirp4netns as default_rootless_network_cmd
+                        t_count=$(grep "^#default_rootless_network_cmd =" ${containers_conf} | wc -l)
+                        if [ $t_count -ge 1 ]; then
+                            sed -i '/^#default_rootless_network_cmd/a default_rootless_network_cmd = "slirp4netns"' ${containers_conf}
                         else
-                            # Create the containers.conf file with [network] stanza
-                            echo "[network]" > ${containers_conf}
                             sed -i '/^\[network\]/a default_rootless_network_cmd = "slirp4netns"' ${containers_conf}
                         fi
 
-                        t_verify_network=$(podman info --format='{{.Host.RootlessNetworkCmd}}' 2>/dev/null)
-                        echo "Podman rootless network cmd : $t_verify_network"
-                        if [ ! "$t_verify_network" == "slirp4netns" ]; then
-                            echo ""
-                            echo "ERROR: must use slirp4netns as rootlessNetworkCmd, exit"
-                            echo ""
-                            exit
-                        fi
+                        diff -c ${containers_conf}.bak ${containers_conf}
+                    else
+                        # Create the containers.conf file with [network] stanza
+                        echo "[network]" > ${containers_conf}
+                        sed -i '/^\[network\]/a default_rootless_network_cmd = "slirp4netns"' ${containers_conf}
                     fi
-                else
-                    echo "*** RootlessNetworkCmd not supported in Podman Version $podman_version"
+
+                    t_verify_network=$(podman info --format='{{.Host.RootlessNetworkCmd}}' 2>/dev/null)
+                    echo "Podman rootless network cmd : $t_verify_network"
+                    if [ ! "$t_verify_network" == "slirp4netns" ]; then
+                        echo ""
+                        echo "ERROR: must use slirp4netns as rootlessNetworkCmd, exit"
+                        echo ""
+                        exit 1
+                    fi
                 fi
+            else
+                echo "*** RootlessNetworkCmd not supported in Podman Version $podman_version"
             fi
         fi
     fi
@@ -275,8 +272,8 @@ Sandfly Management Image: $SANDFLY_MGMT_DOCKER_IMAGE
 
 EOF
 
-docker network create sandfly-net 2>/dev/null
-docker rm sandfly-server-mgmt 2>/dev/null
+$CONTAINERMGR network create sandfly-net 2>/dev/null
+$CONTAINERMGR rm sandfly-server-mgmt 2>/dev/null
 
 # Load images if offline bundle is present and not already loaded
 ./setup_scripts/load_images.sh
@@ -329,25 +326,24 @@ if [ -z "$SANDFLY_AUTO" ]; then
   cat << EOF
 
 ******************************************************************************
-Make Signed SSL Key?
+Make Signed SSL Key with Let's Encrypt?
 
-If the Sandfly server is able to be seen on the Internet, we can generate a
-signed key using EFF's Let's Encrypt Bot. Answer below if you'd like to do
-this.
+If the Sandfly server has port 80 open to the Internet, we can generate a
+signed certificate with Let's Encrypt. Answer below if you'd like to do this.
 ******************************************************************************
 
 EOF
-  read -p "Generate signed SSL keys (type YES)? " RESPONSE
+  read -p "Generate signed SSL certificate (type YES)? " RESPONSE
   if [[ "$RESPONSE" = "YES" ]]
   then
-      echo "Starting key signing script"
+      echo "Starting certificate signing script"
       ./setup_scripts/setup_ssl_signed.sh
   fi
 elif [ ! -z "$SSL_FQDN" ]; then
   # Attempt an automated Let's Encrypt setup. The existing SSL_FQDN (and
   # SSL_EMAIL) environment variables will flow through, causing the script
   # to run in non-interactive mode.
-  echo "Starting automated key signing script"
+  echo "Starting automated certificate signing script"
   ./setup_scripts/setup_ssl_signed.sh
 fi # if auto
 

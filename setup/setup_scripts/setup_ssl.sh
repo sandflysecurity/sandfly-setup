@@ -6,7 +6,13 @@
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 cd ..
 
-docker version >/dev/null 2>&1 || { echo "This script must be run as root or as a user with access to the Docker daemon."; exit 1; }
+# Set CONTAINERMGR variable
+. ./setup_scripts/container_command.sh
+if [ $? -ne 0 ]; then
+    # Failed to find container runtime. The container_command script will
+    # have printed an error.
+    exit 1
+fi
 
 cat << EOF
 
@@ -24,18 +30,19 @@ if [[ -z "${SANDFLY_MGMT_DOCKER_IMAGE}" ]]; then
 fi
 
 # Generates initial SSL keys for the Sandfly Server.
-docker network create sandfly-net 2>/dev/null
-docker rm sandfly-server-mgmt 2>/dev/null
+$CONTAINERMGR network create sandfly-net 2>/dev/null
+$CONTAINERMGR rm sandfly-server-mgmt 2>/dev/null
 
 DOCKER_INTERACTIVE="-it"
 [ "$SANDFLY_AUTO" = "YES" ] && DOCKER_INTERACTIVE=""
 
-docker run -v /dev/urandom:/dev/random:ro \
--v $PWD/setup_data:/opt/sandfly/install/setup_data \
+$CONTAINERMGR run -v /dev/urandom:/dev/random:ro \
+-v $PWD/setup_data:/opt/sandfly/install/setup_data:z \
 --name sandfly-server-mgmt \
 --network sandfly-net \
 -e SANDFLY_SETUP_AUTO_HOSTNAME \
 -e SSL_SERVER_HOSTNAME \
+-u root \
 $DOCKER_INTERACTIVE $SANDFLY_MGMT_DOCKER_IMAGE /opt/sandfly/install/install_ssl.sh
 
 exit $?

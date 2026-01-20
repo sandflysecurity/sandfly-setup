@@ -12,7 +12,7 @@ Sandfly API Reference Script Example
 This script will attempt to authenticate and output text of sandfly names.
 ITERATION: Filter for the plaintext names of all sandflies
 
-DOC: https://api.sandflysecurity.com/#get-/sandflies
+DOC: https://docs.sandflysecurity.com/reference/getsandflies
 ******************************************************************************
 
 EOF

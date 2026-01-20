@@ -11,7 +11,7 @@ Sandfly API Reference Script Example
 
 This script will attempt to authenticate, get access token, and output it.
 
-DOC: https://api.sandflysecurity.com/#post-/auth/login
+DOC: https://docs.sandflysecurity.com/reference/apilogin
 ******************************************************************************
 
 EOF

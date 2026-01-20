@@ -6,7 +6,13 @@
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 cd ..
 
-docker version >/dev/null 2>&1 || { echo "This script must be run as root or as a user with access to the Docker daemon."; exit 1; }
+# Set CONTAINERMGR variable
+. ./setup_scripts/container_command.sh
+if [ $? -ne 0 ]; then
+    # Failed to find container runtime. The container_command script will
+    # have printed an error.
+    exit 1
+fi
 
 # Use standard docker image unless overriden.
 if [ -z "${SANDFLY_MGMT_DOCKER_IMAGE}" ]; then
@@ -16,9 +22,10 @@ fi
 
 # Build up a docker run command that includes any environment variables with
 # SANDFLY in the name.
-RUNCMD="docker run --rm -v /dev/urandom:/dev/random:ro \
-  -v $PWD/setup_data:/opt/sandfly/install/setup_data \
+RUNCMD="$CONTAINERMGR run --rm -v /dev/urandom:/dev/random:ro \
+  -v $PWD/setup_data:/opt/sandfly/install/setup_data:z \
   --network sandfly-net \
+  -u root \
   -e CONFIG_JSON"
 
 ENVVARS=$(env | grep SANDFLY | awk -F= '{print $1}')

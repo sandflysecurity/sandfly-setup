@@ -8,6 +8,14 @@
 # Make sure we run from the correct directory so relative paths work
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
+# Set CONTAINERMGR variable
+. ../setup_scripts/container_command.sh
+if [ $? -ne 0 ]; then
+    # Failed to find container runtime. The container_command script will
+    # have printed an error.
+    exit 1
+fi
+
 SETUP_DATA=../setup_data
 VERSION=${SANDFLY_VERSION:-$(cat ../../VERSION)}
 IMAGE_BASE=${SANDFLY_IMAGE_BASE:-quay.io/sandfly}
@@ -16,12 +24,11 @@ IMAGE_BASE=${SANDFLY_IMAGE_BASE:-quay.io/sandfly}
 CONFIG_JSON=$(cat $SETUP_DATA/config.server.json)
 export CONFIG_JSON
 
-docker network create sandfly-net 2>/dev/null
-docker rm sandfly-server-mgmt 2>/dev/null
+$CONTAINERMGR network create sandfly-net 2>/dev/null
+$CONTAINERMGR rm sandfly-server-mgmt 2>/dev/null
 
-docker run --name sandfly-server-mgmt \
+$CONTAINERMGR run --name sandfly-server-mgmt \
 --network sandfly-net \
 -e CONFIG_JSON \
+-u root \
 -it $IMAGE_BASE/sandfly${IMAGE_SUFFIX}:"$VERSION" /opt/sandfly/utils/reset_system_password.sh
-
-

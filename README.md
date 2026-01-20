@@ -23,12 +23,11 @@ includes:
 
 Find out more and get your free trial license here:
 
-https://www.sandflysecurity.com.
+https://www.sandflysecurity.com/
 
 Documentation here:
 
-https://docs.sandflysecurity.com
+https://docs.sandflysecurity.com/
 
 Copyright (c) Sandfly Security LTD, All Rights Reserved.
 www.sandflysecurity.com
-

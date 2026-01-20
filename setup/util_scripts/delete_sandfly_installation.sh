@@ -10,9 +10,13 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 SETUP_DATA_DIR=../setup_data
 SETUP_DIR=..
 
-# See if we can run Docker
-which docker >/dev/null 2>&1 || { echo "Unable to locate docker binary; please install Docker."; exit 1; }
-docker version >/dev/null 2>&1 || { echo "This script must be run as root or as a user with access to the Docker daemon."; exit 1; }
+# Set CONTAINERMGR variable
+. ../setup_scripts/container_command.sh
+if [ $? -ne 0 ]; then
+    # Failed to find container runtime. The container_command script will
+    # have printed an error.
+    exit 1
+fi
 
 echo ""
 echo "---- DANGER ---- DANGER ---- DANGER ---- DANGER ---- DANGER ---- DANGER ----"
@@ -43,10 +47,10 @@ fi
 $SETUP_DIR/clean_docker.sh
 
 # Now blow away our docker volume.
-docker volume rm sandfly-pg14-db-vol
+$CONTAINERMGR volume rm sandfly-pg14-db-vol
 
 # Now blow away our docker network.
-docker network rm sandfly-net
+$CONTAINERMGR network rm sandfly-net
 
 # Delete config
 rm -f $SETUP_DATA_DIR/*.json $SETUP_DATA_DIR/*.txt

@@ -12,7 +12,7 @@ Sandfly API Reference Script Example
 This script will attempt to authenticate, do adhoc scan, and output results.
 ITERATION: Uses the "ssh_key" credentials_type for the host credentials.
 
-DOC: https://api.sandflysecurity.com/#post-/scan/adhoc
+DOC: https://docs.sandflysecurity.com/reference/startadhocscan
 ******************************************************************************
 
 EOF
