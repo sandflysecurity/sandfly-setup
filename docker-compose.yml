@@ -1,0 +1,158 @@
+services:
+
+  sandfly-postgres:
+    image: docker.io/library/postgres:14.18
+    container_name: sandfly-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - ./sandfly-data/postgres:/var/lib/postgresql/data
+      - /dev/urandom:/dev/random:ro
+    networks:
+      - sandfly-net
+    ports:
+      - "5432:5432"
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+    command: |
+      -c max_connections=${POSTGRES_MAX_CONNECTIONS:-60}
+      -c shared_buffers=${POSTGRES_SHARED_BUFFERS:-262144}kB
+      -c effective_cache_size=${POSTGRES_EFFECTIVE_CACHE_SIZE:-786432}kB
+      -c maintenance_work_mem=${POSTGRES_MAINTENANCE_WORK_MEM:-1048576}kB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=${POSTGRES_WAL_BUFFERS:-32}kB
+      -c default_statistics_target=100
+      -c random_page_cost=2
+      -c effective_io_concurrency=100
+      -c work_mem=${POSTGRES_WORK_MEM:-64}kB
+      -c min_wal_size=2GB
+      -c max_wal_size=8GB
+      -c max_worker_processes=${POSTGRES_MAX_WORKER_PROCESSES:-4}
+      -c max_parallel_workers_per_gather=${POSTGRES_MAX_PARALLEL_WORKERS_PER_GATHER:-4}
+      -c max_parallel_workers=${POSTGRES_MAX_PARALLEL_WORKERS:-4}
+      -c max_parallel_maintenance_workers=${POSTGRES_MAX_PARALLEL_MAINTENANCE_WORKERS:-4}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  sandfly-init:
+    image: ${SANDFLY_IMAGE_BASE:-quay.io/sandfly}/sandfly:${SANDFLY_VERSION:-5.5.1}
+    container_name: sandfly-init
+    depends_on:
+      sandfly-postgres:
+        condition: service_healthy
+    environment:
+      - SANDFLY_SETUP_AUTO_HOSTNAME=${SANDFLY_HOSTNAME}
+      - SANDFLY_AUTO=YES
+    volumes:
+      - ./sandfly-data:/opt/sandfly/install/setup_data
+      - ./sandfly-data/ssl:/opt/sandfly/conf/ssl
+      - ./setup/setup_data/templates:/opt/sandfly/install/setup_data/templates:ro
+      - /dev/urandom:/dev/random:ro
+    networks:
+      - sandfly-net
+    command: |
+      sh -c '
+        if [ ! -f /opt/sandfly/install/setup_data/config.server.json ]; then
+          echo "Running Sandfly setup..."
+          /opt/sandfly/install/install_server.sh
+          /opt/sandfly/install/install_ssl.sh
+          /opt/sandfly/install/install_keys.sh
+          /opt/sandfly/install/install_config_json.sh
+          echo "Setup complete!"
+        else
+          echo "Setup already complete, skipping..."
+        fi
+      '
+    profiles:
+      - setup
+
+  sandfly-server:
+    image: ${SANDFLY_IMAGE_BASE:-quay.io/sandfly}/sandfly:${SANDFLY_VERSION:-5.5.1}
+    container_name: sandfly-server
+    restart: unless-stopped
+    depends_on:
+      sandfly-postgres:
+        condition: service_healthy
+    volumes:
+      - /dev/urandom:/dev/random:ro
+      - ./sandfly-data:/opt/sandfly/install/setup_data:ro
+      - ./sandfly-data/ssl:/opt/sandfly/conf/ssl:ro
+    networks:
+      - sandfly-net
+    ports:
+      - "443:8443"
+      - "8000:8000"
+    logging:
+      driver: json-file
+      options:
+        max-size: "${LOG_MAX_SIZE:-100m}"
+        max-file: "5"
+    command: |
+      sh -c '
+        export CONFIG_JSON=$$(cat /opt/sandfly/install/setup_data/config.server.json)
+        /opt/sandfly/start_api.sh
+      '
+    #healthcheck:
+    #  test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+    #  interval: 30s
+    #  timeout: 10s
+    #  retries: 5
+    #  start_period: 60s
+
+  # Sandfly Node (for scanning)
+  sandfly-node:
+    image: ${SANDFLY_IMAGE_BASE:-quay.io/sandfly}/sandfly:${SANDFLY_VERSION:-5.5.1}
+    container_name: sandfly-node
+    restart: unless-stopped
+    depends_on:
+      - sandfly-server
+        #condition: service_healthy
+    environment:
+      - LOCAL_SERVER=true
+    volumes:
+      - /dev/urandom:/dev/random:ro
+      - ./sandfly-data:/opt/sandfly/install/setup_data
+      - ./sandfly-data/ssl:/opt/sandfly/conf/ssl:ro
+    networks:
+      - sandfly-net
+    logging:
+      driver: json-file
+      options:
+        max-size: "${LOG_MAX_SIZE:-100m}"
+        max-file: "5"
+    command: |
+      sh -c '
+        export CONFIG_JSON=$$(cat /opt/sandfly/install/setup_data/config.node.json)
+        /opt/sandfly/start_node.sh
+      '
+    profiles:
+      - node
+
+  # Credentials Adapter (optional)
+  sandfly-credentials-adapter:
+    image: ${SANDFLY_IMAGE_BASE:-quay.io/sandfly}/sandfly-credentials-adapter:${SANDFLY_VERSION:-5.5.1}
+    container_name: sandfly-credentials-adapter
+    restart: unless-stopped
+    depends_on:
+      sandfly-server:
+        condition: service_healthy
+    networks:
+      - sandfly-net
+    profiles:
+      - credentials
+
+
+networks:
+  sandfly-net:
+    driver: bridge
+    name: sandfly-net
+

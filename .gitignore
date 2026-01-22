@@ -4,3 +4,5 @@ setup/setup_data/config.*
 
 docker_images
 
+sandfly-data
+.env
