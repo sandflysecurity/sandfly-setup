@@ -9,6 +9,11 @@ SETUP_DATA=../setup/setup_data
 VERSION=${SANDFLY_VERSION:-$(cat ../VERSION)}
 IMAGE_BASE=${SANDFLY_IMAGE_BASE:-quay.io/sandfly}
 
+# External ports to publish. Override to use non-standard ports, e.g.:
+#   SANDFLY_HTTPS_PORT=8443 SANDFLY_HTTP_PORT=8080 ./start_server.sh
+SANDFLY_HTTP_PORT=${SANDFLY_HTTP_PORT:-80}
+SANDFLY_HTTPS_PORT=${SANDFLY_HTTPS_PORT:-443}
+
 # Use valid (#m or #g) env variable, otherwise the Sandfly default.
 if  [[ "${SANDFLY_LOG_MAX_SIZE}" =~ ^[1-9][0-9]*[m|g]$ ]]; then
   LOG_MAX_SIZE=${SANDFLY_LOG_MAX_SIZE}
@@ -17,7 +22,7 @@ else
 fi
 
 # Remove old scripts
-../setup/clean_scripts.sh
+../setup/setup_scripts/clean_scripts.sh
 
 if [ -e $SETUP_DATA/allinone ]; then
     IGNORE_NODE_DATA_WARNING=YES
@@ -31,7 +36,34 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-if [ ! -f ../setup/setup_data/config.server.json ]; then
+if [ -n "$($CONTAINERMGR ps -q -f name=^/sandfly-server$)" ]; then
+  echo "Container sandfly-server is already running." >&2
+  exit 1
+fi
+
+# Auto-convert old JSON config to env format if needed.
+if [ -f $SETUP_DATA/config.server.json ] && \
+   [ ! -f $SETUP_DATA/config.server.env ]; then
+    echo "Converting config.server.json to config.server.env..."
+    CERTOUT_ARGS=""
+    CERT_DIR=$SETUP_DATA/server_ssl_cert
+    if [ ! -f $CERT_DIR/cert.pem ] || [ ! -f $CERT_DIR/privatekey.pem ]; then
+        mkdir -p "$CERT_DIR"
+        CERTOUT_ARGS="-certout $CERT_DIR/cert.pem -keyout $CERT_DIR/privatekey.pem"
+    fi
+    ../setup/setup_scripts/setuphelper convertserver \
+        -in "$SETUP_DATA/config.server.json" \
+        -out "$SETUP_DATA/config.server.env" \
+        $CERTOUT_ARGS
+    if [ $? -ne 0 ]; then
+        echo "Error converting server configuration."
+        exit 1
+    fi
+    mv "$SETUP_DATA/config.server.json" \
+       "$SETUP_DATA/config.server.json.retired"
+fi
+
+if [ ! -f ../setup/setup_data/config.server.env ]; then
     echo ""
     echo "********************************** ERROR **********************************"
     echo "*                                                                         *"
@@ -43,12 +75,12 @@ if [ ! -f ../setup/setup_data/config.server.json ]; then
     exit 1
 fi
 
-if [ -f $SETUP_DATA/config.node.json -a "$IGNORE_NODE_DATA_WARNING" != "YES" ]; then
+if [ -f $SETUP_DATA/config.node.env -a "$IGNORE_NODE_DATA_WARNING" != "YES" ]; then
     echo ""
     echo "********************************* WARNING *********************************"
     echo "*                                                                         *"
     echo "* The node config data file at:                                           *"
-    printf "*     %-67s *\n" "$SETUP_DATA/config.node.json"
+    printf "*     %-67s *\n" "$SETUP_DATA/config.node.env"
     echo "* is present on the server.                                               *"
     echo "*                                                                         *"
     echo "* This file must be deleted from the server to fully protect the SSH keys *"
@@ -64,46 +96,6 @@ if [ -f $SETUP_DATA/config.node.json -a "$IGNORE_NODE_DATA_WARNING" != "YES" ]; 
     fi
 fi
 
-# jq might not be available on the outer Docker host, so we'll do a simple grep
-# to make sure the config version is correct for this server version.
-
-# Config version 2 means we need to warn about clearing results.
-grep -q \"config_version\":\ 2, $SETUP_DATA/config.server.json > /dev/null
-if [ $? -eq 0 ]; then
-    clear
-    echo ""
-    echo "************************ A T T E N T I O N ************************"
-    echo "*                                                                 *"
-    echo "* Upgrading to this version of Sandfly will clear all results     *"
-    echo "* from the database.                                              *"
-    echo "*                                                                 *"
-    echo "* If you do NOT wish to upgrade, press Ctrl-C now to cancel.      *"
-    echo "* Otherwise, press enter to continue.                             *"
-    echo "*                                                                 *"
-    echo "*******************************************************************"
-    echo ""
-    echo "Press enter to continue"
-    read foo_enter
-
-    # Update config file so we don't warn on future startups.
-    sed -i 's/"config_version": 2/"config_version": 3/' $SETUP_DATA/config.server.json
-fi
-
-# As a safety net, we'll check for the correct config version. Config version
-# 3 is when using Postgres 14, 4 is when using Postgres 18.
-grep -Eq '"config_version": [34],' $SETUP_DATA/config.server.json > /dev/null
-if [ $? -ne 0 ]; then
-    echo ""
-    echo "****************************** ERROR ******************************"
-    echo "*                                                                 *"
-    echo "* Unexpected configuration version. Please contact Sandfly        *"
-    echo "* Support for assistance repairing your installation.             *"
-    echo "*                                                                 *"
-    echo "*******************************************************************"
-    echo ""
-    exit 1
-fi
-
 # Load images if offline bundle is present and not already loaded
 ../setup/setup_scripts/load_images.sh
 if [ "$?" -ne 0 ]; then
@@ -115,30 +107,36 @@ fi
 # old rabbit container. Clean it up if present.
 $CONTAINERMGR volume rm sandfly-rabbitmq-tmp-vol 2>/dev/null
 
-# Populate env variables.
-CONFIG_JSON=$(cat $SETUP_DATA/config.server.json)
-export CONFIG_JSON
-
-# Server SSL certificate overrides from files
-CONFIG_SSL_CERT=""
-CONFIG_SSL_KEY=""
-
-if [ -f $SETUP_DATA/server_ssl_cert/cert.pem ]; then
-    CONFIG_SSL_CERT=$(cat $SETUP_DATA/server_ssl_cert/cert.pem)
+# Set volume mount flags based on SELinux status
+VOLUME_MOUNT_FLAGS="ro"
+selinux_status=$(sestatus 2>/dev/null | grep "SELinux status:" | awk '{print $3}')
+if [ ! -z "${selinux_status}" ]; then
+    if [ $selinux_status = "enabled" ]; then
+        VOLUME_MOUNT_FLAGS="ro,z"
+    fi
 fi
 
-if [ -f $SETUP_DATA/server_ssl_cert/privatekey.pem ]; then
-    CONFIG_SSL_KEY=$(cat $SETUP_DATA/server_ssl_cert/privatekey.pem)
+# Check for user-managed TLS certificates
+TLS_VOLUME_MOUNT=""
+SETUP_DATA_ABS=$(cd $SETUP_DATA && pwd)
+if [ -f $SETUP_DATA/server_ssl_cert/cert.pem ] && \
+   [ -f $SETUP_DATA/server_ssl_cert/privatekey.pem ]; then
+    echo "Using user-managed TLS certificates from server_ssl_cert directory."
+    TLS_VOLUME_MOUNT="-v $SETUP_DATA_ABS/server_ssl_cert:/etc/sandflytls:$VOLUME_MOUNT_FLAGS"
 fi
 
-export CONFIG_SSL_CERT CONFIG_SSL_KEY
+HTTPS_PORT_REDIRECT_ARG=""
+if [ "$SANDFLY_HTTPS_PORT" != "443" ]; then
+    HTTPS_PORT_REDIRECT_ARG="-e SF_HTTP_REDIRECT_PORT=$SANDFLY_HTTPS_PORT"
+fi
 
 $CONTAINERMGR network create sandfly-net 2>/dev/null
 $CONTAINERMGR rm sandfly-server 2>/dev/null
 
 $CONTAINERMGR run -v /dev/urandom:/dev/random:ro \
--e CONFIG_JSON \
--e CONFIG_SSL_CERT -e CONFIG_SSL_KEY \
+$TLS_VOLUME_MOUNT \
+--env-file "${SETUP_DATA}/config.server.env" \
+${HTTPS_PORT_REDIRECT_ARG} \
 --disable-content-trust \
 --restart=always \
 --security-opt="no-new-privileges:true" \
@@ -146,8 +144,8 @@ $CONTAINERMGR run -v /dev/urandom:/dev/random:ro \
 --name sandfly-server \
 --label sandfly-server \
 --user sandfly:sandfly \
---publish 443:8443 \
---publish 80:8000 \
+--publish ${SANDFLY_HTTPS_PORT}:8443 \
+--publish ${SANDFLY_HTTP_PORT}:8000 \
 --log-driver json-file \
 --log-opt max-size=${LOG_MAX_SIZE} \
 --log-opt max-file=5 \
@@ -162,22 +160,10 @@ if [ "$CONTAINERMGR" = "podman" ]; then
         rm -f $CONTAINER_FILE
     fi
     echo "*** Generate $CONTAINER_FILE for sandfly-server"
-    t_CONFIG_JSON=$(echo $CONFIG_JSON)
+    SETUP_DATA_ABS=$(realpath "$SETUP_DATA")
     echo "[Container]" > $CONTAINER_FILE
     echo "ContainerName=sandfly-server" >> $CONTAINER_FILE
-    echo "Environment=CONFIG_JSON='${t_CONFIG_JSON}'" >> $CONTAINER_FILE
-    if [ -f $SETUP_DATA/server_ssl_cert/cert.pem ]; then
-        t_CONFIG_SSL_CERT=$(cat $SETUP_DATA/server_ssl_cert/cert.pem | sed '$!s/$/\\n\\/')
-        echo "Environment=CONFIG_SSL_CERT='${t_CONFIG_SSL_CERT}'" >> $CONTAINER_FILE
-    else
-        echo "Environment=CONFIG_SSL_CERT=" >> $CONTAINER_FILE
-    fi
-    if [ -f $SETUP_DATA/server_ssl_cert/privatekey.pem ]; then
-        t_CONFIG_SSL_KEY=$(cat $SETUP_DATA/server_ssl_cert/privatekey.pem | sed '$!s/$/\\n\\/')
-        echo "Environment=CONFIG_SSL_KEY='${t_CONFIG_SSL_KEY}'" >> $CONTAINER_FILE
-    else
-        echo "Environment=CONFIG_SSL_KEY=" >> $CONTAINER_FILE
-    fi
+    echo "EnvironmentFile=${SETUP_DATA_ABS}/config.server.env" >> $CONTAINER_FILE
     echo "Exec=/opt/sandfly/start_api.sh" >> $CONTAINER_FILE
     echo "Group=sandfly" >> $CONTAINER_FILE
     echo "Image=$IMAGE_BASE/sandfly${IMAGE_SUFFIX}:$VERSION" >> $CONTAINER_FILE
@@ -189,10 +175,17 @@ if [ "$CONTAINERMGR" = "podman" ]; then
     else
         echo "PodmanArgs=--disable-content-trust --log-opt 'max-size=${LOG_MAX_SIZE}' --log-opt 'max-file=5'" >> $CONTAINER_FILE
     fi
-    echo "PublishPort=443:8443" >> $CONTAINER_FILE
-    echo "PublishPort=80:8000" >> $CONTAINER_FILE
+    echo "PublishPort=${SANDFLY_HTTPS_PORT}:8443" >> $CONTAINER_FILE
+    echo "PublishPort=${SANDFLY_HTTP_PORT}:8000" >> $CONTAINER_FILE
+    if [ "$SANDFLY_HTTPS_PORT" != "443" ]; then
+        echo "Environment=SF_HTTP_REDIRECT_PORT=$SANDFLY_HTTPS_PORT" >> $CONTAINER_FILE
+    fi
     echo "User=sandfly" >> $CONTAINER_FILE
     echo "Volume=/dev/urandom:/dev/random:ro" >> $CONTAINER_FILE
+    if [ -f $SETUP_DATA/server_ssl_cert/cert.pem ] && \
+       [ -f $SETUP_DATA/server_ssl_cert/privatekey.pem ]; then
+        echo "Volume=$SETUP_DATA_ABS/server_ssl_cert:/etc/sandflytls:$VOLUME_MOUNT_FLAGS" >> $CONTAINER_FILE
+    fi
     echo "" >> $CONTAINER_FILE
     echo "[Unit]" >> $CONTAINER_FILE
     echo "Requires=sandfly-postgres.service" >> $CONTAINER_FILE

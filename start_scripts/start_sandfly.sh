@@ -13,7 +13,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-if [ ! -f ../setup/setup_data/config.server.json ]; then
+if [ ! -f ../setup/setup_data/config.server.env -a ! -f ../setup/setup_data/config.server.json ]; then
     echo ""
     echo "********************************** ERROR **********************************"
     echo "*                                                                         *"
@@ -29,7 +29,7 @@ fi
 
 ### Start Postgres if not already running
 esresult=$($CONTAINERMGR inspect --format="{{.State.Running}}" sandfly-postgres 2> /dev/null)
-if [ "${esresult}z" != "truez" ]; then
+if [ "${esresult}" != "true" ]; then
     echo "*** Starting Postgres."
     ./start_postgres.sh
     if [ $? -ne 0 ]; then
@@ -44,7 +44,7 @@ fi
 
 ### Start sandfly-server if not already running
 esresult=$($CONTAINERMGR inspect --format="{{.State.Running}}" sandfly-server 2> /dev/null)
-if [ "${esresult}z" != "truez" ]; then
+if [ "${esresult}" != "true" ]; then
     echo "*** Starting Sandfly Server."
     ./start_server.sh
 else
@@ -56,7 +56,7 @@ fi
 
 if [ -f ../../sandfly-credentials-adapter-setup/conf/config.json ]; then
     esresult=$($CONTAINERMGR inspect --format="{{.State.Running}}" sandfly-credentials-adapter 2> /dev/null)
-    if [ "${esresult}z" != "truez" ]; then
+    if [ "${esresult}" != "true" ]; then
         echo "*** Starting Sandfly Credentials Adapter."
         ../../sandfly-credentials-adapter-setup/start_credentials_adapter.sh
     else

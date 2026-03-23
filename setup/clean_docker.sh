@@ -16,8 +16,13 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Cleanly shut down Sandfly
-../start_scripts/shutdown_sandfly.sh
+# Check to see if Sandfly is running under docker compose,
+# then cleanly shut down Sandfly
+if [ -f setup_data/docker-compose.yaml ]; then
+    docker compose -f setup_data/docker-compose.yaml down
+else
+    ../start_scripts/shutdown_sandfly.sh
+fi
 
 # Stop and delete all sandfly containers (should already be stopped from
 # the above script, but we'll stop again just in case).

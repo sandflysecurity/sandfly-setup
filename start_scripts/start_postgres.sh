@@ -6,17 +6,6 @@
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 IMAGE_BASE=${POSTGRES_IMAGE_BASE:-docker.io/library}
-VERSION=18.1
-VOLNAME=sandfly-pg18-db-vol
-
-# All new installs will get Postgres 18 as set in VERSION above. But if
-# this is an old install, we'll continue using Postgres 14.
-if [ -f ../setup/setup_data/config.server.json ]; then
-    if ! grep -q '"config_version": 4,' ../setup/setup_data/config.server.json >/dev/null; then
-        VERSION=14.19
-        VOLNAME=sandfly-pg14-db-vol
-    fi
-fi
 
 LOG_MAX_SIZE="20m"
 
@@ -26,6 +15,27 @@ if [ $? -ne 0 ]; then
     # Failed to find container runtime. The container_command script will
     # have printed an error.
     exit 1
+fi
+
+if [ -n "$($CONTAINERMGR ps -q -f name=^/sandfly-postgres$)" ]; then
+  echo "Container sandfly-postgres is already running." >&2
+  exit 1
+fi
+
+# Determine which Postgres version and volume to use. If a pg18 volume
+# exists, use it. Otherwise check for a legacy pg14 volume. New installs
+# (no volume yet) default to Postgres 18.
+NEW_INSTALL=false
+if $CONTAINERMGR inspect sandfly-pg18-db-vol >/dev/null 2>&1; then
+    VERSION=18.2
+    VOLNAME=sandfly-pg18-db-vol
+elif $CONTAINERMGR inspect sandfly-pg14-db-vol >/dev/null 2>&1; then
+    VERSION=14.21
+    VOLNAME=sandfly-pg14-db-vol
+else
+    VERSION=18.2
+    VOLNAME=sandfly-pg18-db-vol
+    NEW_INSTALL=true
 fi
 
 # Load images if offline bundle is present and not already loaded
@@ -39,62 +49,21 @@ fi
 # database in the Docker volume we use, and setting the password through the
 # docker run command will have no effect (e.g. it doesn't try to change it if
 # a database already exists). If this is an initial install, the password we
-# want to use should be in setup_data courtesy of the install.sh script.
+# want to use should be in setup_data courtesy of the setuphelper tool.
 POSTGRES_ADMIN_PASSWORD="unknown"
-if [ -f ../setup/setup_data/postgres.admin.password.txt ]; then
-    POSTGRES_ADMIN_PASSWORD=$(cat ../setup/setup_data/postgres.admin.password.txt)
+if [ "$NEW_INSTALL" = "true" ]; then
+    if [ -f ../setup/setup_data/config.server.env ]; then
+        POSTGRES_ADMIN_PASSWORD=$(grep '^SF_DB_ADMIN_CONNSTR=' \
+            ../setup/setup_data/config.server.env | \
+            sed 's/.*password=\([^ ]*\).*/\1/')
+    fi
 fi
 
-if [ -f ../setup/setup_data/config.server.json ]; then
-    POOL_SIZE=$(grep -Eo '"pool_size":[[:space:]]*[[:digit:]]+' ../setup/setup_data/config.server.json | grep -Eo '[[:digit:]]+')
-else
-    POOL_SIZE=20
-fi
-if [ -z "$POOL_SIZE" ]; then
-    POOL_SIZE=20
-fi
-if [ "$POOL_SIZE" -lt 20 ]; then
-    echo "ERROR: server.db.postgres.pool_size must be between 20 and 500"
-    exit 1
-fi
-if [ "$POOL_SIZE" -gt 500 ]; then
-    echo "ERROR: server.db.postgres.pool_size must be between 20 and 500"
-    exit 1
-fi
-
-if [ -f ../setup/setup_data/config.server.json ]; then
-    POOL_SIZE_NODES=$(grep -Eo '"pool_size_nodes":[[:space:]]*[[:digit:]]+' ../setup/setup_data/config.server.json | grep -Eo '[[:digit:]]+')
-else
-    POOL_SIZE_NODES=30
-fi
-if [ -z "$POOL_SIZE_NODES" ]; then
-    POOL_SIZE_NODES=30
-fi
-if [ "$POOL_SIZE_NODES" -lt 20 ]; then
-    echo "ERROR: server.db.postgres.pool_size_nodes must be between 20 and 500"
-    exit 1
-fi
-if [ "$POOL_SIZE_NODES" -gt 500 ]; then
-    echo "ERROR: server.db.postgres.pool_size_nodes must be between 20 and 500"
-    exit 1
-fi
-
-if [ -f ../setup/setup_data/config.server.json ]; then
-    RESULT_WORKERS=$(grep -Eo '"result_workers":[[:space:]]*[[:digit:]]+' ../setup/setup_data/config.server.json | grep -Eo '[[:digit:]]+')
-else
-    RESULT_WORKERS=20
-fi
-if [ -z "$RESULT_WORKERS" ]; then
-    RESULT_WORKERS=20
-fi
-if [ "$RESULT_WORKERS" -lt 10 ]; then
-    echo "ERROR: server.db.postgres.result_workers must be between 10 and 500"
-    exit 1
-fi
-if [ "$RESULT_WORKERS" -gt 500 ]; then
-    echo "ERROR: server.db.postgres.result_workers must be between 10 and 500"
-    exit 1
-fi
+# Pool sizes are stored in the database config table and managed through
+# the API. Use defaults here for Postgres max_connections calculation.
+POOL_SIZE=20
+POOL_SIZE_NODES=30
+RESULT_WORKERS=20
 
 # If necessary, we adjust POOL_SIZE_NODES to be a minimum of 10 more than
 # RESULT_WORKERS to make sure we have enough connections for when the server

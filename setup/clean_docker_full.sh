@@ -35,8 +35,13 @@ if [ -z "$SKIP_SANDFLY_WARNING" ]; then
     fi
 fi
 
-# Cleanly shut down Sandfly
-../start_scripts/shutdown_sandfly.sh
+# Check to see if Sandfly is running under docker compose,
+# then cleanly shut down Sandfly
+if [ -f setup_data/docker-compose.yaml ]; then
+    docker compose -f setup_data/docker-compose.yaml down
+else
+    ../start_scripts/shutdown_sandfly.sh
+fi
 
 # Stop all - just in case anything survived the shutdown script.
 $CONTAINERMGR stop $($CONTAINERMGR ps -a -q) 2>/dev/null

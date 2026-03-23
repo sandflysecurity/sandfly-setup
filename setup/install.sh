@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 # Sandfly Security LTD www.sandflysecurity.com
 # Copyright (c) Sandfly Security LTD, All Rights Reserved.
 
@@ -33,12 +34,12 @@ if [ $? -ne 0 ]; then
 fi
 
 # Sandfly already installed?
-if [ -f $SETUP_DATA_DIR/config.server.json ]; then
+if [ -f ${SETUP_DATA_DIR}/config.server.json -o -f ${SETUP_DATA_DIR}/config.server.env ]; then
     echo ""
     echo "********************************** ERROR **********************************"
     echo "*                                                                         *"
-    echo "* Sandfly is already installed (there is a config.server.json file in     *"
-    echo "* the setup_data directory).                                              *"
+    echo "* Sandfly is already installed (there is a config file in the setup_data  *"
+    echo "* directory).                                                             *"
     echo "*                                                                         *"
     echo "* If you are upgrading to a new version of Sandfly, please follow the     *"
     echo "* instructions at:                                                        *"
@@ -56,9 +57,9 @@ fi
 cat << "__EOF__"
 
 
- _____                 _  __ _         _____                      _ _         
-/  ___|               | |/ _| |       /  ___|                    (_) |        
-\ `--.  __ _ _ __   __| | |_| |_   _  \ `--.  ___  ___ _   _ _ __ _| |_ _   _ 
+ _____                 _  __ _         _____                      _ _
+/  ___|               | |/ _| |       /  ___|                    (_) |
+\ `--.  __ _ _ __   __| | |_| |_   _  \ `--.  ___  ___ _   _ _ __ _| |_ _   _
  `--. \/ _` | '_ \ / _` |  _| | | | |  `--. \/ _ \/ __| | | | '__| | __| | | |
 /\__/ / (_| | | | | (_| | | | | |_| | /\__/ /  __/ (__| |_| | |  | | |_| |_| |
 \____/ \__,_|_| |_|\__,_|_| |_|\__, | \____/ \___|\___|\__,_|_|  |_|\__|\__, |
@@ -76,10 +77,35 @@ cat << "__EOF__"
 __EOF__
 
 # Is this an automated install?
-[ -n "$SANDFLY_SETUP_AUTO_HOSTNAME" ] && export SANDFLY_AUTO=YES
+SANDFLY_AUTO=NO
+[ -n "$SANDFLY_SETUP_AUTO_HOSTNAME" -a -n "$SANDFLY_SETUP_AUTO_ADMIN_PASSWORD" ] && export SANDFLY_AUTO=YES
 
-clear
+# But if we only have one or the other, error
+if [ -n "$SANDFLY_SETUP_AUTO_HOSTNAME" -a "$SANDFLY_AUTO" = "NO" ]; then
+    echo ""
+    echo "*********************************** ERROR ***********************************"
+    echo "*                                                                           *"
+    echo "* SANDFLY_SETUP_AUTO_HOSTNAME is set, but SANDFLY_SETUP_AUTO_ADMIN_PASSWORD *"
+    echo "* is not. For an automated install, both are required.                      *"
+    echo "*                                                                           *"
+    echo "*********************************** ERROR ***********************************"
+    echo ""
+    exit 1
+fi
+if [ -n "$SANDFLY_SETUP_AUTO_ADMIN_PASSWORD" -a "$SANDFLY_AUTO" = "NO" ]; then
+    echo ""
+    echo "*********************************** ERROR ***********************************"
+    echo "*                                                                           *"
+    echo "* SANDFLY_SETUP_AUTO_ADMIN_PASSWORD is set, but SANDFLY_SETUP_AUTO_HOSTNAME *"
+    echo "* is not. For an automated install, both are required.                      *"
+    echo "*                                                                           *"
+    echo "*********************************** ERROR ***********************************"
+    echo ""
+    exit 1
+fi
+
 cat << EOF
+
 Installing Sandfly server version $VERSION.
 
 Copyright (c) Sandfly Security Ltd.
@@ -88,7 +114,7 @@ Welcome to the Sandfly $VERSION server setup.
 
 EOF
 
-# Sandfly Postgres Docker volume already exists?
+# Sandfly Postgres Docker volumes already exists?
 $CONTAINERMGR inspect sandfly-pg14-db-vol >/dev/null 2>&1
 if [[ $? -eq 0 ]]
 then
@@ -98,7 +124,31 @@ then
     echo "* Sandfly is already installed (the database Docker volume,               *"
     echo "* sandfly-pg14-db-vol, exists).                                           *"
     echo "*                                                                         *"
-    echo "* If you are upgrading to a new version of Sandfly, please use upgrade.sh *"
+    echo "* If you are upgrading to a new version of Sandfly, please follow the     *"
+    echo "* instructions at:                                                        *"
+    echo "* https://docs.sandflysecurity.com/docs/upgrading-sandfly                 *"
+    echo "*                                                                         *"
+    echo "* If you wish to completely delete your old Sandfly configuration and     *"
+    echo "* database, please use delete_sandfly_installation.sh in the util_scripts *"
+    echo "* directory.                                                              *"
+    echo "*                                                                         *"
+    echo "********************************** ERROR **********************************"
+    echo ""
+    exit 1
+fi
+
+$CONTAINERMGR inspect sandfly-pg18-db-vol >/dev/null 2>&1
+if [[ $? -eq 0 ]]
+then
+    echo ""
+    echo "********************************** ERROR **********************************"
+    echo "*                                                                         *"
+    echo "* Sandfly is already installed (the database Docker volume,               *"
+    echo "* sandfly-pg18-db-vol, exists).                                           *"
+    echo "*                                                                         *"
+    echo "* If you are upgrading to a new version of Sandfly, please follow the     *"
+    echo "* instructions at:                                                        *"
+    echo "* https://docs.sandflysecurity.com/docs/upgrading-sandfly                 *"
     echo "*                                                                         *"
     echo "* If you wish to completely delete your old Sandfly configuration and     *"
     echo "* database, please use delete_sandfly_installation.sh in the util_scripts *"
@@ -120,9 +170,7 @@ if [ "$CONTAINERMGR" = "podman" ]; then
         echo "* To install using Podman as a rootful user, we will need to do the       *"
         echo "* following actions                                                       *"
         echo "*                                                                         *"
-        echo "* 1. If SELinux is running we will need to set the context of the         *"
-        echo "*    setup_data folder to allow the container write access                *"
-        echo "* 2. Create container files in the /etc/containers/systemd folder         *"
+        echo "* 1. Create container files in the /etc/containers/systemd folder         *"
         echo "*    to allow systemd to start the containers at boot time                *"
         echo "*                                                                         *"
         echo "********************************* WARNING *********************************"
@@ -136,15 +184,13 @@ if [ "$CONTAINERMGR" = "podman" ]; then
         echo "* To install using Podman as a rootless user, we will need to do the      *"
         echo "* following actions                                                       *"
         echo "*                                                                         *"
-        echo "* 1. If SELinux is running we will need to set the context of the         *"
-        echo "*    setup_data folder to allow the container write access                *"
-        echo "* 2. Modify sysctl.conf to allow an unprivileged process to bind to       *"
+        echo "* 1. Modify sysctl.conf to allow an unprivileged process to bind to       *"
         echo "*    ports 80 and 443 (requires root access via sudo)                     *"
-        echo "* 3. Enable Linger mode for the current user to prevent containers from   *"
+        echo "* 2. Enable Linger mode for the current user to prevent containers from   *"
         echo "*    shutting down at logout and to start containers at boot time         *"
-        echo "* 4. Create container files in the ~/.config/containers/systemd folder    *"
+        echo "* 3. Create container files in the ~/.config/containers/systemd folder    *"
         echo "*    to allow systemd to start the containers at boot time                *"
-        echo "* 5. If Podman is version 5 or later and the default Rootless Network     *"
+        echo "* 4. If Podman is version 5 or later and the default Rootless Network     *"
         echo "*    Cmd is configured to use 'pasta' we will create or modify the        *"
         echo "*    ~/.config/containers/containers.conf file to use 'slirp4netns'       *"
         echo "*    as the default_rootless_network_cmd.                                 *"
@@ -158,18 +204,6 @@ if [ "$CONTAINERMGR" = "podman" ]; then
         echo ""
         echo "Aborting install."
         exit 1
-    fi
-
-    # set setup_data context to allow containers to write to the directory
-    #
-    selinux_status=$(sestatus 2>/dev/null | grep "SELinux status:" | awk '{print $3}')
-    if [ ! -z "${selinux_status}" ]; then
-        if [ $selinux_status = "enabled" ]; then
-            if [ -d setup_data ] ; then
-                echo "Set SELinux context of setup_data directory"
-                chcon -v -Rt svirt_sandbox_file_t setup_data
-            fi
-        fi
     fi
 
     # change unprivileged_port_start to allow non-root process to bind to ports
@@ -268,7 +302,7 @@ fi
 This will be a fully-automated setup.
 
 Hostname: $SANDFLY_SETUP_AUTO_HOSTNAME
-Sandfly Management Image: $SANDFLY_MGMT_DOCKER_IMAGE
+Sandfly Image: $SANDFLY_MGMT_DOCKER_IMAGE
 
 EOF
 
@@ -282,86 +316,38 @@ if [ "$?" -ne 0 ]; then
   exit 1
 fi
 
-# The first time we start Postgres, we need to assign a superuser password.
-POSTGRES_ADMIN_PASSWORD=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c40)
-echo "$POSTGRES_ADMIN_PASSWORD" > $SETUP_DATA_DIR/postgres.admin.password.txt
-echo "Starting Postgres database."
-../start_scripts/start_postgres.sh
-if [[ $? -ne 0 ]]
-then
-  echo "Error starting Postgres container. Aborting install."
-  exit 1
+# Generate configuration environment files
+# The special value "skip" for admin password will leave it unset.
+if [ "$SANDFLY_AUTO" = "YES" ]; then
+    if [ "$SANDFLY_SETUP_AUTO_ADMIN_PASSWORD" = "skip" ]; then
+        ./setup_scripts/setuphelper install -output-dir setup_data \
+            -skipadminpw \
+            -hostname "$SANDFLY_SETUP_AUTO_HOSTNAME" \
+            -tls-mode self_signed "$@"
+    else
+        ./setup_scripts/setuphelper install -output-dir setup_data \
+            -admin-password "$SANDFLY_SETUP_AUTO_ADMIN_PASSWORD" \
+            -hostname "$SANDFLY_SETUP_AUTO_HOSTNAME" \
+            -tls-mode self_signed "$@"
+    fi
+    if [ "$?" -ne 0 ]; then
+        echo "Error generating configuration environment files."
+        exit 1
+    fi
 else
-  echo "Waiting 15 seconds for database container creation..."
-  sleep 15
+    ./setup_scripts/setuphelper install -output-dir setup_data "$@"
+    if [ "$?" -ne 0 ]; then
+        echo "Error generating configuration environment files."
+        exit 1
+    fi
 fi
-
-./setup_scripts/setup_server.sh
-if [[ $? -ne 0 ]]
-then
-  echo "Server setup did not run. Aborting install."
-  exit 1
-fi
-
-./setup_scripts/setup_keys.sh
-if [[ $? -ne 0 ]]
-then
-  echo "Server and node key setup did not run. Aborting install."
-  exit 1
-fi
-
-# Need to provide the API server hostname, which was written to a file in
-# setup_server.sh, to generate the SSL cert.
-SSL_SERVER_HOSTNAME=$(cat ./setup_data/api.server.hostname.txt)
-export SSL_SERVER_HOSTNAME
-
-./setup_scripts/setup_ssl.sh
-if [[ $? -ne 0 ]]
-then
-  echo "SSL setup did not run. Aborting install."
-  exit 1
-fi
-
-if [ -z "$SANDFLY_AUTO" ]; then
-  cat << EOF
-
-******************************************************************************
-Make Signed SSL Key with Let's Encrypt?
-
-If the Sandfly server has port 80 open to the Internet, we can generate a
-signed certificate with Let's Encrypt. Answer below if you'd like to do this.
-******************************************************************************
-
-EOF
-  read -p "Generate signed SSL certificate (type YES)? " RESPONSE
-  if [[ "$RESPONSE" = "YES" ]]
-  then
-      echo "Starting certificate signing script"
-      ./setup_scripts/setup_ssl_signed.sh
-  fi
-elif [ ! -z "$SSL_FQDN" ]; then
-  # Attempt an automated Let's Encrypt setup. The existing SSL_FQDN (and
-  # SSL_EMAIL) environment variables will flow through, causing the script
-  # to run in non-interactive mode.
-  echo "Starting automated certificate signing script"
-  ./setup_scripts/setup_ssl_signed.sh
-fi # if auto
-
-./setup_scripts/setup_config_json.sh
-if [[ $? -ne 0 ]]
-then
-  echo "Server and node config JSON could not be generated. Aborting install."
-  exit 1
-fi
-
 
 cat << EOF
 
 ******************************************************************************
 Server Setup Complete!
 
-Your server setup is complete. Please see below for the path to the admin
-password to login. Before you can add hosts and scan with Sandfly, you need
+Before you can add hosts and scan with Sandfly, you need
 to set up one or more scanning nodes as well.
 
 To start the server, go to $(realpath $PWD/../start_scripts)
@@ -375,9 +361,6 @@ and run the Sandfly start script:
 *** or start the node on this machine with the ./start_node.sh script
 *** in the start_scripts directory.
 
-Your randomly generated password for the admin account is located at:
-
-$PWD/setup_data/admin.password.txt
 ******************************************************************************
 
 EOF

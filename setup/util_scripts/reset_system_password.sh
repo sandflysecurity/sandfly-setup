@@ -20,15 +20,11 @@ SETUP_DATA=../setup_data
 VERSION=${SANDFLY_VERSION:-$(cat ../../VERSION)}
 IMAGE_BASE=${SANDFLY_IMAGE_BASE:-quay.io/sandfly}
 
-# Populate env variables.
-CONFIG_JSON=$(cat $SETUP_DATA/config.server.json)
-export CONFIG_JSON
-
 $CONTAINERMGR network create sandfly-net 2>/dev/null
 $CONTAINERMGR rm sandfly-server-mgmt 2>/dev/null
 
 $CONTAINERMGR run --name sandfly-server-mgmt \
 --network sandfly-net \
--e CONFIG_JSON \
+--env-file "${SETUP_DATA}/config.server.env" \
 -u root \
 -it $IMAGE_BASE/sandfly${IMAGE_SUFFIX}:"$VERSION" /opt/sandfly/utils/reset_system_password.sh

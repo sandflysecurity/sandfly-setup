@@ -18,26 +18,6 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-SETUP_DATA=../setup_data
-VERSION=${SANDFLY_VERSION:-$(cat ../../VERSION)}
-IMAGE_BASE=${SANDFLY_IMAGE_BASE:-quay.io/sandfly}
-
-# Populate env variables if on the sandfly server.
-if [ -f "$SETUP_DATA/config.server.json" ]; then
-    CONFIG_JSON=$(cat $SETUP_DATA/config.server.json)
-    export CONFIG_JSON
-else
-    echo ""
-    echo "****************************** ERROR ******************************"
-    echo "* The Sandfly server configuration file was not found.            *"
-    echo "*                                                                 *"
-    echo "* Please confirm that you are running this script on a Sandfly    *"
-    echo "* server installation and not on a Sandfly node.                  *"
-    echo "****************************** ERROR ******************************"
-    echo ""
-    exit 1
-fi
-
 # Check the state of the sandfly-server container
 esresult=$($CONTAINERMGR inspect --format="{{.State.Running}}" sandfly-server 2> /dev/null)
 if [ "${esresult}z" = "truez" ]; then
@@ -74,11 +54,14 @@ if [ "${esresult}z" != "truez" ]; then
     exit 1
 fi
 
-$CONTAINERMGR network create sandfly-net 2>/dev/null
-$CONTAINERMGR rm sandfly-server-mgmt 2>/dev/null
-
-$CONTAINERMGR run --name sandfly-server-mgmt \
---network sandfly-net \
--e CONFIG_JSON \
--u root \
--it $IMAGE_BASE/sandfly${IMAGE_SUFFIX}:"$VERSION" /opt/sandfly/utils/init_data_db.sh
+echo "***** WARNING *****"
+echo "This script will erase your results, error, and audit log data."
+echo "***** WARNING *****"
+echo ""
+read -p "Are you sure you want to do this (type YES)? " RESPONSE
+if [[ "$RESPONSE" = "YES" ]]; then
+    echo "db clear started"
+    $CONTAINERMGR exec sandfly-postgres psql -U sandfly -c "TRUNCATE TABLE results, results_json, results_updates, audit_log, errors;"
+else
+    echo "Aborting clear init."
+fi

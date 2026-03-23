@@ -3,13 +3,15 @@
 # Copyright (c) Sandfly Security LTD, All Rights Reserved.
 
 #############################################################################
-# Update the running server container's TLS certificate and key.            #
+# Reload the server's TLS certificate.                                      #
+#                                                                           #
+# If you have placed updated certificate files in the server_ssl_cert       #
+# directory (cert.pem and privatekey.pem), run this script to tell the      #
+# server to reload them without restarting.                                 #
 #############################################################################
 
 # Make sure we run from the correct directory so relative paths work
 cd "$( dirname "${BASH_SOURCE[0]}" )"
-
-SETUP_DATA=../setup_data
 
 # Set CONTAINERMGR variable
 . ./container_command.sh
@@ -24,27 +26,13 @@ if [ -z "$($CONTAINERMGR ps -q -f name=sandfly-server)" ]; then
     exit 1
 fi
 
-# Populate env variables.
-CONFIG_JSON=$(cat $SETUP_DATA/config.server.json)
-export CONFIG_JSON
+echo "Sending reload signal to server..."
+# The server is always PID 1 inside the container
+$CONTAINERMGR exec sandfly-server kill -HUP 1
 
-# Server SSL certificate overrides from files
-CONFIG_SSL_CERT=""
-CONFIG_SSL_KEY=""
-
-if [ -f $SETUP_DATA/server_ssl_cert/cert.pem ]; then
-    CONFIG_SSL_CERT=$(cat $SETUP_DATA/server_ssl_cert/cert.pem)
+if [ $? -eq 0 ]; then
+    echo "Reload signal sent. The server will reload its TLS certificate."
+else
+    echo "Failed to send reload signal."
+    exit 1
 fi
-
-if [ -f $SETUP_DATA/server_ssl_cert/privatekey.pem ]; then
-    CONFIG_SSL_KEY=$(cat $SETUP_DATA/server_ssl_cert/privatekey.pem)
-fi
-
-export CONFIG_SSL_CERT CONFIG_SSL_KEY
-
-$CONTAINERMGR exec \
--e CONFIG_JSON \
--e CONFIG_SSL_CERT -e CONFIG_SSL_KEY \
-sandfly-server /opt/sandfly/reload_server_cert.sh
-
-exit $?

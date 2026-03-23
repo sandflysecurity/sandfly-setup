@@ -17,7 +17,7 @@ else
 fi
 
 # Remove old scripts
-../setup/clean_scripts.sh
+../setup/setup_scripts/clean_scripts.sh
 
 # Set CONTAINERMGR variable
 . ../setup/setup_scripts/container_command.sh
@@ -27,13 +27,29 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-if [ ! -f $SETUP_DATA/config.node.json ]; then
+# Auto-convert old JSON config to env format if needed.
+if [ -f $SETUP_DATA/config.node.json ] && \
+   [ ! -f $SETUP_DATA/config.node.env ]; then
+    echo "Converting config.node.json to config.node.env..."
+    ../setup/setup_scripts/setuphelper convertnode \
+        -in "$SETUP_DATA/config.node.json" \
+        -out "$SETUP_DATA/config.node.env"
+    if [ $? -ne 0 ]; then
+        echo "Error converting node configuration."
+        exit 1
+    fi
+    mv "$SETUP_DATA/config.node.json" \
+       "$SETUP_DATA/config.node.json.retired"
+fi
+
+if [ ! -f $SETUP_DATA/config.node.env ]; then
     echo
     echo "***************************** ERROR *******************************"
     echo
-    echo "The node config data ($SETUP_DATA/config.node.json) is not present on the"
-    echo "node. This file must be present for the scanning nodes to start. Please copy"
-    echo "this file from the server setup_data directory and try again."
+    echo "The node config data (../setup/setup_data/config.node.env) is not"
+    echo "present on the node. This file must be present for the scanning"
+    echo "nodes to start. Please copy this file from the server setup_data"
+    echo "directory and try again."
     echo
     echo "Exiting node start."
     echo "***************************** ERROR *******************************"
@@ -48,18 +64,14 @@ if [ "$?" -ne 0 ]; then
   exit 1
 fi
 
-# Populate env variables.
-CONFIG_JSON=$(cat $SETUP_DATA/config.node.json)
-export CONFIG_JSON
-
 # If the node is running on the server (judging by the presence of the server
 # config file), use internal Docker network to communicate with the server.
 # We will pass in an environment variable to the startup script that will
 # ignore the normal hostname configuration.
 EXTRA_PARAMS=""
-if [ -f $SETUP_DATA/config.server.json ]; then
+if [ -f $SETUP_DATA/config.server.env ]; then
   echo
-  echo "** Note: config.server.json file present; assuming Node is running on"
+  echo "** Note: config.server.env file present; assuming Node is running on"
   echo "         same host as the Sandfly Server."
   echo
 
@@ -68,7 +80,7 @@ fi
 
 $CONTAINERMGR run -v /dev/urandom:/dev/random:ro \
 --label sandfly-node \
--e CONFIG_JSON \
+--env-file "${SETUP_DATA}/config.node.env" \
 --disable-content-trust \
 --restart=always \
 --security-opt="no-new-privileges:true" \
@@ -89,15 +101,19 @@ if [ "$CONTAINERMGR" = "podman" ]; then
         CONTAINER_FILE=sandfly-node-$node_name.container
         if [[ ! -f $CONTAINER_FILE ]]; then
             echo "*** Generate $CONTAINER_FILE for $node_name"
-            t_CONFIG_JSON=$(echo $CONFIG_JSON)
+            SETUP_DATA_ABS=$(realpath "$SETUP_DATA")
             echo "[Container]" > $CONTAINER_FILE
             echo "ContainerName=$node_name" >> $CONTAINER_FILE
-            echo "Environment=CONFIG_JSON='${t_CONFIG_JSON}'" >> $CONTAINER_FILE
+            echo "EnvironmentFile=${SETUP_DATA_ABS}/config.node.env" >> $CONTAINER_FILE
             echo "Exec=/opt/sandfly/start_node.sh" >> $CONTAINER_FILE
             echo "Group=sandfly" >> $CONTAINER_FILE
             echo "Image=$IMAGE_BASE/sandfly${IMAGE_SUFFIX}:$VERSION" >> $CONTAINER_FILE
             echo "Label=sandfly-node=" >> $CONTAINER_FILE
             echo "LogDriver=json-file" >> $CONTAINER_FILE
+            if [ -f sandfly-server.container ]; then
+                echo "Network=sandfly-net" >> $CONTAINER_FILE
+                echo "Environment=LOCAL_SERVER=true" >> $CONTAINER_FILE
+            fi
             if [ "$t_cgroup_mgr" != "systemd" ]; then
                 echo "PodmanArgs=--cgroups=enabled --disable-content-trust --log-opt 'max-size=${LOG_MAX_SIZE}' --log-opt 'max-file=5'" >> $CONTAINER_FILE
             else

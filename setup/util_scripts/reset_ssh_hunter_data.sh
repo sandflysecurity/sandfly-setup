@@ -15,19 +15,30 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-SETUP_DATA=../setup_data
-VERSION=${SANDFLY_VERSION:-$(cat ../../VERSION)}
-IMAGE_BASE=${SANDFLY_IMAGE_BASE:-quay.io/sandfly}
+# Check the state of the sandfly-postgres container
+esresult=$($CONTAINERMGR inspect --format="{{.State.Running}}" sandfly-postgres 2> /dev/null)
+if [ "${esresult}z" != "truez" ]; then
+    echo ""
+    echo "****************************** ERROR ******************************"
+    echo "* The Sandfly Postgres container is not running.                  *"
+    echo "*                                                                 *"
+    echo "* Please start the container with the following script:           *"
+    echo "*   ~/sandfly-setup/start_scripts/start_postgres.sh               *"
+    echo "*                                                                 *"
+    echo "* Then run this script again.                                     *"
+    echo "****************************** ERROR ******************************"
+    echo ""
+    exit 1
+fi
 
-# Populate env variables.
-CONFIG_JSON=$(cat $SETUP_DATA/config.server.json)
-export CONFIG_JSON
-
-$CONTAINERMGR network create sandfly-net 2>/dev/null
-$CONTAINERMGR rm sandfly-server-mgmt 2>/dev/null
-
-$CONTAINERMGR run --name sandfly-server-mgmt \
---network sandfly-net \
--e CONFIG_JSON \
--u root \
--it $IMAGE_BASE/sandfly${IMAGE_SUFFIX}:"$VERSION" /opt/sandfly/utils/reset_ssh_hunter_data.sh
+echo "***** WARNING *****"
+echo "This script will erase all SSH Hunter key data from the database."
+echo "***** WARNING *****"
+echo ""
+read -p "Are you sure you want to do this (type YES)? " RESPONSE
+if [[ "$RESPONSE" = "YES" ]]; then
+    echo "db clear started"
+    $CONTAINERMGR exec sandfly-postgres psql -U sandfly -c "TRUNCATE TABLE ssh_public_keys, user_ssh_authorized_keys, user_ssh_authorized_keys_entry, ssh_public_keys_tags;"
+else
+    echo "Response wasn't 'YES', aborting SSH Hunter clear."
+fi

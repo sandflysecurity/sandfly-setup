@@ -1,12 +1,22 @@
 Sandfly API Service SSL Certificate
 ===================================
 
-To use your own SSL/TLS certificate for the Sandfly API service, place two
-files in this directory named cert.pem and privatekey.pem.
+The Sandfly server automatically manages TLS certificates. By default, it
+generates a self-signed certificate that is stored in the database.
 
-If one or both files are present in this directory, the corresponding values
-in config.server.json will be ignored (server.ssl.server.cert_signed and
-server.ssl.server.private_key_signed).
+To use your own SSL/TLS certificate instead, place two files in this directory:
+
+  - cert.pem       - Your server certificate (and chain)
+  - privatekey.pem - Your private key
+
+When both files are present, the server will use them instead of auto-generated
+certificates. If either file is missing, the server uses automatic TLS.
+
+After updating the certificate files, you can reload them without restarting
+the server by running:
+
+    ./setup_scripts/reload_server_https_certificate.sh
+
 
 cert.pem
 --------
@@ -14,18 +24,16 @@ cert.pem
 The cert.pem file must contain the server certificate and (if necessary) the
 intermediate chain certificate(s).
 
-The server certificate must be the first certificate in the cert.pem file.
-Each certificate (the server certificate and the intermediate certificates)
-must be PEM-encoded and include the "-----BEGIN CERTIFICATE-----" and
+The server certificate must be the first certificate in the file. Each
+certificate must be PEM-encoded with "-----BEGIN CERTIFICATE-----" and
 "-----END CERTIFICATE-----" delimiters.
 
 If you have your server certificate in certificate.pem and your intermediate
-certificates in cachain.pem, you can create the cert.pem file by
-concatenating them together in the correct order:
+certificates in cachain.pem, create cert.pem by concatenating them:
 
     cat certificate.pem cachain.pem > cert.pem
 
-The complete cert.pem file should look like (without leading spaces):
+The complete file should look like:
 
     -----BEGIN CERTIFICATE-----
     MII...
@@ -33,15 +41,22 @@ The complete cert.pem file should look like (without leading spaces):
     -----BEGIN CERTIFICATE-----
     MII...
     -----END CERTIFICATE-----
-    ... (possibly more certificates)
 
 
 privatekey.pem
 --------------
 
-The privatekey.pem file must be a PEM-encoded, unecrypted private key file.
-It should look something like (without leading spaces):
+The privatekey.pem file must be a PEM-encoded, unencrypted private key:
 
     -----BEGIN RSA PRIVATE KEY-----
     MII...
     -----END RSA PRIVATE KEY-----
+
+
+Let's Encrypt / ACME
+--------------------
+
+The server has built-in support for automatically obtaining and renewing
+certificates from Let's Encrypt. This can be configured through the server's
+configuration settings. When ACME mode is enabled, the server handles all
+certificate management automatically.

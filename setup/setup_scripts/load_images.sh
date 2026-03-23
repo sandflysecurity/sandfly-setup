@@ -6,18 +6,6 @@
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 SF_VERSION=${SANDFLY_VERSION:-$(cat ../../VERSION)}
-PG_VERSION_14=$(grep -oP 'VERSION=\K(14\.[0-9]+)' ../../start_scripts/start_postgres.sh)
-PG_VERSION_18=$(grep -oP 'VERSION=\K(18\.[0-9]+)' ../../start_scripts/start_postgres.sh)
-
-# Newer installation get Postgres 18
-PG_VERSION=$PG_VERSION_18
-
-# But older installs still use Postgres 14
-if [ -f ../setup_data/config.server.json ]; then
-    if ! grep -q '"config_version": 4,' ../setup_data/config.server.json >/dev/null; then
-        PG_VERSION=$PG_VERSION_14
-    fi
-fi
 
 # If we don't have the offline package, there's nothing to do
 if [ ! -f ../../docker_images/sandfly-docker-images-${SF_VERSION}.tgz ]; then
@@ -30,6 +18,18 @@ if [ $? -ne 0 ]; then
     # Failed to find container runtime. The container_command script will
     # have printed an error.
     exit 1
+fi
+
+PG_VERSION_14=$(grep -oP 'VERSION=\K(14\.[0-9]+)' ../../start_scripts/start_postgres.sh | head -n1)
+PG_VERSION_18=$(grep -oP 'VERSION=\K(18\.[0-9]+)' ../../start_scripts/start_postgres.sh | head -n1)
+
+# Determine postgres version based on presence of existing volume
+if $CONTAINERMGR inspect sandfly-pg18-db-vol >/dev/null 2>&1; then
+    PG_VERSION=$PG_VERSION_18
+elif $CONTAINERMGR inspect sandfly-pg14-db-vol >/dev/null 2>&1; then
+    PG_VERSION=$PG_VERSION_14
+else
+    PG_VERSION=$PG_VERSION_18
 fi
 
 NEED_IMAGES=0

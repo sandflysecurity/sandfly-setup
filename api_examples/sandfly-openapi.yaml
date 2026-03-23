@@ -7,7 +7,7 @@ info:
     name: Sandfly Security, Ltd.
     url: https://www.sandflysecurity.com
   title: Sandfly API
-  version: 5.6.0
+  version: 5.7.0
 servers:
   - url: https://{sandfly-api-host}/v4
 security:
@@ -674,6 +674,26 @@ paths:
       summary: Get SSO status
       tags:
         - Authentication
+  /debug/tlsregenerate:
+    post:
+      description: Forces regeneration of the self-signed TLS certificate. This is a debug endpoint since certificates are auto-renewed before expiration.
+      operationId: regenerateTlsCert
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: TLS certificate regenerated successfully.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+      summary: Regenerate self-signed TLS certificate
+      tags:
+        - Debug
   /credentials:
     delete:
       description: This deletes all credential_ids passed into the body as bulk operation.
@@ -2054,6 +2074,31 @@ paths:
                 $ref: "#/components/schemas/StandardResponse"
           description: Unexpected error
       summary: Delete license
+      tags:
+        - License
+    get:
+      description: Gets the license data.
+      operationId: getLicense
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/License"
+          description: License retrieved
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: License entry not found.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+      summary: Get license data
       tags:
         - License
     post:
@@ -3584,6 +3629,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/StandardResponse"
           description: Invalid delete request (e.g. non-integer ID in request).
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Profile not found.
         default:
           content:
             application/json:
@@ -5005,7 +5056,7 @@ paths:
             type: string
         - name: mode
           in: query
-          description: "Execution mode: 'immediate' (default) or 'trickle'. Only applicable to scan schedules; discovery schedules are always run in immediate mode."
+          description: "Execution mode: 'immediate' (default) or 'trickle'. Only applicable to scan schedules; discover schedules are always run in immediate mode."
           required: false
           schema:
             type: string
@@ -5135,7 +5186,7 @@ paths:
         - Schedule
   "/schedule/{schedule_name}":
     delete:
-      description: Deletes a schedule by schedule_name. Only schedules of type scan and discovery can be deleted, result_profile_gather schedules can only be removed by editing or deleting the related result profile.
+      description: Deletes a schedule by schedule_name. Only schedules of type scan and discover can be deleted, result_profile_gather schedules can only be removed by editing or deleting the related result profile.
       operationId: deleteSchedule
       parameters:
         - description: schedule_name to delete
@@ -7043,6 +7094,32 @@ paths:
       summary: Delete Whitelist Rules
       tags:
         - Whitelist
+  /debug/rotatejwtkey:
+    post:
+      description: Generates a new JWT signing key and saves it to the database. This invalidates all existing user sessions, requiring users to log in again. The new key takes effect immediately.
+      operationId: rotateJWTKey
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: JWT signing key rotated successfully.
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Failed to rotate JWT signing key.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+      summary: Rotate JWT Signing Key
+      tags:
+        - Debug
 components:
   parameters:
     summary:
@@ -9319,34 +9396,17 @@ components:
     LicenseFeatures:
       type: string
       enum:
+        - ad_hoc_scan
+        - custom_sandflies
+        - elasticsearch_replication
         - host_tags
         - sandfly_auto_response
-        - user_roles
-        - custom_sandflies
-        - policy_sandflies
-        - recon_sandflies
-        - incident_response_sandflies
-        - sandfly_hunter
-        - ssh_hunter
-        - process_stalker
-        - file_stalker
-        - user_stalker
-        - directory_stalker
-        - video_training
-        - standard_support
-        - pagerduty_notifications
-        - 2fa
-        - elasticsearch_replication
-        - elasticsearch_external
-        - splunk_connector
-        - ad_hoc_scan
-        - enterprise_support
-        - key_vault
-        - sso
-        - demo
         - siem_sentinel
-        - trial
+        - splunk_connector
+        - ssh_hunter
+        - sso
         - threat_feed
+        - user_roles
     LicenseLimits:
       properties:
         alerts:
@@ -12341,11 +12401,11 @@ components:
         result_profile_id:
           description: If this is a schedule related to a result profile, this will be the ID of the associated result profile. Otherwise, this field will not be present.
           type: integer
-    ScheduleTypeDiscovery:
+    ScheduleTypeDiscover:
       type: object
       allOf:
-        - $ref: "#/components/schemas/ScheduleConfigDiscoveryIplist"
-        - $ref: "#/components/schemas/ScheduleConfigDiscoveryNetblock"
+        - $ref: "#/components/schemas/ScheduleConfigDiscoverIplist"
+        - $ref: "#/components/schemas/ScheduleConfigDiscoverNetblock"
         - $ref: "#/components/schemas/ScheduleAddCommon"
         - $ref: "#/components/schemas/ScheduleCommon"
         - $ref: "#/components/schemas/ScheduleMeta"
@@ -12364,7 +12424,7 @@ components:
         - $ref: "#/components/schemas/ScheduleSummaryDrift"
     ScheduleSummaryScan:
       allOf:
-        - $ref: "#/components/schemas/ScheduleConfigDiscovery"
+        - $ref: "#/components/schemas/ScheduleConfigDiscover"
         - $ref: "#/components/schemas/ScheduleConfigScan"
         - $ref: "#/components/schemas/HostConnectionCommon"
         - $ref: "#/components/schemas/LinkedCredential"
@@ -12374,7 +12434,7 @@ components:
         - $ref: "#/components/schemas/HostConnectionList"
     ScheduleSummaryDrift:
       allOf:
-        - $ref: "#/components/schemas/ScheduleConfigDiscovery"
+        - $ref: "#/components/schemas/ScheduleConfigDiscover"
         - $ref: "#/components/schemas/ScheduleConfigScan"
         - $ref: "#/components/schemas/HostConnectionCommon"
         - $ref: "#/components/schemas/LinkedCredential"
@@ -12391,7 +12451,7 @@ components:
           type: integer
     ScheduleSummaryDiscover:
       allOf:
-        - $ref: "#/components/schemas/ScheduleConfigDiscovery"
+        - $ref: "#/components/schemas/ScheduleConfigDiscover"
         - $ref: "#/components/schemas/ScheduleConfigScan"
         - $ref: "#/components/schemas/HostConnectionCommon"
         - $ref: "#/components/schemas/LinkedCredential"
@@ -12408,7 +12468,7 @@ components:
           type: boolean
     ScheduleSummaryGather:
       allOf:
-        - $ref: "#/components/schemas/ScheduleConfigDiscovery"
+        - $ref: "#/components/schemas/ScheduleConfigDiscover"
         - $ref: "#/components/schemas/ScheduleConfigScan"
         - $ref: "#/components/schemas/HostConnectionCommon"
         - $ref: "#/components/schemas/LinkedCredential"
@@ -12435,12 +12495,12 @@ components:
         propertyName: schedule_type
         mapping:
           scan: "#/components/schemas/ScheduleTypeScan"
-          discover: "#/components/schemas/ScheduleTypeDiscovery"
+          discover: "#/components/schemas/ScheduleTypeDiscover"
           gather: "#/components/schemas/ScheduleTypeGather"
           drift: "#/components/schemas/ScheduleTypeDrift"
       oneOf:
         - $ref: "#/components/schemas/ScheduleTypeScan"
-        - $ref: "#/components/schemas/ScheduleTypeDiscovery"
+        - $ref: "#/components/schemas/ScheduleTypeDiscover"
         - $ref: "#/components/schemas/ScheduleTypeGather"
         - $ref: "#/components/schemas/ScheduleTypeDrift"
       type: object
@@ -12450,11 +12510,11 @@ components:
         propertyName: schedule_type
         mapping:
           scan: "#/components/schemas/ScheduleConfigScan"
-          discover: "#/components/schemas/ScheduleConfigDiscovery"
+          discover: "#/components/schemas/ScheduleConfigDiscover"
           gather: "#/components/schemas/ScheduleConfigScan"
       oneOf:
         - $ref: "#/components/schemas/ScheduleConfigScan"
-        - $ref: "#/components/schemas/ScheduleConfigDiscovery"
+        - $ref: "#/components/schemas/ScheduleConfigDiscover"
     ScheduleAddCommon:
       required:
         - name
@@ -12500,16 +12560,16 @@ components:
           description: nil or -1 to disable, or a number between 0-24 to indicate the end hour (UTC) of the window of time during which this schedule will not run.
           format: int32
           type: integer
-    ScheduleConfigDiscovery:
+    ScheduleConfigDiscover:
       discriminator:
         propertyName: ip_type
         mapping:
-          ip_list: "#/components/schemas/ScheduleConfigDiscoveryIplist"
-          ip_range: "#/components/schemas/ScheduleConfigDiscoveryNetblock"
+          ip_list: "#/components/schemas/ScheduleConfigDiscoverIplist"
+          ip_range: "#/components/schemas/ScheduleConfigDiscoverNetblock"
       oneOf:
-        - $ref: "#/components/schemas/ScheduleConfigDiscoveryIplist"
-        - $ref: "#/components/schemas/ScheduleConfigDiscoveryNetblock"
-    ScheduleConfigDiscoveryCommon:
+        - $ref: "#/components/schemas/ScheduleConfigDiscoverIplist"
+        - $ref: "#/components/schemas/ScheduleConfigDiscoverNetblock"
+    ScheduleConfigDiscoverCommon:
       required:
         - ip_type
         - discovered_host_tags
@@ -12546,19 +12606,19 @@ components:
           type: string
           default: ""
       type: object
-    ScheduleConfigDiscoveryIplist:
+    ScheduleConfigDiscoverIplist:
       allOf:
         - $ref: "#/components/schemas/ScheduleAddCommon"
         - $ref: "#/components/schemas/ScheduleConfigCommon"
         - $ref: "#/components/schemas/HostConnectionList"
-        - $ref: "#/components/schemas/ScheduleConfigDiscoveryCommon"
+        - $ref: "#/components/schemas/ScheduleConfigDiscoverCommon"
         - $ref: "#/components/schemas/LinkedCredential"
-    ScheduleConfigDiscoveryNetblock:
+    ScheduleConfigDiscoverNetblock:
       allOf:
         - $ref: "#/components/schemas/ScheduleAddCommon"
         - $ref: "#/components/schemas/ScheduleConfigCommon"
         - $ref: "#/components/schemas/HostConnectionRange"
-        - $ref: "#/components/schemas/ScheduleConfigDiscoveryCommon"
+        - $ref: "#/components/schemas/ScheduleConfigDiscoverCommon"
         - $ref: "#/components/schemas/LinkedCredential"
     ScheduleConfigScan:
       required:
@@ -12647,11 +12707,11 @@ components:
         propertyName: schedule_type
         mapping:
           scan: "#/components/schemas/ScheduleConfigScan"
-          discover: "#/components/schemas/ScheduleConfigDiscovery"
+          discover: "#/components/schemas/ScheduleConfigDiscover"
       type: object
       oneOf:
         - $ref: "#/components/schemas/ScheduleConfigScan"
-        - $ref: "#/components/schemas/ScheduleConfigDiscovery"
+        - $ref: "#/components/schemas/ScheduleConfigDiscover"
     ScrollingResponse:
       properties:
         more_results:
@@ -12678,11 +12738,15 @@ components:
       allOf:
         - $ref: "#/components/schemas/ServerConfigCommon"
         - $ref: "#/components/schemas/ServerConfigGeneral"
+        - $ref: "#/components/schemas/ServerConfigSessionTimeouts"
+        - $ref: "#/components/schemas/ServerConfigScanningBinary"
         - $ref: "#/components/schemas/ServerConfigSectionElastic"
         - $ref: "#/components/schemas/ServerConfigSectionLLM"
         - $ref: "#/components/schemas/ServerConfigSectionPostgres"
         - $ref: "#/components/schemas/ServerConfigSectionSentinel"
         - $ref: "#/components/schemas/ServerConfigSectionSSO"
+        - $ref: "#/components/schemas/ServerConfigSectionTLS"
+        - $ref: "#/components/schemas/ServerConfigSectionAdvanced"
       type: object
     ServerConfigurationUpdate:
       allOf:
@@ -12692,11 +12756,15 @@ components:
       type: object
       anyOf:
         - $ref: "#/components/schemas/ServerConfigGeneral"
+        - $ref: "#/components/schemas/ServerConfigSessionTimeouts"
+        - $ref: "#/components/schemas/ServerConfigScanningBinary"
         - $ref: "#/components/schemas/ServerConfigSectionElastic"
         - $ref: "#/components/schemas/ServerConfigSectionLLM"
         - $ref: "#/components/schemas/ServerConfigSectionPostgres"
         - $ref: "#/components/schemas/ServerConfigSectionSentinel"
         - $ref: "#/components/schemas/ServerConfigSectionSSO"
+        - $ref: "#/components/schemas/ServerConfigSectionTLS"
+        - $ref: "#/components/schemas/ServerConfigSectionAdvancedEdit"
     ServerConfigSectionElastic:
       type: object
       required:
@@ -12732,6 +12800,53 @@ components:
       properties:
         sso:
           $ref: "#/components/schemas/ServerConfigSSO"
+    ServerConfigSectionAdvanced:
+      type: object
+      required:
+        - advanced
+      properties:
+        advanced:
+          $ref: "#/components/schemas/ServerConfigAdvanced"
+    ServerConfigSectionAdvancedEdit:
+      type: object
+      required:
+        - advanced
+      properties:
+        advanced:
+          $ref: "#/components/schemas/ServerConfigAdvancedEdit"
+    ServerConfigSectionTLS:
+      type: object
+      required:
+        - tls
+      properties:
+        tls:
+          $ref: "#/components/schemas/ServerConfigTLS"
+    ServerConfigTLS:
+      type: object
+      description: TLS certificate management configuration.
+      required:
+        - mode
+        - acme_email
+        - acme_directory
+        - user_tls_active
+      properties:
+        mode:
+          type: string
+          enum:
+            - self_signed
+            - acme
+            - none
+          description: TLS certificate management mode. 'self_signed' generates certificates automatically, 'acme' uses Let's Encrypt or another ACME provider, 'none' runs plain HTTP only (for use behind a TLS-terminating proxy). User-provided certificate files (via SF_TLS_CERT_PATH / SF_TLS_KEY_PATH env vars) are detected automatically and override the configured mode.
+        acme_email:
+          type: string
+          description: Email address for ACME account registration.
+        acme_directory:
+          type: string
+          description: ACME provider directory URL. Defaults to Let's Encrypt production.
+        user_tls_active:
+          type: boolean
+          readOnly: true
+          description: Indicates that user-provided TLS certificate files were detected and are being used, overriding the configured mode. This field is read-only and determined at server startup.
     ServerConfigCommon:
       required:
         - config_revision
@@ -12744,40 +12859,104 @@ components:
     ServerConfigGeneral:
       type: object
       required:
-        - agent_names
         - data_retention_days
         - pass_retention_days
         - shared_url_keep_days
         - maintenance_hour
+      properties:
+        data_retention_days:
+          format: int64
+          type: integer
+          description: Number of days to keep alert results and other data.
+          default: 30
+          minimum: 1
+          maximum: 31
+        pass_retention_days:
+          format: int64
+          type: integer
+          description: Number of days to keep pass results.
+          default: 3
+          minimum: 1
+          maximum: 31
+        shared_url_keep_days:
+          format: int64
+          type: integer
+          description: Number of days to keep "share" URL links generated in the UI.
+          default: 90
+          minimum: 1
+          maximum: 9999
+        maintenance_hour:
+          format: int64
+          type: integer
+          description: Hour of the day, on the 24-hour UTC clock, to perform daily system maintenance tasks.
+          default: 0
+          minimum: 0
+          maximum: 24
+        server_hostname:
+          type: string
+          description: The hostname of the Sandfly server, used for SAML ACS URLs, notification links, and other features that need to reference the server's public URL. Once set, this value cannot be changed back to empty.
+        server_log_level:
+          type: string
+          enum:
+            - debug
+            - info
+          description: Server log verbosity level. Changes take effect immediately unless the SF_LOG_LEVEL environment variable is set, in which case the environment variable takes precedence for the lifetime of the server.
+          default: info
+    ServerConfigSessionTimeouts:
+      type: object
+      required:
+        - access_token_minutes
+        - refresh_token_minutes
+        - ui_session_timeout_minutes
+        - ui_session_expiration_minutes
+      properties:
+        access_token_minutes:
+          format: int64
+          type: integer
+          description: Length of time (in minutes) that API access tokens are valid.
+          default: 30
+          minimum: 5
+          maximum: 1440
+        refresh_token_minutes:
+          format: int64
+          type: integer
+          description: Length of time (in minutes) that API refresh tokens are valid.
+          default: 1440
+          minimum: 5
+          maximum: 44640
+        ui_session_timeout_minutes:
+          format: int64
+          type: integer
+          description: Length of time (in minutes) a UI session can be idle before requiring re-authentication.
+          default: 60
+          minimum: 5
+          maximum: 1440
+        ui_session_expiration_minutes:
+          format: int64
+          type: integer
+          description: Maximum time (in minutes) from initial login that a UI session can remain valid, regardless of activity.
+          default: 1440
+          minimum: 5
+          maximum: 44640
+    ServerConfigScanningBinary:
+      type: object
+      required:
+        - agent_names
         - agent_reverse_dns_lookup
+        - home_dir_base_paths
       properties:
         agent_names:
           format: string
           type: string
           description: Comma-separated list of names to use for the Sandfly binary that is sent to target hosts.
           default: sandfly
-        data_retention_days:
-          format: int64
-          type: integer
-          description: Number of days to keep alert results and other data.
-          default: 30
-        pass_retention_days:
-          format: int64
-          type: integer
-          description: Number of days to keep pass results.
-          default: 3
-        shared_url_keep_days:
-          format: int64
-          type: integer
-          description: Number of days to keep "share" URL links generated in the UI.
-          default: 90
-        maintenance_hour:
-          format: int64
-          type: integer
-          description: Hour of the day, on the 24-hour UTC clock, to perform daily system maintenance tasks.
         agent_reverse_dns_lookup:
           type: boolean
           description: Configure node to perform a Reverse DNS lookup on IP addresses
+        home_dir_base_paths:
+          type: string
+          description: Comma-separated list of directories to search for inferred user home directories during scans.
+          default: /home
     ServerConfigLLM:
       type: object
       required:
@@ -12796,6 +12975,7 @@ components:
           type: string
           description: LLM API service to use.
           enum:
+            - Claude
             - custom
             - DigitalOcean
             - Gemini
@@ -13000,6 +13180,91 @@ components:
         saml_enabled:
           type: boolean
           description: Is SAML SSO enabled for this Sandfly instance.
+    ServerConfigAdvanced:
+      type: object
+      description: Advanced performance tuning configuration.
+      required:
+        - db_pool_size
+        - db_pool_size_nodes
+        - result_workers
+        - disable_nightly_maintenance
+        - disable_strict_tls_policy
+        - sso_redirect_prefix
+      properties:
+        db_pool_size:
+          type: integer
+          format: int64
+          minimum: 20
+          maximum: 100
+          description: Database connection pool size for general operations.
+          default: 20
+        db_pool_size_nodes:
+          type: integer
+          format: int64
+          minimum: 20
+          maximum: 100
+          description: Database connection pool size dedicated to node result ingestion.
+          default: 30
+        result_workers:
+          type: integer
+          format: int64
+          minimum: 5
+          maximum: 100
+          description: Number of concurrent workers for processing scan results.
+          default: 20
+        disable_nightly_maintenance:
+          type: boolean
+          description: Disable nightly database maintenance tasks. When true, relies on PostgreSQL autovacuum for maintenance.
+          default: false
+        disable_strict_tls_policy:
+          type: boolean
+          description: Disable strict TLS policy for the server. When true, uses Go's default TLS configuration. When false (default), enforces TLS 1.2+ with a limited set of strong cipher suites. Changes require a server restart to take effect.
+          default: false
+        sso_redirect_prefix:
+          type: string
+          description: Optional URL prefix for SSO redirect after successful SAML authentication. If set, the SSO redirect will use this prefix instead of the root path.
+    ServerConfigAdvancedEdit:
+      type: object
+      description: Advanced performance tuning configuration. Changes require a server restart to take effect.
+      properties:
+        db_pool_size:
+          type: integer
+          format: int64
+          nullable: true
+          minimum: 20
+          maximum: 100
+          description: Database connection pool size for general operations.
+          default: 20
+        db_pool_size_nodes:
+          type: integer
+          format: int64
+          nullable: true
+          minimum: 20
+          maximum: 100
+          description: Database connection pool size dedicated to node result ingestion.
+          default: 30
+        result_workers:
+          type: integer
+          format: int64
+          nullable: true
+          minimum: 5
+          maximum: 100
+          description: Number of concurrent workers for processing scan results.
+          default: 20
+        disable_nightly_maintenance:
+          type: boolean
+          nullable: true
+          description: Disable nightly database maintenance tasks. When true, relies on PostgreSQL autovacuum for maintenance.
+          default: false
+        disable_strict_tls_policy:
+          type: boolean
+          nullable: true
+          description: Disable strict TLS policy for the server. When true, uses Go's default TLS configuration. When false (default), enforces TLS 1.2+ with a limited set of strong cipher suites. Changes require a server restart to take effect.
+          default: false
+        sso_redirect_prefix:
+          type: string
+          nullable: true
+          description: Optional URL prefix for SSO redirect after successful SAML authentication. If set, the SSO redirect will use this prefix instead of the root path.
     RequestSignatureMethod:
       type: string
       enum:
@@ -13295,18 +13560,48 @@ components:
       required:
         - hostname
         - udp_port
+        - pass_facility
+        - alert_facility
+        - audit_facility
+        - error_facility
+        - transport
+        - use_tls
+        - ignore_certs
+        - ca_cert_b64
       properties:
         hostname:
           description: hostname or IP address used with this syslog entry.
           type: string
-        send_all_alerts:
-          description: Boolean flag to send all events regardless of pass, alert, error.
-          type: boolean
-          default: false
+          format: uri
+        pass_facility:
+          description: Integer Syslog Facility code for Pass Results
+          type: integer
+          default: -1
+          minimum: -1
+          maximum: 23
+        alert_facility:
+          description: Integer Syslog Facility code for Alert Results
+          type: integer
+          default: -1
+          minimum: -1
+          maximum: 23
+        audit_facility:
+          description: Integer Syslog Facility code for Audit Logs
+          type: integer
+          default: -1
+          minimum: -1
+          maximum: 23
+        error_facility:
+          description: Integer Syslog Facility code for Scan Error Logs
+          type: integer
+          default: -1
+          minimum: -1
+          maximum: 23
         udp_port:
           description: Port number to use to send syslog data (despite 'udp' in the property name, this is also used for TCP connections).
           format: int32
           type: integer
+          default: 514
         transport:
           $ref: "#/components/schemas/SyslogTransport"
         use_tls:
@@ -13328,7 +13623,14 @@ components:
         - name
         - hostname
         - udp_port
-        - send_all_alerts
+        - pass_facility
+        - alert_facility
+        - audit_facility
+        - error_facility
+        - transport
+        - use_tls
+        - ignore_certs
+        - ca_cert_b64
       properties:
         id:
           description: Alias for name.
@@ -13345,9 +13647,22 @@ components:
           description: UDP port number to use to send syslog data (despite 'udp' in the property name, this is also used for TCP connections).
           type: integer
           default: 514
-        send_all_alerts:
-          description: Boolean flag to send all events regardless of pass, alert, error.
-          type: boolean
+        pass_facility:
+          description: Integer Syslog Facility code for Pass Results
+          type: integer
+          default: -1
+        alert_facility:
+          description: Integer Syslog Facility code for Alert Results
+          type: integer
+          default: -1
+        audit_facility:
+          description: Integer Syslog Facility code for Audit Logs
+          type: integer
+          default: -1
+        error_facility:
+          description: Integer Syslog Facility code for Scan Error Logs
+          type: integer
+          default: -1
         transport:
           $ref: "#/components/schemas/SyslogTransport"
         use_tls:
@@ -16266,7 +16581,6 @@ components:
             - file_descriptors
             - environ
             - map
-            - maps_list
             - stack
             - cgroup
             - container
@@ -16313,6 +16627,12 @@ components:
               type: integer
             groupname:
               type: string
+            login_uid:
+              type: integer
+            login_uid_username:
+              type: string
+            session_id:
+              type: integer
             path:
               type: string
             true_path:
@@ -16413,27 +16733,6 @@ components:
               type: array
               items:
                 type: string
-            maps_list:
-              type: array
-              items:
-                type: object
-                properties:
-                  path:
-                    type: string
-                  deleted:
-                    type: boolean
-                  pseudo_path:
-                    type: boolean
-                  inode:
-                    type: integer
-                  permissions:
-                    type: string
-                required:
-                  - path
-                  - deleted
-                  - pseudo_path
-                  - inode
-                  - permissions
             stack:
               type: array
               items:

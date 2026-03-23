@@ -5925,36 +5925,17 @@
             }
            }
           },
-          "maps_list": {
-           "properties": {
-            "deleted": {
-             "type": "boolean"
-            },
-            "inode": {
-             "type": "long"
-            },
-            "path": {
-             "fields": {
-              "keyword": {
-               "ignore_above": 256,
-               "type": "keyword"
-              }
-             },
-             "type": "text"
-            },
-            "permissions": {
-             "fields": {
-              "keyword": {
-               "ignore_above": 256,
-               "type": "keyword"
-              }
-             },
-             "type": "text"
-            },
-            "pseudo_path": {
-             "type": "boolean"
+          "login_uid": {
+           "type": "long"
+          },
+          "login_uid_username": {
+           "fields": {
+            "keyword": {
+             "ignore_above": 256,
+             "type": "keyword"
             }
-           }
+           },
+           "type": "text"
           },
           "name": {
            "fields": {
@@ -7722,36 +7703,17 @@
               }
              }
             },
-            "maps_list": {
-             "properties": {
-              "deleted": {
-               "type": "boolean"
-              },
-              "inode": {
-               "type": "long"
-              },
-              "path": {
-               "fields": {
-                "keyword": {
-                 "ignore_above": 256,
-                 "type": "keyword"
-                }
-               },
-               "type": "text"
-              },
-              "permissions": {
-               "fields": {
-                "keyword": {
-                 "ignore_above": 256,
-                 "type": "keyword"
-                }
-               },
-               "type": "text"
-              },
-              "pseudo_path": {
-               "type": "boolean"
+            "login_uid": {
+             "type": "long"
+            },
+            "login_uid_username": {
+             "fields": {
+              "keyword": {
+               "ignore_above": 256,
+               "type": "keyword"
               }
-             }
+             },
+             "type": "text"
             },
             "name": {
              "fields": {
@@ -8744,6 +8706,9 @@
              },
              "type": "text"
             },
+            "session_id": {
+             "type": "long"
+            },
             "stack": {
              "fields": {
               "keyword": {
@@ -9312,6 +9277,9 @@
             }
            },
            "type": "text"
+          },
+          "session_id": {
+           "type": "long"
           },
           "stack": {
            "fields": {
@@ -12551,36 +12519,17 @@
                   }
                  }
                 },
-                "maps_list": {
-                 "properties": {
-                  "deleted": {
-                   "type": "boolean"
-                  },
-                  "inode": {
-                   "type": "long"
-                  },
-                  "path": {
-                   "fields": {
-                    "keyword": {
-                     "ignore_above": 256,
-                     "type": "keyword"
-                    }
-                   },
-                   "type": "text"
-                  },
-                  "permissions": {
-                   "fields": {
-                    "keyword": {
-                     "ignore_above": 256,
-                     "type": "keyword"
-                    }
-                   },
-                   "type": "text"
-                  },
-                  "pseudo_path": {
-                   "type": "boolean"
+                "login_uid": {
+                 "type": "long"
+                },
+                "login_uid_username": {
+                 "fields": {
+                  "keyword": {
+                   "ignore_above": 256,
+                   "type": "keyword"
                   }
-                 }
+                 },
+                 "type": "text"
                 },
                 "name": {
                  "fields": {
@@ -13572,6 +13521,9 @@
                   }
                  },
                  "type": "text"
+                },
+                "session_id": {
+                 "type": "long"
                 },
                 "stack": {
                  "fields": {

@@ -47,13 +47,16 @@ fi
 $SETUP_DIR/clean_docker.sh
 
 # Now blow away our docker volume.
-$CONTAINERMGR volume rm sandfly-pg14-db-vol
+volumes=$($CONTAINERMGR volume ls | grep sandfly-pg | awk '{print $2}')
+for x in $volumes ; do
+    $CONTAINERMGR volume rm $x
+done
 
 # Now blow away our docker network.
-$CONTAINERMGR network rm sandfly-net
+$CONTAINERMGR network rm sandfly-net 2>/dev/null
 
 # Delete config
-rm -f $SETUP_DATA_DIR/*.json $SETUP_DATA_DIR/*.txt
+rm -f $SETUP_DATA_DIR/*.json $SETUP_DATA_DIR/*.txt $SETUP_DATA_DIR/*.env $SETUP_DATA_DIR/*.yaml
 
 echo ""
 echo "Done."

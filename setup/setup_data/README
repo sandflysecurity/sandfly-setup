@@ -1,25 +1,30 @@
-*********************************************************************************
-* This is a holding area for setup data for Sandfly.
-*********************************************************************************
+*****************************************************************************
+* This directory contains local configuration files for Sandfly
+*****************************************************************************
 
+Maintain this directory across upgrades. The sandfly-setup distribution
+bundle will never contain files in this directory that overwrite generated
+configuration files, so it is safe to extract upgrade sandfly-setup versions
+over top of the existing sandfly-setup directory.
 
-*********************************************************************************
+*****************************************************************************
 * Server Config
-*********************************************************************************
+*****************************************************************************
 
-The Server should only have these files present:
+Sandfly server uses the following files in this directory:
 
-admin.password.txt (Invalid once user logs in and changes it.)
-config.server.json
+config.server.env
+server_ssl_cert/cert.prm
+server_ssl_cert/privatekey.pem
 
-*********************************************************************************
+*****************************************************************************
 * Node Config
-*********************************************************************************
+*****************************************************************************
 
 The Node should only have this file present and it should be DELETED from the
 server once it has been copied onto the nodes:
 
-config.node.json
+config.node.env
 
 This file contains private keys that only the node should have access to for
 security purposes.
@@ -27,3 +32,11 @@ security purposes.
 If you have decided to run the server and node on the same system, then you can
 leave this file but the server will give you a warning on start-up about the
 security risk of doing so.
+
+*****************************************************************************
+* Additional files
+*****************************************************************************
+
+When generating Kubernetes or docker-compose configurations, the files will
+be saved in this directory.
+
