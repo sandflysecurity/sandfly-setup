@@ -28,7 +28,7 @@ fi
 
 echo "Sending reload signal to server..."
 # The server is always PID 1 inside the container
-$CONTAINERMGR exec sandfly-server kill -HUP 1
+$CONTAINERMGR exec sandfly-server bash -c 'kill -HUP 1'
 
 if [ $? -eq 0 ]; then
     echo "Reload signal sent. The server will reload its TLS certificate."
