@@ -159,7 +159,7 @@ while true; do
 	fi
 done
 # NOTE: host settings and/or credentials were incorrect if output is:
-# { "data": [], "more_results": false, "scroll_id": null, "total": 0 }
+# { "data": [], "more_results": false, "total": 0 }
 
 # Wrap up the example
 echo ""

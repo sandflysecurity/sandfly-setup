@@ -80,6 +80,11 @@ SETUP_DATA_DIR=./setup_data
 VERSION=${SANDFLY_SETUP_VERSION:-$(cat ../VERSION)}
 PG_VERSION_18=$(grep -oP 'VERSION=\K(18\.[0-9]+)' ../start_scripts/start_postgres.sh | head -n1)
 
+SETUPTOOL="setuphelper"
+if [ "$(uname -s)" = "Darwin" ]; then
+    SETUPTOOL="setuphelper.macos"
+fi
+
 cat << "__EOF__"
 
 
@@ -125,7 +130,7 @@ Kubernetes manifest files for deploying Sandfly.
 
 EOF
 
-./setup_scripts/setuphelper k8s -postgres-version "$PG_VERSION_18" -output-dir "$SETUP_DATA_DIR" "$@"
+./setup_scripts/$SETUPTOOL k8s -postgres-version "$PG_VERSION_18" -output-dir "$SETUP_DATA_DIR" "$@"
 
 if [ $? -eq 0 ]; then
     echo ""

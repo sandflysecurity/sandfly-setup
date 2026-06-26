@@ -7,7 +7,7 @@ info:
     name: Sandfly Security, Ltd.
     url: https://www.sandflysecurity.com
   title: Sandfly API
-  version: 5.7.0
+  version: 5.8.0
 servers:
   - url: https://{sandfly-api-host}/v4
 security:
@@ -501,7 +501,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthAccessRefreshToken"
+                oneOf:
+                  - $ref: "#/components/schemas/AuthAccessRefresh"
+                  - $ref: "#/components/schemas/AuthAccessRefreshFull"
           description: Login valid
         "400":
           content:
@@ -541,7 +543,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthAccessToken"
+                oneOf:
+                  - $ref: "#/components/schemas/AuthAccessRefresh"
+                  - $ref: "#/components/schemas/AuthAccessRefreshFull"
           description: Login valid
         "400":
           content:
@@ -654,6 +658,40 @@ paths:
       summary: Update server configurations
       tags:
         - Server Configuration
+  /config/logininfo:
+    get:
+      description: "Returns pre-login information needed by the login page: whether SSO is enabled and the optional login warning message."
+      operationId: getLoginInfo
+      responses:
+        "200":
+          description: Returns whether the license allows for SSO and SSO is configured and enabled in settings, along with the optional login warning message to display on the login page.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - sso_enabled
+                  - login_banner
+                  - disable_login_form
+                properties:
+                  sso_enabled:
+                    type: boolean
+                    description: True if the license allows for SSO and SSO is configured and enabled in settings.
+                  login_banner:
+                    type: string
+                    description: Optional warning or notice message to display on the login page. Empty if no message is configured.
+                  disable_login_form:
+                    type: boolean
+                    description: True if the UI should hide or disable the username/password login form (set via the SF_DISABLE_UI_LOGIN_FORM server environment variable).
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+      summary: Get login page info
+      tags:
+        - Authentication
   /config/sso/enabled:
     get:
       description: Returns SSO enabled boolean.
@@ -961,6 +999,21 @@ paths:
           required: false
           schema:
             type: boolean
+        - description: Page number (1-indexed). Defaults to 1.
+          in: query
+          name: page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+        - description: Number of results per page. Defaults to 10000, max 10000.
+          in: query
+          name: size
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10000
       responses:
         "200":
           content:
@@ -2872,6 +2925,427 @@ paths:
           description: Unexpected error
       tags:
         - Reports
+  "/responseaction/result/{id}/{action}":
+    post:
+      description: |-
+        Initiates a response action from an existing result. For process actions (process_kill, process_suspend, process_resume, process_retrieve), the result must contain process data with a SHA-512 hash. For file_retrieve, the result must contain a file path (from file, cron, or at job engines). Requires the responder role. Can be disabled server-wide with SF_DISABLE_RESPONSES and at the node level with SF_NODE_DISABLE_RESPONSES.
+
+        Returns a ResponseActionResponse in both the queued (HTTP 202) and cached-fulfillment (HTTP 200, retrieve actions only) cases.
+      operationId: dispatchResultAction
+      parameters:
+        - description: Numeric result ID to act on.
+          in: path
+          name: id
+          required: true
+          schema:
+            format: int64
+            type: integer
+        - description: Action to perform. Process actions require a process result; file_retrieve requires a result with a file path.
+          in: path
+          name: action
+          required: true
+          schema:
+            oneOf:
+              - $ref: "#/components/schemas/ResponseActionTypeResult"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseActionResponse"
+          description: Retrieve action fulfilled immediately from a previously cached blob (matched by SHA-512 hash). No scan was dispatched; an action log entry was recorded as successful and references the existing blob via the order's data_hash field.
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseActionResponse"
+          description: Action queued for execution.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Invalid action type, result does not contain the required data (process or file path), host is inactive, or host no longer exists.
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: User does not have the responder role, or response actions are disabled on the server (SF_DISABLE_RESPONSES=true).
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Result ID does not exist.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+      summary: Perform response action on a process result
+      tags:
+        - Response Actions
+  "/responseaction/sshpubkey/{keyid}/{action}":
+    post:
+      description: Performs an SSH key response action (remove or deduplicate) across all hosts and users where the key is deployed. Requires the responder role. Creates one order per affected host, each containing one action per affected user. Can be disabled server-wide with SF_DISABLE_RESPONSES and at the node level with SF_NODE_DISABLE_RESPONSES. For 'remove' actions, a last-key protection safety check denies the request with HTTP 409 if any affected host would be left with zero SSH keys known to Sandfly; set allow_last_key_removal=true in the request body to override.
+      operationId: dispatchSshKeyAction
+      parameters:
+        - description: SSH public key ID (integer) from SSH Hunter.
+          in: path
+          name: keyid
+          required: true
+          schema:
+            format: int32
+            type: integer
+        - description: "Action to perform: 'sshkey_remove' deletes all copies, 'sshkey_dedup' removes duplicates leaving one copy."
+          in: path
+          name: action
+          required: true
+          schema:
+            $ref: "#/components/schemas/ResponseActionTypeSshNonCached"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SSHKeyActionRequest"
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseActionResponse"
+          description: Action queued for execution across all affected hosts.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Key has no stored value, no active hosts available, or no active placements found.
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: User does not have the responder role, or response actions are disabled on the server.
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: SSH public key ID does not exist, or no active placements found.
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SSHKeyLastKeyProtectionResponse"
+          description: "Last-key protection: the remove action would leave one or more hosts with no SSH keys known to Sandfly. The response body identifies the affected hosts and users. Set allow_last_key_removal=true in the request body to override."
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+      summary: Remove or deduplicate an SSH key across all hosts
+      tags:
+        - Response Actions
+  "/responseaction/sshpubkey/{keyid}/{action}/host/{host_sequence_id}":
+    post:
+      description: Performs an SSH key response action on a specific host for all users that have the key. Requires the responder role. For 'remove' actions, a last-key protection safety check denies the request with HTTP 409 if the host would be left with zero SSH keys known to Sandfly; set allow_last_key_removal=true in the request body to override.
+      operationId: dispatchSshKeyHostAction
+      parameters:
+        - description: SSH public key ID (integer) from SSH Hunter.
+          in: path
+          name: keyid
+          required: true
+          schema:
+            format: int32
+            type: integer
+        - description: "Action to perform: 'sshkey_remove' or 'sshkey_dedup'."
+          in: path
+          name: action
+          required: true
+          schema:
+            $ref: "#/components/schemas/ResponseActionTypeSshNonCached"
+        - description: Host sequence ID to target.
+          in: path
+          name: host_sequence_id
+          required: true
+          schema:
+            format: int32
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SSHKeyActionRequest"
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseActionResponse"
+          description: Action queued for the specified host.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Key has no stored value, host is inactive, or no placements found.
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Insufficient role or response actions disabled.
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Key or host not found, or no active placements.
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SSHKeyLastKeyProtectionResponse"
+          description: "Last-key protection: the remove action would leave the host with no SSH keys known to Sandfly. The response body identifies the affected host and users. Set allow_last_key_removal=true in the request body to override."
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+      summary: Remove or deduplicate an SSH key on a specific host
+      tags:
+        - Response Actions
+  "/responseaction/sshpubkey/{keyid}/{action}/host/{host_sequence_id}/user/{username}":
+    post:
+      description: Performs an SSH key response action for a specific user on a specific host. Requires the responder role. For 'remove' actions, a last-key protection safety check denies the request with HTTP 409 if the host would be left with zero SSH keys known to Sandfly after removing the key for this user; set allow_last_key_removal=true in the request body to override.
+      operationId: dispatchSshKeyHostUserAction
+      parameters:
+        - description: SSH public key ID (integer) from SSH Hunter.
+          in: path
+          name: keyid
+          required: true
+          schema:
+            format: int32
+            type: integer
+        - description: "Action to perform: 'sshkey_remove' or 'sshkey_dedup'."
+          in: path
+          name: action
+          required: true
+          schema:
+            $ref: "#/components/schemas/ResponseActionTypeSshNonCached"
+        - description: Host sequence ID to target.
+          in: path
+          name: host_sequence_id
+          required: true
+          schema:
+            format: int32
+            type: integer
+        - description: Username on the target host.
+          in: path
+          name: username
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SSHKeyActionRequest"
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseActionResponse"
+          description: Action queued for the specified user on the specified host.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Key has no stored value, host is inactive, or no placements found.
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Insufficient role or response actions disabled.
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Key, host, or user placement not found.
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SSHKeyLastKeyProtectionResponse"
+          description: "Last-key protection: removing the key for this user would leave the host with no SSH keys known to Sandfly. The response body identifies the affected host and user. Set allow_last_key_removal=true in the request body to override."
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+      summary: Remove or deduplicate an SSH key for a specific user on a specific host
+      tags:
+        - Response Actions
+  /responseaction/log:
+    get:
+      description: Returns a paginated list of response action log entries, ordered by request time descending. Includes a summary of each action without the bulky source result and action result JSON blobs.
+      operationId: getResponseActionLog
+      parameters:
+        - description: Page number (1-indexed). Defaults to 1.
+          in: query
+          name: page
+          required: false
+          schema:
+            type: integer
+        - description: Page size (1-10000). Defaults to 100.
+          in: query
+          name: size
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseActionLogList"
+          description: Paginated list of response action log entries.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+      summary: List response action log entries
+      tags:
+        - Response Actions
+  "/responseaction/log/{id}":
+    get:
+      description: Returns a single response action log entry by action ID, including the source result JSON and action result JSON.
+      operationId: getResponseActionLogEntry
+      parameters:
+        - description: Action ID.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseActionLogEntry"
+          description: Response action log entry.
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Action ID does not exist.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+      summary: Get response action log entry
+      tags:
+        - Response Actions
+  "/responseaction/log/{id}/data":
+    delete:
+      description: Delete the data blob associated with a process retrieve or file retrieve action from the database.
+      operationId: deleteResponseActionLogEntryData
+      parameters:
+        - description: Action ID.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Data flagged for deletion.
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: User does not have the required role.
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Action ID does not exist.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+      summary: Delete file associated with retrieve action
+      tags:
+        - Response Actions
+  "/responseaction/data/{hash}":
+    get:
+      description: Downloads the binary blob retrieved by a response action (process binary or file). Identified by SHA-512 content hash. Multiple action log entries may reference the same blob. Requires the responder role.
+      operationId: getBinary
+      parameters:
+        - description: SHA-512 content hash of the blob (hex-encoded).
+          in: path
+          name: hash
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+          description: Binary blob.
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: User does not have the responder role.
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: No data found for the given hash.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+      summary: Download a retrieved binary blob by hash
+      tags:
+        - Response Actions
   /results:
     delete:
       description: Deletes results.
@@ -2958,6 +3432,28 @@ paths:
       summary: Get results
       tags:
         - Results
+  /results/getMaxID:
+    get:
+      summary: Get max result ID
+      description: Gets the highest sequence_id currently present in the results table that is safe for replication (no results IDs will ever appear in the future lower than this ID).
+      tags:
+        - Results
+      operationId: getMaxID
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: integer
+                format: int64
+                description: The maximum result sequence_id.
+          description: Maximum "safe" result sequence_id.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
   /results/timeline:
     post:
       summary: Result timeline
@@ -3129,6 +3625,40 @@ paths:
                 $ref: "#/components/schemas/StandardResponse"
           description: Unexpected error
       summary: Get result
+      tags:
+        - Results
+  "/resultdetail/{id}":
+    get:
+      description: Gets a result by ID along with additional mutable status data, including the response action log for this result.
+      operationId: getResultDetail
+      parameters:
+        - description: Numeric result ID to retrieve.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultDetail"
+          description: Result detail retrieved
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Result not found.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+          description: Unexpected error
+      summary: Get result detail
       tags:
         - Results
   /results/delete/hostsandflies:
@@ -4248,7 +4778,7 @@ paths:
     get:
       summary: Get result profile result
       description: Get result JSON for a result profile result ID.
-      operationId: getProfileResultJSON
+      operationId: getProfileResultJson
       tags:
         - Drift Detection
         - Result Profiles
@@ -5383,6 +5913,18 @@ paths:
           required: false
           schema:
             type: integer
+        - description: number of hosts per page
+          in: query
+          name: size
+          required: false
+          schema:
+            type: integer
+        - description: page number of hosts to retrieve
+          in: query
+          name: page
+          required: false
+          schema:
+            type: integer
       responses:
         "200":
           content:
@@ -5529,7 +6071,7 @@ paths:
     put:
       description: Bulk update tags on SSH public keys.
       summary: Bulk tag SSH keys
-      operationId: bulkTagSSHKeys
+      operationId: bulkTagSshKeys
       parameters:
         - description: operation - add or remove the requested tags
           in: query
@@ -5571,7 +6113,7 @@ paths:
     put:
       description: Set tags on an SSH public key.
       summary: Tag SSH key
-      operationId: tagSSHKey
+      operationId: tagSshKey
       parameters:
         - description: ID of key to modify
           in: path
@@ -5616,7 +6158,7 @@ paths:
         - SSH Hunter
   /sshhunter/hosttags:
     post:
-      operationId: getSSHKeysHostTags
+      operationId: getSshKeysHostTags
       description: For the set of requested keys, get the hosts tags for the hosts the keys were found on. The result object will contain an entry for each key in the input key list that exists in the database. Keys that don't exist will be ignored.
       summary: Get SSH keys host tags
       tags:
@@ -5658,7 +6200,7 @@ paths:
                 $ref: "#/components/schemas/StandardResponse"
   /sshhunter/keyhosttags:
     post:
-      operationId: getSSHHostsAndTagsForKeys
+      operationId: getSshHostsAndTagsForKeys
       description: For the requested list of SSH key IDs, returns a list of all hosts with those keys and the host tags on each host.
       summary: Get hosts+tags for SSH keys
       tags:
@@ -5698,7 +6240,7 @@ paths:
                 $ref: "#/components/schemas/StandardResponse"
   /sshhunter/hostkeytags:
     post:
-      operationId: getSSHKeysAndTagsForHosts
+      operationId: getSshKeysAndTagsForHosts
       description: For the requested list of Host IDs, returns a list of all keys on those hosts and the key tags on each key.
       summary: Get keys+tags for hosts
       tags:
@@ -5792,6 +6334,18 @@ paths:
           required: false
           schema:
             type: integer
+        - description: number of users per page
+          in: query
+          name: size
+          required: false
+          schema:
+            type: integer
+        - description: page number of users to retrieve
+          in: query
+          name: page
+          required: false
+          schema:
+            type: integer
       responses:
         "200":
           content:
@@ -5867,7 +6421,7 @@ paths:
     get:
       summary: Get SSH security zones
       description: Get summary list of all SSH security zones.
-      operationId: getSSHZones
+      operationId: getSshZones
       responses:
         "200":
           content:
@@ -5891,7 +6445,7 @@ paths:
       tags:
         - SSH Zones
     post:
-      operationId: createSSHZone
+      operationId: createSshZone
       summary: Create SSH security zone
       description: Create a new SSH security zone.
       tags:
@@ -5963,7 +6517,7 @@ paths:
       tags:
         - SSH Zones
     put:
-      operationId: updateSSHZone
+      operationId: updateSshZone
       summary: Update SSH security zone
       description: Update an SSH security zone.
       tags:
@@ -6015,7 +6569,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/StandardResponse"
     delete:
-      operationId: deleteSSHZone
+      operationId: deleteSshZone
       summary: Delete SSH security zone
       description: Delete an SSH security zone.
       tags:
@@ -7097,7 +7651,7 @@ paths:
   /debug/rotatejwtkey:
     post:
       description: Generates a new JWT signing key and saves it to the database. This invalidates all existing user sessions, requiring users to log in again. The new key takes effect immediately.
-      operationId: rotateJWTKey
+      operationId: rotateJwtKey
       responses:
         "200":
           content:
@@ -7165,62 +7719,50 @@ components:
           type: string
           description: Username (or, if internally triggered by the Sandfly API service, '[system]') that triggered this event.
       type: object
-    AuthAccessRefreshToken:
-      deprecated: true
+    AuthAccess:
+      description: Response returned on successful login.
+      allOf:
+        - $ref: "#/components/schemas/AuthAccessToken"
+    AuthAccessFull:
+      description: Response returned on successful login when full_details is true in the request.
+      allOf:
+        - $ref: "#/components/schemas/AuthAccessData"
+        - $ref: "#/components/schemas/AuthAccessToken"
+    AuthAccessRefresh:
+      description: Response returned on successful API login.
+      allOf:
+        - $ref: "#/components/schemas/AuthAccessToken"
+        - $ref: "#/components/schemas/AuthRefreshToken"
+    AuthAccessRefreshFull:
+      description: Response returned on successful API login when full_details is true in the request.
+      allOf:
+        - $ref: "#/components/schemas/AuthAccessData"
+        - $ref: "#/components/schemas/AuthAccessToken"
+        - $ref: "#/components/schemas/AuthRefreshToken"
+        - $ref: "#/components/schemas/AuthRefreshData"
+    AuthAccessToken:
       required:
         - access_token
-        - access_token_data
-        - access_token_expire_date
-        - access_token_issue_date
-        - llm
-        - refresh_token
-        - refresh_token_data
-        - refresh_token_expire_date
-        - refresh_token_issue_date
-        - user
-        - saved_views
-      properties:
-        access_token:
-          description: Access token.
-          type: string
-        access_token_data:
-          $ref: "#/components/schemas/JWT"
-          description: Access JWT data decoded.
-          type: object
-        access_token_expire_date:
-          description: Access token expire date.
-          type: string
-        access_token_issue_date:
-          description: Access token issue date.
-          type: string
-        llm:
-          description: Current LLM configuration
-          $ref: "#/components/schemas/LlmLoginInfo"
-        refresh_token:
-          description: Refresh token.
-          type: string
-        refresh_token_data:
-          $ref: "#/components/schemas/JWT"
-          description: Refresh JWT data decoded.
-          type: object
-        refresh_token_expire_date:
-          description: Refresh token expire date.
-          type: string
-        refresh_token_issue_date:
-          description: Refresh token issue date.
-          type: string
-        user:
-          $ref: "#/components/schemas/User"
-        saved_views:
-          type: array
-          items:
-            $ref: "#/components/schemas/SavedView"
-      type: object
-    AuthAccessToken:
+      readOnly: true
       properties:
         access_token:
           description: Access token
           type: string
+      type: object
+    AuthAccessData:
+      description: Extended data returned on login when full_details is true.
+      readOnly: true
+      required:
+        - access_token_data
+        - access_token_expire_date
+        - access_token_issue_date
+        - session_expiration_date
+        - user
+        - llm
+        - response_actions
+        - saved_views
+      type: object
+      properties:
         access_token_data:
           $ref: "#/components/schemas/JWT"
           description: Access JWT data decoded.
@@ -7244,6 +7786,44 @@ components:
         llm:
           description: Current LLM configuration
           $ref: "#/components/schemas/LlmLoginInfo"
+        response_actions:
+          description: Current response actions configuration
+          $ref: "#/components/schemas/ResponseActionsLoginInfo"
+        saved_views:
+          type: array
+          items:
+            $ref: "#/components/schemas/SavedView"
+    AuthRefreshToken:
+      required:
+        - refresh_token
+      readOnly: true
+      properties:
+        refresh_token:
+          description: Refresh token
+          type: string
+      type: object
+    AuthRefreshData:
+      description: Extended data returned on token refresh when full_details is true.
+      readOnly: true
+      required:
+        - refresh_token
+        - refresh_token_data
+        - refresh_token_expire_date
+        - refresh_token_issue_date
+      properties:
+        refresh_token:
+          description: Refresh token.
+          type: string
+        refresh_token_data:
+          $ref: "#/components/schemas/JWT"
+          description: Refresh JWT data decoded.
+          type: object
+        refresh_token_expire_date:
+          description: Refresh token expire date.
+          type: string
+        refresh_token_issue_date:
+          description: Refresh token issue date.
+          type: string
       type: object
     AuthLogin:
       properties:
@@ -7746,9 +8326,12 @@ components:
                 $ref: "#/components/schemas/ErrorLogSummaryEntry"
               type: array
         total:
-          description: Total number of records found.
+          description: Total number of records returned in this page.
           format: int32
           type: integer
+        more_results:
+          description: Whether there are more results beyond this page.
+          type: boolean
       type: object
     ErrorLogEntry:
       type: object
@@ -9724,6 +10307,9 @@ components:
         brief:
           type: string
           description: Brief one-sentence summary of LLM analysis, if available. Will be an empty string if the first response is not yet available, or if no brief was found.
+        model:
+          type: string
+          description: Model name this analysis was started with.
         created_at:
           type: string
           format: date-time
@@ -9740,6 +10326,7 @@ components:
         - results
         - userid
         - username
+        - model
         - brief
         - created_at
         - modified_at
@@ -9768,6 +10355,15 @@ components:
         results_limit:
           type: integer
           description: Maximum number of results allowed in an LLM analysis request.
+    ResponseActionsLoginInfo:
+      type: object
+      description: Response actions configuration summary returned during login.
+      required:
+        - enabled
+      properties:
+        enabled:
+          type: boolean
+          description: Response actions are enabled on the server.
     NotificationSummaries:
       type: array
       description: Array of Notification Summaries.
@@ -10023,6 +10619,7 @@ components:
       type: string
       enum:
         - Banned
+        - Protected
     SshKeySummary:
       type: object
       description: SSH key summary data.
@@ -10039,6 +10636,7 @@ components:
         - host_tags_all
         - zone_violation_hosts
         - permitted_zones_count
+        - permitted_zones_summary
       properties:
         num_hosts_with_alerts:
           type: integer
@@ -10072,6 +10670,24 @@ components:
         permitted_zones_count:
           type: integer
           description: Number of SSH Security Zones that permit this key to appear on hosts.
+        permitted_zones_summary:
+          type: array
+          items:
+            $ref: "#/components/schemas/SshZoneRef"
+          description: SSH Security Zones that permit this key to appear on hosts.
+    SshZoneRef:
+      type: object
+      description: Reference to an SSH Security Zone by ID and name.
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          description: SSH Security Zone ID.
+        name:
+          type: string
+          description: SSH Security Zone name.
     SshKey:
       type: object
       required:
@@ -10841,6 +11457,27 @@ components:
       allOf:
         - $ref: "#/components/schemas/ResultCommon"
         - $ref: "#/components/schemas/ResultVariants"
+    ResultDetail:
+      title: ResultDetail
+      description: Extended result view that includes the full result JSON along with mutable status data such as the response action log.
+      type: object
+      properties:
+        id:
+          description: ID of the result.
+          type: integer
+          format: uint64
+        result:
+          description: The full result JSON.
+          $ref: "#/components/schemas/Result"
+        response_action_log:
+          description: Response actions that have been performed against this result, ordered by most recent first. Empty array if none.
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponseActionLogSummary"
+      required:
+        - sequence_id
+        - result
+        - response_action_log
     ResultSummary:
       title: ResultSummary
       description: Summary of data returned from a sandfly.
@@ -11598,14 +12235,15 @@ components:
           type: string
       type: object
     ResultsSearch:
+      description: Search criteria for retrieving results. The `result_ids`, `filter`, and `time_since` properties are mutually exclusive; provide only one of them per request.
       properties:
         result_ids:
-          description: A list of result IDs.
+          description: A list of result IDs. Mutually exclusive with `filter` and `time_since`.
           items:
             type: string
           type: array
         filter:
-          description: Filter value from UI to pass into search.
+          description: Filter value from UI to pass into search. Mutually exclusive with `result_ids` and `time_since`.
           type: object
           required:
             - items
@@ -11632,15 +12270,29 @@ components:
           type: integer
           default: 1
         sort:
-          description: Sort parameters.
+          description: List of sort criteria applied to the results. Each entry specifies a field and a direction. If omitted, results are ordered by "id" descending (most recently results first).
+          type: array
           items:
             type: object
-          type: array
+            required:
+              - field
+              - sort
+            properties:
+              field:
+                description: The result field to sort by (for example, "data.end_time" or "host_id"). Must be a known, sortable result field; unknown fields are rejected with an error.
+                type: string
+              sort:
+                description: 'Sort direction for the field: "asc" for ascending or "desc" for descending. Any other value is rejected with an error.'
+                type: string
+                enum:
+                  - asc
+                  - desc
         summary:
           description: Optional request to return summary result data and not full dataset.
           type: boolean
         time_since:
-          description: A correctly formatted time entry for searching time since this date.
+          description: A correctly formatted time entry for searching time since this date. Mutually exclusive with `result_ids` and `filter`. Deprecated. Do not use result timestamp for incremental synchronization; older results may commit to the database out-of-order with newer commits. Instead, synchronize using the result sequence ID, which is guaranteed to never have new, lower values than the current value returned by the getMaxID operation.
+          deprecated: true
           format: date-time
           type: string
       type: object
@@ -11655,8 +12307,49 @@ components:
           - operator
         properties:
           field:
+            description: |
+              The result field to filter on. For compatibility with future Sandfly releases, only search using the following fields:
+
+              - `id`
+              - `sequence_id`
+              - `external_id`
+              - `data.status`
+              - `whitelisted`
+              - `drift_result`
+              - `containerized`
+              - `data.results.containerized`
+              - `header.host_id`
+              - `header.host_sequence_id`
+              - `header.hostname`
+              - `header.node_name`
+              - `data.tags`
+              - `data.name`
+              - `header.ip_addr`
+              - `header.queue_name`
+              - `header.run_id`
+              - `header.manual_scan`
+              - `data.severity`
+              - `data.end_time`
+              - `header.tags`
+              - `data.exec_seconds`
+              - `data.type`
+              - `data.key_data`
+              - `first_seen`
+              - `last_seen`
+              - `count`
+              - `superseded`
+              - `match_hashes.permissive`
+              - `match_hashes.moderate`
+              - `match_hashes.strict`
             type: string
           operator:
+            description: |-
+              The comparison operator to apply. The set of valid operators depends on the data type of the chosen field:
+
+              - **String** fields (`external_id`, `data.status`, `header.host_id`, `header.hostname`, `header.node_name`, `data.name`, `header.ip_addr`, `header.queue_name`, `header.run_id`, `data.type`, `data.key_data`, `match_hashes.permissive`, `match_hashes.moderate`, `match_hashes.strict`) and **tag** fields (`data.tags`, `header.tags`): `contains`, `equals`, `startsWith`, `endsWith`, `notContains`, `notEquals`, `notStartsWith`, `notEndsWith`, `is`, `not`, `isEmpty`, `isNotEmpty`
+              - **Integer** fields (`id`, `sequence_id`, `header.host_sequence_id`, `data.severity`, `data.exec_seconds`, `count`): `equals`, `=`, `!=`, `<`, `<=`, `>`, `>=`, `isEmpty`, `isNotEmpty`
+              - **Date** fields (`data.end_time`, `first_seen`, `last_seen`): `is`, `not`, `after`, `onOrAfter`, `before`, `onOrBefore`, `isEmpty`, `isNotEmpty`
+              - **Boolean** fields (`whitelisted`, `drift_result`, `containerized`, `data.results.containerized`, `header.manual_scan`, `superseded`): `is`
             type: string
           value:
             oneOf:
@@ -12861,6 +13554,7 @@ components:
       required:
         - data_retention_days
         - pass_retention_days
+        - file_retention_days
         - shared_url_keep_days
         - maintenance_hour
       properties:
@@ -12875,6 +13569,13 @@ components:
           format: int64
           type: integer
           description: Number of days to keep pass results.
+          default: 3
+          minimum: 1
+          maximum: 31
+        file_retention_days:
+          format: int64
+          type: integer
+          description: Number of days to keep blobs (process binaries or files retrieved by response actions) in the database.
           default: 3
           minimum: 1
           maximum: 31
@@ -12895,6 +13596,11 @@ components:
         server_hostname:
           type: string
           description: The hostname of the Sandfly server, used for SAML ACS URLs, notification links, and other features that need to reference the server's public URL. Once set, this value cannot be changed back to empty.
+        login_banner:
+          type: string
+          description: Optional warning or notice message displayed on the login page. Leave empty to show no message. Must be no more than 5000 characters.
+          default: ""
+          maxLength: 5000
         server_log_level:
           type: string
           enum:
@@ -13009,6 +13715,9 @@ components:
         - url
         - ca_cert
         - username
+        - summary_results
+        - duplicate_alerts
+        - duplicate_summary
       description: ElasticSearch replication settings.
       type: object
       properties:
@@ -13032,6 +13741,18 @@ components:
           format: string
           type: string
           description: ElasticSearch login username.
+        summary_results:
+          description: Include the summary result JSON rather than the full size result JSON.
+          type: boolean
+          default: false
+        duplicate_alerts:
+          description: Send a duplicate alert when the alert is updated with new information.
+          type: boolean
+          default: false
+        duplicate_summary:
+          description: When sending duplicate alerts, include the summary result JSON rather than the full size result JSON.
+          type: boolean
+          default: false
     ServerConfigPostgres:
       type: object
       required:
@@ -13080,6 +13801,9 @@ components:
         - ssh_stream_name
         - host_stream_name
         - alerts_only
+        - summary_results
+        - duplicate_alerts
+        - duplicate_summary
         - auth_method
         - auth_certificate
       description: Microsoft Sentinel replication settings.
@@ -13124,6 +13848,18 @@ components:
         alerts_only:
           type: boolean
           description: Indicates type of results to send to Sentinel. True sends only alert and error results, false sends all results.
+        summary_results:
+          description: Include the summary result JSON rather than the full size result JSON.
+          type: boolean
+          default: false
+        duplicate_alerts:
+          description: Send a duplicate alert when the alert is updated with new information.
+          type: boolean
+          default: false
+        duplicate_summary:
+          description: When sending duplicate alerts, include the summary result JSON rather than the full size result JSON.
+          type: boolean
+          default: false
         auth_method:
           type: string
           description: Whether to use a client secret or certificate credentials for authentication.
@@ -13190,6 +13926,8 @@ components:
         - disable_nightly_maintenance
         - disable_strict_tls_policy
         - sso_redirect_prefix
+        - esrepl_batch_size
+        - sentinel_batch_size
       properties:
         db_pool_size:
           type: integer
@@ -13223,6 +13961,20 @@ components:
         sso_redirect_prefix:
           type: string
           description: Optional URL prefix for SSO redirect after successful SAML authentication. If set, the SSO redirect will use this prefix instead of the root path.
+        esrepl_batch_size:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 500
+          description: Elasticsearch result replication batch size.
+          default: 250
+        sentinel_batch_size:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 500
+          description: Sentinel result replication batch size.
+          default: 250
     ServerConfigAdvancedEdit:
       type: object
       description: Advanced performance tuning configuration. Changes require a server restart to take effect.
@@ -13265,6 +14017,22 @@ components:
           type: string
           nullable: true
           description: Optional URL prefix for SSO redirect after successful SAML authentication. If set, the SSO redirect will use this prefix instead of the root path.
+        esrepl_batch_size:
+          type: integer
+          format: int64
+          nullable: true
+          minimum: 1
+          maximum: 500
+          description: Elasticsearch result replication batch size.
+          default: 250
+        sentinel_batch_size:
+          type: integer
+          format: int64
+          nullable: true
+          minimum: 1
+          maximum: 500
+          description: Sentinel result replication batch size.
+          default: 250
     RequestSignatureMethod:
       type: string
       enum:
@@ -13273,6 +14041,441 @@ components:
         - sha256
         - sha512
       description: Request signing method. Typically 'none'.
+    ResponseActionOrder:
+      description: A single scan order dispatched (or short-circuited) by a response action request. A result response action always produces one order; SSH key actions produce one per affected host.
+      properties:
+        action_ids:
+          description: Action IDs created for this order. Process and file orders contain one; SSH key orders contain one per affected user.
+          type: array
+          items:
+            type: integer
+            format: int64
+        run_id:
+          description: Run ID of the scan order that will execute the action(s). Empty when the action was fulfilled immediately from a previously cached retrieval and no scan was dispatched.
+          type: string
+        target_address:
+          description: Sandfly's host target address (hostname or IP) for the host at request time.
+          type: string
+        node_name:
+          description: OS-reported hostname of the target host.
+          type: string
+        host_id:
+          description: " ID of the target host."
+          type: string
+        host_sequence_id:
+          description: Sequence ID of the target host.
+          type: integer
+        pid:
+          description: Process ID targeted by the action (process actions only).
+          type: integer
+        path:
+          description: File path targeted by the action (file_retrieve only).
+          type: string
+        users:
+          description: Usernames targeted on this host (SSH key actions only). Parallel to action_ids.
+          type: array
+          items:
+            type: string
+        data_hash:
+          description: SHA-512 (hex) content hash of a previously retrieved blob that fulfilled this action without dispatching a scan. Pair with GET /responseaction/data/{hash} to download.
+          type: string
+      required:
+        - action_ids
+        - run_id
+        - target_address
+        - node_name
+        - host_id
+        - host_sequence_id
+      type: object
+    ResponseActionResponse:
+      description: |-
+        Response envelope for /responseaction/result/... and /responseaction/sshpubkey/... POST endpoints.
+
+        For retrieve actions (process_retrieve, file_retrieve), if a blob with the same SHA-512 hash has already been retrieved (from this or any other host) the server returns HTTP 200 and the single order carries data_hash with an empty run_id (no scan dispatched, action already logged as successful). Otherwise HTTP 202 is returned and the order carries the run_id of the dispatched scan.
+      properties:
+        status:
+          description: HTTP status code.
+          format: int32
+          type: integer
+          example: 202
+        detail:
+          description: Status message.
+          type: string
+          example: response action queued
+        action:
+          $ref: "#/components/schemas/ResponseActionType"
+        key_id:
+          description: SSH public key ID the action targets (SSH key actions only).
+          type: integer
+        orders:
+          description: Orders created for this request, one per target host.
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponseActionOrder"
+      required:
+        - status
+        - detail
+        - action
+        - orders
+      type: object
+    ResponseActionType:
+      description: The type of action that was performed.
+      oneOf:
+        - $ref: "#/components/schemas/ResponseActionTypeResult"
+        - $ref: "#/components/schemas/ResponseActionTypeSsh"
+    ResponseActionTypeResult:
+      oneOf:
+        - $ref: "#/components/schemas/ResponseActionTypeProcessNonCached"
+        - $ref: "#/components/schemas/ResponseActionTypeProcessCached"
+        - $ref: "#/components/schemas/ResponseActionTypeFileCached"
+    ResponseActionTypeSsh:
+      oneOf:
+        - $ref: "#/components/schemas/ResponseActionTypeSshNonCached"
+    ResponseActionTypeNonCached:
+      oneOf:
+        - $ref: "#/components/schemas/ResponseActionTypeProcessNonCached"
+        - $ref: "#/components/schemas/ResponseActionTypeSshNonCached"
+    ResponseActionTypeCached:
+      oneOf:
+        - $ref: "#/components/schemas/ResponseActionTypeProcessCached"
+        - $ref: "#/components/schemas/ResponseActionTypeFileCached"
+    ResponseActionTypeProcessNonCached:
+      type: string
+      enum:
+        - process_kill
+        - process_suspend
+        - process_resume
+    ResponseActionTypeProcessCached:
+      type: string
+      enum:
+        - process_retrieve
+    ResponseActionTypeFileCached:
+      type: string
+      enum:
+        - file_retrieve
+    ResponseActionTypeSshNonCached:
+      description: The type of action that was performed.
+      type: string
+      enum:
+        - sshkey_remove
+        - sshkey_dedup
+    ResponseActionStatus:
+      description: Current status of the action.
+      anyOf:
+        - $ref: "#/components/schemas/ResponseActionStatusSuccess"
+        - $ref: "#/components/schemas/ResponseActionStatusFailure"
+        - $ref: "#/components/schemas/ResponseActionStatusInFlight"
+    ResponseActionStatusInFlight:
+      type: string
+      enum:
+        - pending
+    ResponseActionStatusFailure:
+      type: string
+      enum:
+        - verification_failed
+        - failed
+        - skipped
+        - node_denied
+    ResponseActionStatusSuccess:
+      type: string
+      enum:
+        - success
+    ResponseActionLogSummary:
+      oneOf:
+        - $ref: "#/components/schemas/ResponseActionLogSummaryNonCached"
+        - $ref: "#/components/schemas/ResponseActionLogSummaryNonCached"
+    ResponseActionLogCommon:
+      properties:
+        action_id:
+          description: Numeric identifier for this response action
+          type: integer
+          format: int64
+        correlation_id:
+          description: Internal identifier sent in the order during response execution.
+          type: string
+        run_id:
+          description: Run ID of the scan order that executed this action. Empty if the action was fulfilled from cached data.
+          type: string
+        status:
+          $ref: "#/components/schemas/ResponseActionStatus"
+        message:
+          description: Human-readable detail about the action outcome.
+          type: string
+        requested_by:
+          description: Username of the user who initiated the action.
+          type: string
+        requested_at:
+          description: Timestamp when the action was requested.
+          type: string
+          format: date-time
+        completed_at:
+          description: Timestamp when the action result was received. Null while pending.
+          type: string
+          format: date-time
+        host_id:
+          description: Host ID of the target host.
+          type: string
+        host_sequence_id:
+          description: Numeric sequence ID of the target host at the time the action was requested.
+          type: integer
+        target_address:
+          description: Target address (hostname or IP) for the host at the time the action was requested.
+          type: string
+        node_name:
+          description: OS-reported hostname of the target host at the time the action was requested.
+          type: string
+        last_seen_ip_addr:
+          description: Last-seen IP address of the target host at the time the action was requested.
+          type: string
+        source_result_id:
+          description: Numeric result ID that triggered this action, if applicable. May be null for actions not initiated from a result (e.g. SSH key removal by key ID).
+          type: integer
+          format: int64
+        data_hash:
+          description: SHA-512 content hash of an associated binary blob (retrieved process binary or file). Use GET /responseaction/data/{hash} to download. Empty if no data was retrieved.
+          type: string
+        key_data:
+          description: "Most-relevant string identifier for the action's target: file path for file_retrieve, process name for process actions, SSH key friendly name for SSH key actions. Empty if the action target had no identifier available."
+          type: string
+        hash:
+          description: Cryptographic hashes of the action's target item (process binary, file, or SSH key). Individual fields are empty if the corresponding hash was not collected.
+          type: object
+          required:
+            - md5
+            - sha1
+            - sha256
+            - sha512
+          properties:
+            md5:
+              type: string
+              description: MD5 hash of the target item.
+            sha1:
+              type: string
+              description: SHA-1 hash of the target item.
+            sha256:
+              type: string
+              description: SHA-256 hash of the target item.
+            sha512:
+              type: string
+              description: SHA-512 hash of the target item.
+        host_exists:
+          description: True if the original target host record still exists in Sandfly and has not been deleted. When false, GET /hosts/{host_id} will return 404.
+          type: boolean
+        source_result_exists:
+          description: True if the original source result still exists in the results table. When false, GET /results/{source_result_id} will return 404. Always false when source_result_id is null.
+          type: boolean
+      required:
+        - action_id
+        - correlation_id
+        - run_id
+        - status
+        - requested_by
+        - requested_at
+        - host_id
+        - host_sequence_id
+        - target_address
+        - node_name
+        - last_seen_ip_addr
+        - key_data
+        - hash
+        - host_exists
+        - source_result_exists
+      type: object
+    ResponseActionLogSummaryNonCached:
+      required:
+        - action_type
+      allOf:
+        - $ref: "#/components/schemas/ResponseActionLogCommon"
+      properties:
+        action_type:
+          $ref: "#/components/schemas/ResponseActionTypeNonCached"
+        source_result_id:
+          description: Numeric result ID that triggered this action, if applicable. May be null for actions not initiated from a result (e.g. SSH key removal by key ID).
+          type: integer
+          format: int64
+      type: object
+    ResponseActionLogSummaryCached:
+      required:
+        - action_type
+      allOf:
+        - $ref: "#/components/schemas/ResponseActionLogCommon"
+      properties:
+        action_type:
+          $ref: "#/components/schemas/ResponseActionTypeCached"
+        source_result_id:
+          description: Numeric result ID that triggered this action, if applicable. May be null for actions not initiated from a result (e.g. SSH key removal by key ID).
+          type: integer
+          format: int64
+        data_hash:
+          description: SHA-512 content hash of an associated binary blob (retrieved process binary or file). Use GET /responseaction/data/{hash} to download. Empty if no data was retrieved.
+          type: string
+      type: object
+    ResponseActionLogList:
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponseActionLogSummary"
+        more_results:
+          type: boolean
+          description: True if additional pages of results are available.
+      required:
+        - data
+        - more_results
+      type: object
+    ResponseActionLogEntry:
+      oneOf:
+        - $ref: "#/components/schemas/ResponseActionLogEntrySSH"
+        - $ref: "#/components/schemas/ResponseActionLogEntryResult"
+    ResponseActionLogEntrySSH:
+      allOf:
+        - $ref: "#/components/schemas/ResponseActionLogCommon"
+      required:
+        - action_type
+      properties:
+        action_type:
+          allOf:
+            - $ref: "#/components/schemas/ResponseActionTypeProcessNonCached"
+            - $ref: "#/components/schemas/ResponseActionTypeProcessCached"
+            - $ref: "#/components/schemas/ResponseActionTypeSshNonCached"
+        source_result_json:
+          $ref: "#/components/schemas/SshKeySummary"
+          nullable: true
+          description: Copy of the source result JSON at the time the action was requested.
+        action_result_json:
+          $ref: "#/components/schemas/ResponseActionReceiptSsh"
+      type: object
+    ResponseActionLogEntryResult:
+      allOf:
+        - $ref: "#/components/schemas/ResponseActionLogCommon"
+      required:
+        - action_type
+      properties:
+        action_type:
+          allOf:
+            - $ref: "#/components/schemas/ResponseActionTypeResult"
+        source_result_json:
+          $ref: "#/components/schemas/ResultDetail"
+          nullable: true
+          description: Copy of the source result JSON at the time the action was requested.
+        action_result_json:
+          $ref: "#/components/schemas/ResponseActionReceiptResult"
+      type: object
+    ResponseActionReceipt:
+      oneOf:
+        - $ref: "#/components/schemas/ResponseActionReceiptSsh"
+        - $ref: "#/components/schemas/ResponseActionReceiptResult"
+    ResponseActionReceiptCommon:
+      readOnly: true
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          $ref: "#/components/schemas/ResponseActionStatus"
+        message:
+          description: Human-readable detail about the action outcome.
+          type: string
+        verified:
+          type: boolean
+    ResponseActionReceiptSsh:
+      readOnly: true
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/ResponseActionReceiptCommon"
+      properties:
+        type:
+          $ref: "#/components/schemas/ResponseActionTypeSshNonCached"
+        sshkey_files:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponseActionReceiptSshKeyFile"
+    ResponseActionReceiptSshKeyFile:
+      readOnly: true
+      type: object
+      properties:
+        path:
+          type: string
+        keys_found:
+          type: number
+        backup_path:
+          type: string
+        keys_removed:
+          type: number
+        keys_remaining:
+          type: number
+    ResponseActionReceiptResult:
+      readOnly: true
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/ResponseActionReceiptCommon"
+      required:
+        - type
+      properties:
+        type:
+          oneOf:
+            - $ref: "#/components/schemas/ResponseActionTypeResult"
+        actual_path:
+          type: string
+        data_size:
+          type: number
+        actual_hash_sha512:
+          type: string
+    SSHKeyActionRequest:
+      description: Optional JSON body for an SSH key response action request. An empty body is equivalent to setting the allow_last_key_removal property to false.
+      properties:
+        allow_last_key_removal:
+          description: When true, override the last-key protection safety check. Without this flag set, a 'sshkey_remove' action that would leave any affected host with zero SSH keys known to Sandfly is denied with HTTP 409. Has no effect for the 'sshkey_dedup' action.
+          type: boolean
+      type: object
+    SSHKeyLastKeyProtectionResponse:
+      description: Returned with HTTP 409 when a 'remove' action is denied because it would remove the last SSH key Sandfly knows about on one or more hosts. Set allow_last_key_removal=true in the request body to override.
+      properties:
+        status:
+          description: HTTP status code.
+          format: int32
+          type: integer
+          example: 409
+        title:
+          description: Short description of status.
+          type: string
+          example: Last SSH Key Protection
+        detail:
+          description: Extended explanation of status.
+          type: string
+        data:
+          description: Data describing which hosts (and which users on those hosts) would be left with no known SSH keys.
+          type: object
+          properties:
+            hosts:
+              type: array
+              items:
+                type: object
+                properties:
+                  host_sequence_id:
+                    description: Sequence ID of the host that would be left with no known SSH keys.
+                    format: int32
+                    type: integer
+                  hostname:
+                    description: Hostname of the affected host.
+                    type: string
+                  users:
+                    description: Usernames on the host that would lose the last known SSH key.
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - host_sequence_id
+                  - hostname
+                  - users
+          required:
+            - hosts
+      required:
+        - status
+        - title
+        - detail
+        - data
+      type: object
     StandardResponse:
       allOf:
         - $ref: "#/components/schemas/StandardResponseStatus"
@@ -13566,6 +14769,9 @@ components:
         - error_facility
         - transport
         - use_tls
+        - summary_results
+        - duplicate_alerts
+        - duplicate_summary
         - ignore_certs
         - ca_cert_b64
       properties:
@@ -13608,6 +14814,18 @@ components:
           description: When using TCP transport, use TLS. This property has no effect if transport is 'udp'.
           type: boolean
           default: false
+        summary_results:
+          description: Include the summary result JSON rather than the full size result JSON.
+          type: boolean
+          default: false
+        duplicate_alerts:
+          description: Send a duplicate alert when the alert is updated with new information.
+          type: boolean
+          default: false
+        duplicate_summary:
+          description: When sending duplicate alerts, include the summary result JSON rather than the full size result JSON.
+          type: boolean
+          default: false
         ignore_certs:
           description: When using TLS, set this property to true to disable certificate validation. This property has no effect unless transport=tcp and use_tls=true.
           type: boolean
@@ -13629,6 +14847,9 @@ components:
         - error_facility
         - transport
         - use_tls
+        - summary_results
+        - duplicate_alerts
+        - duplicate_summary
         - ignore_certs
         - ca_cert_b64
       properties:
@@ -13667,6 +14888,18 @@ components:
           $ref: "#/components/schemas/SyslogTransport"
         use_tls:
           description: When using TCP transport, use TLS. This property has no effect if transport is 'udp'.
+          type: boolean
+          default: false
+        summary_results:
+          description: Include the summary result JSON rather than the full size result JSON.
+          type: boolean
+          default: false
+        duplicate_alerts:
+          description: Send a duplicate alert when the alert is updated with new information.
+          type: boolean
+          default: false
+        duplicate_summary:
+          description: When sending duplicate alerts, include the summary result JSON rather than the full size result JSON.
           type: boolean
           default: false
         ignore_certs:
@@ -14118,7 +15351,9 @@ components:
       type: string
       enum:
         - admin
+        - power_user
         - user
+        - responder
     NotificationType:
       type: string
       enum:
@@ -15863,32 +17098,20 @@ components:
           type: object
           required:
             - date
-            - inode
-            - device
-            - rdevice
-            - nlink
             - mode
             - uid
             - username
             - gid
             - groupname
-            - selinux_context
             - size
-            - size_byte_count
             - size_mismatch
-            - blksize
-            - blocks
             - path
             - path_root
-            - path_link
-            - true_path
             - name
-            - extension
-            - flags
+            - flags_list
             - entropy
             - hash
             - magic_num
-            - data
             - container
             - mount
           properties:
@@ -15914,14 +17137,6 @@ components:
                   type: string
                 accessed_minutes:
                   type: integer
-            inode:
-              type: integer
-            device:
-              type: integer
-            rdevice:
-              type: integer
-            nlink:
-              type: integer
             mode:
               type: string
             uid:
@@ -15959,10 +17174,6 @@ components:
               type: integer
             size_mismatch:
               type: boolean
-            blksize:
-              type: integer
-            blocks:
-              type: integer
             path:
               type: string
             path_root:
@@ -15975,58 +17186,10 @@ components:
               type: string
             extension:
               type: string
-            flags:
-              type: object
-              required:
-                - directory
-                - regular
-                - link
-                - suid
-                - suid_root
-                - sgid
-                - sgid_root
-                - socket
-                - device
-                - char_device
-                - named_pipe
-                - sticky
-                - immutable
-                - hidden
-                - deleted
-                - containerized
-              properties:
-                directory:
-                  type: boolean
-                regular:
-                  type: boolean
-                link:
-                  type: boolean
-                suid:
-                  type: boolean
-                suid_root:
-                  type: boolean
-                sgid:
-                  type: boolean
-                sgid_root:
-                  type: boolean
-                socket:
-                  type: boolean
-                device:
-                  type: boolean
-                char_device:
-                  type: boolean
-                named_pipe:
-                  type: boolean
-                sticky:
-                  type: boolean
-                immutable:
-                  type: boolean
-                hidden:
-                  type: boolean
-                deleted:
-                  type: boolean
-                containerized:
-                  type: boolean
+            flags_list:
+              type: array
+              items:
+                type: string
             entropy:
               type: number
             hash:
@@ -16148,14 +17311,8 @@ components:
           required:
             - path
             - path_root
-            - path_link
-            - true_path
             - name
-            - extension
             - date
-            - inode
-            - device
-            - rdevice
             - nlink
             - count
             - count_mismatch
@@ -16164,9 +17321,8 @@ components:
             - username
             - gid
             - groupname
-            - selinux_context
             - size
-            - flags
+            - flags_list
             - container
             - mount
           properties:
@@ -16204,12 +17360,6 @@ components:
                   type: string
                 accessed_minutes:
                   type: integer
-            inode:
-              type: integer
-            device:
-              type: integer
-            rdevice:
-              type: integer
             nlink:
               type: integer
             count:
@@ -16230,25 +17380,10 @@ components:
               type: integer
             selinux_context:
               type: string
-            flags:
-              type: object
-              required:
-                - link
-                - sticky
-                - hidden
-                - deleted
-                - containerized
-              properties:
-                link:
-                  type: boolean
-                sticky:
-                  type: boolean
-                hidden:
-                  type: boolean
-                deleted:
-                  type: boolean
-                containerized:
-                  type: boolean
+            flags_list:
+              type: array
+              items:
+                type: string
             container:
               type: object
               properties:
@@ -16338,30 +17473,20 @@ components:
               type: object
               required:
                 - date
-                - inode
-                - device
-                - rdevice
-                - nlink
                 - mode
                 - uid
                 - username
                 - gid
                 - groupname
                 - size
-                - size_byte_count
                 - size_mismatch
-                - blksize
-                - blocks
                 - path
                 - path_root
-                - path_link
                 - name
-                - extension
-                - flags
+                - flags_list
                 - entropy
                 - hash
                 - magic_num
-                - data
               properties:
                 date:
                   type: object
@@ -16385,14 +17510,6 @@ components:
                       type: string
                     accessed_minutes:
                       type: integer
-                inode:
-                  type: integer
-                device:
-                  type: integer
-                rdevice:
-                  type: integer
-                nlink:
-                  type: integer
                 mode:
                   type: string
                 uid:
@@ -16409,10 +17526,6 @@ components:
                   type: integer
                 size_mismatch:
                   type: boolean
-                blksize:
-                  type: integer
-                blocks:
-                  type: integer
                 path:
                   type: string
                 path_root:
@@ -16423,55 +17536,10 @@ components:
                   type: string
                 extension:
                   type: string
-                flags:
-                  type: object
-                  required:
-                    - directory
-                    - regular
-                    - link
-                    - suid
-                    - suid_root
-                    - sgid
-                    - sgid_root
-                    - socket
-                    - device
-                    - char_device
-                    - named_pipe
-                    - sticky
-                    - immutable
-                    - hidden
-                    - deleted
-                  properties:
-                    directory:
-                      type: boolean
-                    regular:
-                      type: boolean
-                    link:
-                      type: boolean
-                    suid:
-                      type: boolean
-                    suid_root:
-                      type: boolean
-                    sgid:
-                      type: boolean
-                    sgid_root:
-                      type: boolean
-                    socket:
-                      type: boolean
-                    device:
-                      type: boolean
-                    char_device:
-                      type: boolean
-                    named_pipe:
-                      type: boolean
-                    sticky:
-                      type: boolean
-                    immutable:
-                      type: boolean
-                    hidden:
-                      type: boolean
-                    deleted:
-                      type: boolean
+                flags_list:
+                  type: array
+                  items:
+                    type: string
                 entropy:
                   type: number
                 hash:
@@ -16577,17 +17645,15 @@ components:
             - state
             - system_uptime
             - selinux_context
-            - flags
+            - flags_list
             - file_descriptors
             - environ
-            - map
             - stack
             - cgroup
             - container
             - network_ports
             - hash
             - file
-            - stat
             - status
           properties:
             name:
@@ -16648,22 +17714,10 @@ components:
               format: date-time
             selinux_context:
               type: string
-            flags:
-              type: object
-              properties:
-                deleted:
-                  type: boolean
-                immutable:
-                  type: boolean
-                containerized:
-                  type: boolean
-                hidden:
-                  type: boolean
-              required:
-                - deleted
-                - immutable
-                - containerized
-                - hidden
+            flags_list:
+              type: array
+              items:
+                type: string
             file_descriptors:
               type: array
               items:
@@ -16688,8 +17742,6 @@ components:
                         type: string
                       protocol_text:
                         type: string
-                      inode:
-                        type: integer
                       uid:
                         type: integer
                       interface:
@@ -16704,10 +17756,6 @@ components:
                       protocol:
                         type: string
                       protocol_text:
-                        type: string
-                      inode:
-                        type: integer
-                      flags:
                         type: string
                       state:
                         type: integer
@@ -16726,10 +17774,6 @@ components:
                   - class
                   - hidden
             environ:
-              type: array
-              items:
-                type: string
-            map:
               type: array
               items:
                 type: string
@@ -16806,14 +17850,6 @@ components:
                     - modified_minutes
                     - accessed
                     - accessed_minutes
-                inode:
-                  type: integer
-                device:
-                  type: integer
-                rdevice:
-                  type: integer
-                nlink:
-                  type: integer
                 mode:
                   type: string
                 uid:
@@ -16826,73 +17862,18 @@ components:
                   type: string
                 size:
                   type: integer
-                size_byte_count:
-                  type: integer
                 size_mismatch:
                   type: boolean
-                blksize:
-                  type: integer
-                blocks:
-                  type: integer
                 path:
                   type: string
                 path_root:
                   type: string
-                path_link:
-                  type: string
                 name:
                   type: string
-                extension:
-                  type: string
-                flags:
-                  type: object
-                  properties:
-                    directory:
-                      type: boolean
-                    regular:
-                      type: boolean
-                    link:
-                      type: boolean
-                    suid:
-                      type: boolean
-                    suid_root:
-                      type: boolean
-                    sgid:
-                      type: boolean
-                    sgid_root:
-                      type: boolean
-                    socket:
-                      type: boolean
-                    device:
-                      type: boolean
-                    char_device:
-                      type: boolean
-                    named_pipe:
-                      type: boolean
-                    sticky:
-                      type: boolean
-                    immutable:
-                      type: boolean
-                    hidden:
-                      type: boolean
-                    deleted:
-                      type: boolean
-                  required:
-                    - directory
-                    - regular
-                    - link
-                    - suid
-                    - suid_root
-                    - sgid
-                    - sgid_root
-                    - socket
-                    - device
-                    - char_device
-                    - named_pipe
-                    - sticky
-                    - immutable
-                    - hidden
-                    - deleted
+                flags_list:
+                  type: array
+                  items:
+                    type: string
                 entropy:
                   type: number
                 mount:
@@ -16940,169 +17921,6 @@ components:
                     - type
                     - class
                     - expected_extensions
-            stat:
-              type: object
-              properties:
-                pid:
-                  type: integer
-                comm:
-                  type: string
-                state:
-                  type: string
-                ppid:
-                  type: integer
-                pgrp:
-                  type: integer
-                session:
-                  type: integer
-                tty_nr:
-                  type: integer
-                tpgid:
-                  type: integer
-                flags:
-                  type: integer
-                minflt:
-                  type: integer
-                cminflt:
-                  type: integer
-                majflt:
-                  type: integer
-                cmajflt:
-                  type: integer
-                utime:
-                  type: integer
-                stime:
-                  type: integer
-                cutime:
-                  type: integer
-                cstime:
-                  type: integer
-                priority:
-                  type: integer
-                nice:
-                  type: integer
-                num_threads:
-                  type: integer
-                itrealvalue:
-                  type: integer
-                starttime:
-                  type: integer
-                vsize:
-                  type: integer
-                rss:
-                  type: integer
-                rsslim:
-                  type: integer
-                startcode:
-                  type: integer
-                endcode:
-                  type: integer
-                startstack:
-                  type: integer
-                kstkesp:
-                  type: integer
-                kstkeip:
-                  type: integer
-                signal:
-                  type: integer
-                locked:
-                  type: integer
-                sigignore:
-                  type: integer
-                sigcatch:
-                  type: integer
-                wchan:
-                  type: integer
-                nswap:
-                  type: integer
-                cnswap:
-                  type: integer
-                exit_signal:
-                  type: integer
-                processor:
-                  type: integer
-                rt_priority:
-                  type: integer
-                policy:
-                  type: integer
-                delayacct_blkio_ticks:
-                  type: integer
-                guest_time:
-                  type: integer
-                cguest_time:
-                  type: integer
-                start_data:
-                  type: integer
-                end_data:
-                  type: integer
-                start_brk:
-                  type: integer
-                arg_start:
-                  type: integer
-                arg_end:
-                  type: integer
-                env_start:
-                  type: integer
-                env_end:
-                  type: integer
-                exit_code:
-                  type: integer
-                empty:
-                  type: boolean
-              required:
-                - pid
-                - comm
-                - state
-                - ppid
-                - pgrp
-                - session
-                - tty_nr
-                - tpgid
-                - flags
-                - minflt
-                - cminflt
-                - majflt
-                - cmajflt
-                - utime
-                - stime
-                - cutime
-                - cstime
-                - priority
-                - nice
-                - num_threads
-                - itrealvalue
-                - starttime
-                - vsize
-                - rss
-                - rsslim
-                - startcode
-                - endcode
-                - startstack
-                - kstkesp
-                - kstkeip
-                - signal
-                - locked
-                - sigignore
-                - sigcatch
-                - wchan
-                - nswap
-                - cnswap
-                - exit_signal
-                - processor
-                - rt_priority
-                - policy
-                - delayacct_blkio_ticks
-                - guest_time
-                - cguest_time
-                - start_data
-                - end_data
-                - start_brk
-                - arg_start
-                - arg_end
-                - env_start
-                - env_end
-                - exit_code
-                - empty
             status:
               type: object
               properties:
@@ -17136,9 +17954,7 @@ components:
                   type: integer
                 gid_saved_set:
                   type: integer
-                gid_filesystem:
-                  type: integer
-                fdsize:
+                gid_file_system:
                   type: integer
                 groupids:
                   type: array
@@ -17160,52 +17976,8 @@ components:
                   type: integer
                 vm_size:
                   type: integer
-                vm_lck:
-                  type: integer
-                vm_pin:
-                  type: integer
-                vm_hwm:
-                  type: integer
-                vm_rss:
-                  type: integer
-                rss_anon:
-                  type: integer
-                rss_file:
-                  type: integer
-                rss_shmem:
-                  type: integer
-                vm_data:
-                  type: integer
-                vm_stk:
-                  type: integer
-                vm_exe:
-                  type: integer
-                vm_lib:
-                  type: integer
-                vm_pte:
-                  type: integer
-                vm_swap:
-                  type: integer
-                hugetlb_pages:
-                  type: integer
-                core_dumping:
-                  type: boolean
-                thp_enabled:
-                  type: boolean
                 threads:
                   type: integer
-                sig_q:
-                  type: string
-                sig_pnd:
-                  type: string
-                shd_pnd:
-                  type: string
-                sig_blk:
-                  type: string
-                sig_ign:
-                  type: string
-                sig_cgt:
-                  type: string
                 cap_inh:
                   type: string
                 cap_prm:
@@ -17219,20 +17991,6 @@ components:
                 seccomp:
                   type: integer
                 seccomp_filters:
-                  type: integer
-                speculation_store_bypass:
-                  type: string
-                cpus_allowed:
-                  type: string
-                cpus_allowed_list:
-                  type: string
-                mems_allowed:
-                  type: string
-                mems_allowed_list:
-                  type: string
-                voluntary_ctxt_switches:
-                  type: integer
-                nonvoluntary_ctxt_switches:
                   type: integer
                 flags:
                   type: object
@@ -17365,30 +18123,20 @@ components:
                       type: object
                       required:
                         - date
-                        - inode
-                        - device
-                        - rdevice
-                        - nlink
                         - mode
                         - uid
                         - username
                         - gid
                         - groupname
                         - size
-                        - size_byte_count
                         - size_mismatch
-                        - blksize
-                        - blocks
                         - path
                         - path_root
-                        - path_link
                         - name
-                        - extension
-                        - flags
+                        - flags_list
                         - entropy
                         - hash
                         - magic_num
-                        - data
                       properties:
                         date:
                           type: object
@@ -17412,14 +18160,6 @@ components:
                               type: string
                             accessed_minutes:
                               type: integer
-                        inode:
-                          type: integer
-                        device:
-                          type: integer
-                        rdevice:
-                          type: integer
-                        nlink:
-                          type: integer
                         mode:
                           type: string
                         uid:
@@ -17436,10 +18176,6 @@ components:
                           type: integer
                         size_mismatch:
                           type: boolean
-                        blksize:
-                          type: integer
-                        blocks:
-                          type: integer
                         path:
                           type: string
                         path_root:
@@ -17450,55 +18186,10 @@ components:
                           type: string
                         extension:
                           type: string
-                        flags:
-                          type: object
-                          required:
-                            - directory
-                            - regular
-                            - link
-                            - suid
-                            - suid_root
-                            - sgid
-                            - sgid_root
-                            - socket
-                            - device
-                            - char_device
-                            - named_pipe
-                            - sticky
-                            - immutable
-                            - hidden
-                            - deleted
-                          properties:
-                            directory:
-                              type: boolean
-                            regular:
-                              type: boolean
-                            link:
-                              type: boolean
-                            suid:
-                              type: boolean
-                            suid_root:
-                              type: boolean
-                            sgid:
-                              type: boolean
-                            sgid_root:
-                              type: boolean
-                            socket:
-                              type: boolean
-                            device:
-                              type: boolean
-                            char_device:
-                              type: boolean
-                            named_pipe:
-                              type: boolean
-                            sticky:
-                              type: boolean
-                            immutable:
-                              type: boolean
-                            hidden:
-                              type: boolean
-                            deleted:
-                              type: boolean
+                        flags_list:
+                          type: array
+                          items:
+                            type: string
                         entropy:
                           type: number
                         hash:

@@ -2611,9 +2611,6 @@
             }
            }
           },
-          "device": {
-           "type": "unsigned_long"
-          },
           "extension": {
            "fields": {
             "keyword": {
@@ -2623,24 +2620,14 @@
            },
            "type": "text"
           },
-          "flags": {
-           "properties": {
-            "containerized": {
-             "type": "boolean"
-            },
-            "deleted": {
-             "type": "boolean"
-            },
-            "hidden": {
-             "type": "boolean"
-            },
-            "link": {
-             "type": "boolean"
-            },
-            "sticky": {
-             "type": "boolean"
+          "flags_list": {
+           "fields": {
+            "keyword": {
+             "ignore_above": 256,
+             "type": "keyword"
             }
-           }
+           },
+           "type": "text"
           },
           "gid": {
            "type": "long"
@@ -2653,9 +2640,6 @@
             }
            },
            "type": "text"
-          },
-          "inode": {
-           "type": "unsigned_long"
           },
           "mode": {
            "fields": {
@@ -2736,9 +2720,6 @@
            },
            "type": "text"
           },
-          "rdevice": {
-           "type": "unsigned_long"
-          },
           "selinux_context": {
            "fields": {
             "keyword": {
@@ -2788,12 +2769,6 @@
         },
         "file": {
          "properties": {
-          "blksize": {
-           "type": "long"
-          },
-          "blocks": {
-           "type": "long"
-          },
           "capabilities": {
            "properties": {
             "effective": {
@@ -2887,9 +2862,6 @@
             }
            }
           },
-          "device": {
-           "type": "unsigned_long"
-          },
           "entropy": {
            "type": "float"
           },
@@ -2902,57 +2874,14 @@
            },
            "type": "text"
           },
-          "flags": {
-           "properties": {
-            "char_device": {
-             "type": "boolean"
-            },
-            "containerized": {
-             "type": "boolean"
-            },
-            "deleted": {
-             "type": "boolean"
-            },
-            "device": {
-             "type": "boolean"
-            },
-            "directory": {
-             "type": "boolean"
-            },
-            "hidden": {
-             "type": "boolean"
-            },
-            "immutable": {
-             "type": "boolean"
-            },
-            "link": {
-             "type": "boolean"
-            },
-            "named_pipe": {
-             "type": "boolean"
-            },
-            "regular": {
-             "type": "boolean"
-            },
-            "sgid": {
-             "type": "boolean"
-            },
-            "sgid_root": {
-             "type": "boolean"
-            },
-            "socket": {
-             "type": "boolean"
-            },
-            "sticky": {
-             "type": "boolean"
-            },
-            "suid": {
-             "type": "boolean"
-            },
-            "suid_root": {
-             "type": "boolean"
+          "flags_list": {
+           "fields": {
+            "keyword": {
+             "ignore_above": 256,
+             "type": "keyword"
             }
-           }
+           },
+           "type": "text"
           },
           "gid": {
            "type": "long"
@@ -3005,9 +2934,6 @@
              "type": "text"
             }
            }
-          },
-          "inode": {
-           "type": "unsigned_long"
           },
           "magic_num": {
            "properties": {
@@ -3146,9 +3072,6 @@
            },
            "type": "text"
           },
-          "rdevice": {
-           "type": "unsigned_long"
-          },
           "selinux_context": {
            "fields": {
             "keyword": {
@@ -3212,12 +3135,6 @@
           },
           "file": {
            "properties": {
-            "blksize": {
-             "type": "long"
-            },
-            "blocks": {
-             "type": "long"
-            },
             "capabilities": {
              "properties": {
               "effective": {
@@ -3311,9 +3228,6 @@
               }
              }
             },
-            "device": {
-             "type": "unsigned_long"
-            },
             "entropy": {
              "type": "float"
             },
@@ -3326,57 +3240,14 @@
              },
              "type": "text"
             },
-            "flags": {
-             "properties": {
-              "char_device": {
-               "type": "boolean"
-              },
-              "containerized": {
-               "type": "boolean"
-              },
-              "deleted": {
-               "type": "boolean"
-              },
-              "device": {
-               "type": "boolean"
-              },
-              "directory": {
-               "type": "boolean"
-              },
-              "hidden": {
-               "type": "boolean"
-              },
-              "immutable": {
-               "type": "boolean"
-              },
-              "link": {
-               "type": "boolean"
-              },
-              "named_pipe": {
-               "type": "boolean"
-              },
-              "regular": {
-               "type": "boolean"
-              },
-              "sgid": {
-               "type": "boolean"
-              },
-              "sgid_root": {
-               "type": "boolean"
-              },
-              "socket": {
-               "type": "boolean"
-              },
-              "sticky": {
-               "type": "boolean"
-              },
-              "suid": {
-               "type": "boolean"
-              },
-              "suid_root": {
-               "type": "boolean"
+            "flags_list": {
+             "fields": {
+              "keyword": {
+               "ignore_above": 256,
+               "type": "keyword"
               }
-             }
+             },
+             "type": "text"
             },
             "gid": {
              "type": "long"
@@ -3429,9 +3300,6 @@
                "type": "text"
               }
              }
-            },
-            "inode": {
-             "type": "unsigned_long"
             },
             "magic_num": {
              "properties": {
@@ -3569,9 +3437,6 @@
               }
              },
              "type": "text"
-            },
-            "rdevice": {
-             "type": "unsigned_long"
             },
             "selinux_context": {
              "fields": {
@@ -5287,12 +5152,6 @@
           },
           "file": {
            "properties": {
-            "blksize": {
-             "type": "long"
-            },
-            "blocks": {
-             "type": "long"
-            },
             "capabilities": {
              "properties": {
               "effective": {
@@ -5386,9 +5245,6 @@
               }
              }
             },
-            "device": {
-             "type": "unsigned_long"
-            },
             "entropy": {
              "type": "float"
             },
@@ -5401,57 +5257,14 @@
              },
              "type": "text"
             },
-            "flags": {
-             "properties": {
-              "char_device": {
-               "type": "boolean"
-              },
-              "containerized": {
-               "type": "boolean"
-              },
-              "deleted": {
-               "type": "boolean"
-              },
-              "device": {
-               "type": "boolean"
-              },
-              "directory": {
-               "type": "boolean"
-              },
-              "hidden": {
-               "type": "boolean"
-              },
-              "immutable": {
-               "type": "boolean"
-              },
-              "link": {
-               "type": "boolean"
-              },
-              "named_pipe": {
-               "type": "boolean"
-              },
-              "regular": {
-               "type": "boolean"
-              },
-              "sgid": {
-               "type": "boolean"
-              },
-              "sgid_root": {
-               "type": "boolean"
-              },
-              "socket": {
-               "type": "boolean"
-              },
-              "sticky": {
-               "type": "boolean"
-              },
-              "suid": {
-               "type": "boolean"
-              },
-              "suid_root": {
-               "type": "boolean"
+            "flags_list": {
+             "fields": {
+              "keyword": {
+               "ignore_above": 256,
+               "type": "keyword"
               }
-             }
+             },
+             "type": "text"
             },
             "gid": {
              "type": "long"
@@ -5504,9 +5317,6 @@
                "type": "text"
               }
              }
-            },
-            "inode": {
-             "type": "unsigned_long"
             },
             "magic_num": {
              "properties": {
@@ -5645,9 +5455,6 @@
              },
              "type": "text"
             },
-            "rdevice": {
-             "type": "unsigned_long"
-            },
             "selinux_context": {
              "fields": {
               "keyword": {
@@ -5711,9 +5518,6 @@
             },
             "class_data_socket_packet": {
              "properties": {
-              "inode": {
-               "type": "long"
-              },
               "interface": {
                "type": "long"
               },
@@ -5756,18 +5560,6 @@
              "properties": {
               "abstract": {
                "type": "boolean"
-              },
-              "flags": {
-               "fields": {
-                "keyword": {
-                 "ignore_above": 256,
-                 "type": "keyword"
-                }
-               },
-               "type": "text"
-              },
-              "inode": {
-               "type": "long"
               },
               "path": {
                "fields": {
@@ -5857,21 +5649,14 @@
             }
            }
           },
-          "flags": {
-           "properties": {
-            "containerized": {
-             "type": "boolean"
-            },
-            "deleted": {
-             "type": "boolean"
-            },
-            "hidden": {
-             "type": "boolean"
-            },
-            "immutable": {
-             "type": "boolean"
+          "flags_list": {
+           "fields": {
+            "keyword": {
+             "ignore_above": 256,
+             "type": "keyword"
             }
-           }
+           },
+           "type": "text"
           },
           "gid": {
            "type": "long"
@@ -5982,9 +5767,6 @@
                  },
                  "type": "text"
                 },
-                "inode": {
-                 "type": "long"
-                },
                 "ip_address_local": {
                  "fields": {
                   "keyword": {
@@ -6013,9 +5795,6 @@
                  "type": "unsigned_long"
                 },
                 "protocol_num": {
-                 "type": "unsigned_long"
-                },
-                "status": {
                  "type": "unsigned_long"
                 },
                 "status_text": {
@@ -6086,9 +5865,6 @@
                  },
                  "type": "text"
                 },
-                "inode": {
-                 "type": "long"
-                },
                 "ip_address_local": {
                  "fields": {
                   "keyword": {
@@ -6117,9 +5893,6 @@
                  "type": "unsigned_long"
                 },
                 "protocol_num": {
-                 "type": "unsigned_long"
-                },
-                "status": {
                  "type": "unsigned_long"
                 },
                 "status_text": {
@@ -6199,9 +5972,6 @@
                  },
                  "type": "text"
                 },
-                "inode": {
-                 "type": "long"
-                },
                 "ip_address_local": {
                  "fields": {
                   "keyword": {
@@ -6230,9 +6000,6 @@
                  "type": "unsigned_long"
                 },
                 "protocol_num": {
-                 "type": "unsigned_long"
-                },
-                "status": {
                  "type": "unsigned_long"
                 },
                 "status_text": {
@@ -6303,9 +6070,6 @@
                  },
                  "type": "text"
                 },
-                "inode": {
-                 "type": "long"
-                },
                 "ip_address_local": {
                  "fields": {
                   "keyword": {
@@ -6334,9 +6098,6 @@
                  "type": "unsigned_long"
                 },
                 "protocol_num": {
-                 "type": "unsigned_long"
-                },
-                "status": {
                  "type": "unsigned_long"
                 },
                 "status_text": {
@@ -6407,9 +6168,6 @@
                  },
                  "type": "text"
                 },
-                "inode": {
-                 "type": "long"
-                },
                 "ip_address_local": {
                  "fields": {
                   "keyword": {
@@ -6438,9 +6196,6 @@
                  "type": "unsigned_long"
                 },
                 "protocol_num": {
-                 "type": "unsigned_long"
-                },
-                "status": {
                  "type": "unsigned_long"
                 },
                 "status_text": {
@@ -6511,9 +6266,6 @@
                  },
                  "type": "text"
                 },
-                "inode": {
-                 "type": "long"
-                },
                 "ip_address_local": {
                  "fields": {
                   "keyword": {
@@ -6542,9 +6294,6 @@
                  "type": "unsigned_long"
                 },
                 "protocol_num": {
-                 "type": "unsigned_long"
-                },
-                "status": {
                  "type": "unsigned_long"
                 },
                 "status_text": {
@@ -6615,9 +6364,6 @@
                  },
                  "type": "text"
                 },
-                "inode": {
-                 "type": "long"
-                },
                 "ip_address_local": {
                  "fields": {
                   "keyword": {
@@ -6646,9 +6392,6 @@
                  "type": "unsigned_long"
                 },
                 "protocol_num": {
-                 "type": "unsigned_long"
-                },
-                "status": {
                  "type": "unsigned_long"
                 },
                 "status_text": {
@@ -6719,9 +6462,6 @@
                  },
                  "type": "text"
                 },
-                "inode": {
-                 "type": "long"
-                },
                 "ip_address_local": {
                  "fields": {
                   "keyword": {
@@ -6750,9 +6490,6 @@
                  "type": "unsigned_long"
                 },
                 "protocol_num": {
-                 "type": "unsigned_long"
-                },
-                "status": {
                  "type": "unsigned_long"
                 },
                 "status_text": {
@@ -6823,9 +6560,6 @@
                  },
                  "type": "text"
                 },
-                "inode": {
-                 "type": "long"
-                },
                 "ip_address_local": {
                  "fields": {
                   "keyword": {
@@ -6854,9 +6588,6 @@
                  "type": "unsigned_long"
                 },
                 "protocol_num": {
-                 "type": "unsigned_long"
-                },
-                "status": {
                  "type": "unsigned_long"
                 },
                 "status_text": {
@@ -7065,12 +6796,6 @@
             },
             "file": {
              "properties": {
-              "blksize": {
-               "type": "long"
-              },
-              "blocks": {
-               "type": "long"
-              },
               "capabilities": {
                "properties": {
                 "effective": {
@@ -7164,9 +6889,6 @@
                 }
                }
               },
-              "device": {
-               "type": "unsigned_long"
-              },
               "entropy": {
                "type": "float"
               },
@@ -7179,57 +6901,14 @@
                },
                "type": "text"
               },
-              "flags": {
-               "properties": {
-                "char_device": {
-                 "type": "boolean"
-                },
-                "containerized": {
-                 "type": "boolean"
-                },
-                "deleted": {
-                 "type": "boolean"
-                },
-                "device": {
-                 "type": "boolean"
-                },
-                "directory": {
-                 "type": "boolean"
-                },
-                "hidden": {
-                 "type": "boolean"
-                },
-                "immutable": {
-                 "type": "boolean"
-                },
-                "link": {
-                 "type": "boolean"
-                },
-                "named_pipe": {
-                 "type": "boolean"
-                },
-                "regular": {
-                 "type": "boolean"
-                },
-                "sgid": {
-                 "type": "boolean"
-                },
-                "sgid_root": {
-                 "type": "boolean"
-                },
-                "socket": {
-                 "type": "boolean"
-                },
-                "sticky": {
-                 "type": "boolean"
-                },
-                "suid": {
-                 "type": "boolean"
-                },
-                "suid_root": {
-                 "type": "boolean"
+              "flags_list": {
+               "fields": {
+                "keyword": {
+                 "ignore_above": 256,
+                 "type": "keyword"
                 }
-               }
+               },
+               "type": "text"
               },
               "gid": {
                "type": "long"
@@ -7282,9 +6961,6 @@
                  "type": "text"
                 }
                }
-              },
-              "inode": {
-               "type": "unsigned_long"
               },
               "magic_num": {
                "properties": {
@@ -7423,9 +7099,6 @@
                },
                "type": "text"
               },
-              "rdevice": {
-               "type": "unsigned_long"
-              },
               "selinux_context": {
                "fields": {
                 "keyword": {
@@ -7489,9 +7162,6 @@
               },
               "class_data_socket_packet": {
                "properties": {
-                "inode": {
-                 "type": "long"
-                },
                 "interface": {
                  "type": "long"
                 },
@@ -7534,18 +7204,6 @@
                "properties": {
                 "abstract": {
                  "type": "boolean"
-                },
-                "flags": {
-                 "fields": {
-                  "keyword": {
-                   "ignore_above": 256,
-                   "type": "keyword"
-                  }
-                 },
-                 "type": "text"
-                },
-                "inode": {
-                 "type": "long"
                 },
                 "path": {
                  "fields": {
@@ -7635,21 +7293,14 @@
               }
              }
             },
-            "flags": {
-             "properties": {
-              "containerized": {
-               "type": "boolean"
-              },
-              "deleted": {
-               "type": "boolean"
-              },
-              "hidden": {
-               "type": "boolean"
-              },
-              "immutable": {
-               "type": "boolean"
+            "flags_list": {
+             "fields": {
+              "keyword": {
+               "ignore_above": 256,
+               "type": "keyword"
               }
-             }
+             },
+             "type": "text"
             },
             "gid": {
              "type": "long"
@@ -7760,9 +7411,6 @@
                    },
                    "type": "text"
                   },
-                  "inode": {
-                   "type": "long"
-                  },
                   "ip_address_local": {
                    "fields": {
                     "keyword": {
@@ -7791,9 +7439,6 @@
                    "type": "unsigned_long"
                   },
                   "protocol_num": {
-                   "type": "unsigned_long"
-                  },
-                  "status": {
                    "type": "unsigned_long"
                   },
                   "status_text": {
@@ -7864,9 +7509,6 @@
                    },
                    "type": "text"
                   },
-                  "inode": {
-                   "type": "long"
-                  },
                   "ip_address_local": {
                    "fields": {
                     "keyword": {
@@ -7895,9 +7537,6 @@
                    "type": "unsigned_long"
                   },
                   "protocol_num": {
-                   "type": "unsigned_long"
-                  },
-                  "status": {
                    "type": "unsigned_long"
                   },
                   "status_text": {
@@ -7977,9 +7616,6 @@
                    },
                    "type": "text"
                   },
-                  "inode": {
-                   "type": "long"
-                  },
                   "ip_address_local": {
                    "fields": {
                     "keyword": {
@@ -8008,9 +7644,6 @@
                    "type": "unsigned_long"
                   },
                   "protocol_num": {
-                   "type": "unsigned_long"
-                  },
-                  "status": {
                    "type": "unsigned_long"
                   },
                   "status_text": {
@@ -8081,9 +7714,6 @@
                    },
                    "type": "text"
                   },
-                  "inode": {
-                   "type": "long"
-                  },
                   "ip_address_local": {
                    "fields": {
                     "keyword": {
@@ -8112,9 +7742,6 @@
                    "type": "unsigned_long"
                   },
                   "protocol_num": {
-                   "type": "unsigned_long"
-                  },
-                  "status": {
                    "type": "unsigned_long"
                   },
                   "status_text": {
@@ -8185,9 +7812,6 @@
                    },
                    "type": "text"
                   },
-                  "inode": {
-                   "type": "long"
-                  },
                   "ip_address_local": {
                    "fields": {
                     "keyword": {
@@ -8216,9 +7840,6 @@
                    "type": "unsigned_long"
                   },
                   "protocol_num": {
-                   "type": "unsigned_long"
-                  },
-                  "status": {
                    "type": "unsigned_long"
                   },
                   "status_text": {
@@ -8289,9 +7910,6 @@
                    },
                    "type": "text"
                   },
-                  "inode": {
-                   "type": "long"
-                  },
                   "ip_address_local": {
                    "fields": {
                     "keyword": {
@@ -8320,9 +7938,6 @@
                    "type": "unsigned_long"
                   },
                   "protocol_num": {
-                   "type": "unsigned_long"
-                  },
-                  "status": {
                    "type": "unsigned_long"
                   },
                   "status_text": {
@@ -8393,9 +8008,6 @@
                    },
                    "type": "text"
                   },
-                  "inode": {
-                   "type": "long"
-                  },
                   "ip_address_local": {
                    "fields": {
                     "keyword": {
@@ -8424,9 +8036,6 @@
                    "type": "unsigned_long"
                   },
                   "protocol_num": {
-                   "type": "unsigned_long"
-                  },
-                  "status": {
                    "type": "unsigned_long"
                   },
                   "status_text": {
@@ -8497,9 +8106,6 @@
                    },
                    "type": "text"
                   },
-                  "inode": {
-                   "type": "long"
-                  },
                   "ip_address_local": {
                    "fields": {
                     "keyword": {
@@ -8528,9 +8134,6 @@
                    "type": "unsigned_long"
                   },
                   "protocol_num": {
-                   "type": "unsigned_long"
-                  },
-                  "status": {
                    "type": "unsigned_long"
                   },
                   "status_text": {
@@ -8601,9 +8204,6 @@
                    },
                    "type": "text"
                   },
-                  "inode": {
-                   "type": "long"
-                  },
                   "ip_address_local": {
                    "fields": {
                     "keyword": {
@@ -8632,9 +8232,6 @@
                    "type": "unsigned_long"
                   },
                   "protocol_num": {
-                   "type": "unsigned_long"
-                  },
-                  "status": {
                    "type": "unsigned_long"
                   },
                   "status_text": {
@@ -8718,181 +8315,6 @@
              },
              "type": "text"
             },
-            "stat": {
-             "properties": {
-              "arg_end": {
-               "type": "unsigned_long"
-              },
-              "arg_start": {
-               "type": "unsigned_long"
-              },
-              "cguest_time": {
-               "type": "long"
-              },
-              "cmajflt": {
-               "type": "unsigned_long"
-              },
-              "cminflt": {
-               "type": "unsigned_long"
-              },
-              "cnswap": {
-               "type": "unsigned_long"
-              },
-              "comm": {
-               "fields": {
-                "keyword": {
-                 "ignore_above": 256,
-                 "type": "keyword"
-                }
-               },
-               "type": "text"
-              },
-              "cstime": {
-               "type": "long"
-              },
-              "cutime": {
-               "type": "long"
-              },
-              "delayacct_blkio_ticks": {
-               "type": "unsigned_long"
-              },
-              "empty": {
-               "type": "boolean"
-              },
-              "end_data": {
-               "type": "unsigned_long"
-              },
-              "endcode": {
-               "type": "unsigned_long"
-              },
-              "env_end": {
-               "type": "unsigned_long"
-              },
-              "env_start": {
-               "type": "unsigned_long"
-              },
-              "exit_code": {
-               "type": "long"
-              },
-              "exit_signal": {
-               "type": "long"
-              },
-              "flags": {
-               "type": "unsigned_long"
-              },
-              "guest_time": {
-               "type": "unsigned_long"
-              },
-              "itrealvalue": {
-               "type": "long"
-              },
-              "kstkeip": {
-               "type": "unsigned_long"
-              },
-              "kstkesp": {
-               "type": "unsigned_long"
-              },
-              "locked": {
-               "type": "unsigned_long"
-              },
-              "majflt": {
-               "type": "unsigned_long"
-              },
-              "minflt": {
-               "type": "unsigned_long"
-              },
-              "nice": {
-               "type": "long"
-              },
-              "nswap": {
-               "type": "unsigned_long"
-              },
-              "num_threads": {
-               "type": "long"
-              },
-              "pgrp": {
-               "type": "long"
-              },
-              "pid": {
-               "type": "long"
-              },
-              "policy": {
-               "type": "unsigned_long"
-              },
-              "ppid": {
-               "type": "long"
-              },
-              "priority": {
-               "type": "long"
-              },
-              "processor": {
-               "type": "long"
-              },
-              "rss": {
-               "type": "long"
-              },
-              "rsslim": {
-               "type": "unsigned_long"
-              },
-              "rt_priority": {
-               "type": "unsigned_long"
-              },
-              "session": {
-               "type": "long"
-              },
-              "sigcatch": {
-               "type": "unsigned_long"
-              },
-              "sigignore": {
-               "type": "unsigned_long"
-              },
-              "signal": {
-               "type": "unsigned_long"
-              },
-              "start_brk": {
-               "type": "unsigned_long"
-              },
-              "start_data": {
-               "type": "unsigned_long"
-              },
-              "startcode": {
-               "type": "unsigned_long"
-              },
-              "startstack": {
-               "type": "unsigned_long"
-              },
-              "starttime": {
-               "type": "unsigned_long"
-              },
-              "state": {
-               "fields": {
-                "keyword": {
-                 "ignore_above": 256,
-                 "type": "keyword"
-                }
-               },
-               "type": "text"
-              },
-              "stime": {
-               "type": "unsigned_long"
-              },
-              "tpgid": {
-               "type": "long"
-              },
-              "tty_nr": {
-               "type": "long"
-              },
-              "utime": {
-               "type": "unsigned_long"
-              },
-              "vsize": {
-               "type": "unsigned_long"
-              },
-              "wchan": {
-               "type": "unsigned_long"
-              }
-             }
-            },
             "state": {
              "fields": {
               "keyword": {
@@ -8949,29 +8371,8 @@
                },
                "type": "text"
               },
-              "cpus_allowed": {
-               "fields": {
-                "keyword": {
-                 "ignore_above": 256,
-                 "type": "keyword"
-                }
-               },
-               "type": "text"
-              },
-              "cpus_allowed_list": {
-               "fields": {
-                "keyword": {
-                 "ignore_above": 256,
-                 "type": "keyword"
-                }
-               },
-               "type": "text"
-              },
               "empty": {
                "type": "boolean"
-              },
-              "fdsize": {
-               "type": "long"
               },
               "flags": {
                "properties": {
@@ -9013,27 +8414,6 @@
                },
                "type": "text"
               },
-              "hugeltb_pages": {
-               "type": "long"
-              },
-              "mems_allowed": {
-               "fields": {
-                "keyword": {
-                 "ignore_above": 256,
-                 "type": "keyword"
-                }
-               },
-               "type": "text"
-              },
-              "mems_allowed_list": {
-               "fields": {
-                "keyword": {
-                 "ignore_above": 256,
-                 "type": "keyword"
-                }
-               },
-               "type": "text"
-              },
               "name": {
                "fields": {
                 "keyword": {
@@ -9044,9 +8424,6 @@
                "type": "text"
               },
               "ngid": {
-               "type": "long"
-              },
-              "nonvoluntar_ctxt_switches": {
                "type": "long"
               },
               "ns_pgid": {
@@ -9067,83 +8444,11 @@
               "ppid": {
                "type": "long"
               },
-              "rss_anon": {
-               "type": "long"
-              },
-              "rss_file": {
-               "type": "long"
-              },
-              "rss_shmem": {
-               "type": "long"
-              },
               "seccomp": {
                "type": "long"
               },
               "seccomp_filters": {
                "type": "long"
-              },
-              "shd_pnd": {
-               "fields": {
-                "keyword": {
-                 "ignore_above": 256,
-                 "type": "keyword"
-                }
-               },
-               "type": "text"
-              },
-              "sig_blk": {
-               "fields": {
-                "keyword": {
-                 "ignore_above": 256,
-                 "type": "keyword"
-                }
-               },
-               "type": "text"
-              },
-              "sig_cgt": {
-               "fields": {
-                "keyword": {
-                 "ignore_above": 256,
-                 "type": "keyword"
-                }
-               },
-               "type": "text"
-              },
-              "sig_ign": {
-               "fields": {
-                "keyword": {
-                 "ignore_above": 256,
-                 "type": "keyword"
-                }
-               },
-               "type": "text"
-              },
-              "sig_pnd": {
-               "fields": {
-                "keyword": {
-                 "ignore_above": 256,
-                 "type": "keyword"
-                }
-               },
-               "type": "text"
-              },
-              "sig_q": {
-               "fields": {
-                "keyword": {
-                 "ignore_above": 256,
-                 "type": "keyword"
-                }
-               },
-               "type": "text"
-              },
-              "speculation_store_bypass": {
-               "fields": {
-                "keyword": {
-                 "ignore_above": 256,
-                 "type": "keyword"
-                }
-               },
-               "type": "text"
               },
               "state": {
                "fields": {
@@ -9184,43 +8489,10 @@
                },
                "type": "text"
               },
-              "vm_data": {
-               "type": "long"
-              },
-              "vm_exe": {
-               "type": "long"
-              },
-              "vm_hwm": {
-               "type": "long"
-              },
-              "vm_lck": {
-               "type": "long"
-              },
-              "vm_lib": {
-               "type": "long"
-              },
               "vm_peak": {
                "type": "long"
               },
-              "vm_pin": {
-               "type": "long"
-              },
-              "vm_pte": {
-               "type": "long"
-              },
-              "vm_rss": {
-               "type": "long"
-              },
               "vm_size": {
-               "type": "long"
-              },
-              "vm_stk": {
-               "type": "long"
-              },
-              "vm_swap": {
-               "type": "long"
-              },
-              "voluntary_ctxt_switches": {
                "type": "long"
               }
              }
@@ -9290,181 +8562,6 @@
            },
            "type": "text"
           },
-          "stat": {
-           "properties": {
-            "arg_end": {
-             "type": "unsigned_long"
-            },
-            "arg_start": {
-             "type": "unsigned_long"
-            },
-            "cguest_time": {
-             "type": "long"
-            },
-            "cmajflt": {
-             "type": "unsigned_long"
-            },
-            "cminflt": {
-             "type": "unsigned_long"
-            },
-            "cnswap": {
-             "type": "unsigned_long"
-            },
-            "comm": {
-             "fields": {
-              "keyword": {
-               "ignore_above": 256,
-               "type": "keyword"
-              }
-             },
-             "type": "text"
-            },
-            "cstime": {
-             "type": "long"
-            },
-            "cutime": {
-             "type": "long"
-            },
-            "delayacct_blkio_ticks": {
-             "type": "unsigned_long"
-            },
-            "empty": {
-             "type": "boolean"
-            },
-            "end_data": {
-             "type": "unsigned_long"
-            },
-            "endcode": {
-             "type": "unsigned_long"
-            },
-            "env_end": {
-             "type": "unsigned_long"
-            },
-            "env_start": {
-             "type": "unsigned_long"
-            },
-            "exit_code": {
-             "type": "long"
-            },
-            "exit_signal": {
-             "type": "long"
-            },
-            "flags": {
-             "type": "unsigned_long"
-            },
-            "guest_time": {
-             "type": "unsigned_long"
-            },
-            "itrealvalue": {
-             "type": "long"
-            },
-            "kstkeip": {
-             "type": "unsigned_long"
-            },
-            "kstkesp": {
-             "type": "unsigned_long"
-            },
-            "locked": {
-             "type": "unsigned_long"
-            },
-            "majflt": {
-             "type": "unsigned_long"
-            },
-            "minflt": {
-             "type": "unsigned_long"
-            },
-            "nice": {
-             "type": "long"
-            },
-            "nswap": {
-             "type": "unsigned_long"
-            },
-            "num_threads": {
-             "type": "long"
-            },
-            "pgrp": {
-             "type": "long"
-            },
-            "pid": {
-             "type": "long"
-            },
-            "policy": {
-             "type": "unsigned_long"
-            },
-            "ppid": {
-             "type": "long"
-            },
-            "priority": {
-             "type": "long"
-            },
-            "processor": {
-             "type": "long"
-            },
-            "rss": {
-             "type": "long"
-            },
-            "rsslim": {
-             "type": "unsigned_long"
-            },
-            "rt_priority": {
-             "type": "unsigned_long"
-            },
-            "session": {
-             "type": "long"
-            },
-            "sigcatch": {
-             "type": "unsigned_long"
-            },
-            "sigignore": {
-             "type": "unsigned_long"
-            },
-            "signal": {
-             "type": "unsigned_long"
-            },
-            "start_brk": {
-             "type": "unsigned_long"
-            },
-            "start_data": {
-             "type": "unsigned_long"
-            },
-            "startcode": {
-             "type": "unsigned_long"
-            },
-            "startstack": {
-             "type": "unsigned_long"
-            },
-            "starttime": {
-             "type": "unsigned_long"
-            },
-            "state": {
-             "fields": {
-              "keyword": {
-               "ignore_above": 256,
-               "type": "keyword"
-              }
-             },
-             "type": "text"
-            },
-            "stime": {
-             "type": "unsigned_long"
-            },
-            "tpgid": {
-             "type": "long"
-            },
-            "tty_nr": {
-             "type": "long"
-            },
-            "utime": {
-             "type": "unsigned_long"
-            },
-            "vsize": {
-             "type": "unsigned_long"
-            },
-            "wchan": {
-             "type": "unsigned_long"
-            }
-           }
-          },
           "state": {
            "fields": {
             "keyword": {
@@ -9521,29 +8618,8 @@
              },
              "type": "text"
             },
-            "cpus_allowed": {
-             "fields": {
-              "keyword": {
-               "ignore_above": 256,
-               "type": "keyword"
-              }
-             },
-             "type": "text"
-            },
-            "cpus_allowed_list": {
-             "fields": {
-              "keyword": {
-               "ignore_above": 256,
-               "type": "keyword"
-              }
-             },
-             "type": "text"
-            },
             "empty": {
              "type": "boolean"
-            },
-            "fdsize": {
-             "type": "long"
             },
             "flags": {
              "properties": {
@@ -9585,27 +8661,6 @@
              },
              "type": "text"
             },
-            "hugeltb_pages": {
-             "type": "long"
-            },
-            "mems_allowed": {
-             "fields": {
-              "keyword": {
-               "ignore_above": 256,
-               "type": "keyword"
-              }
-             },
-             "type": "text"
-            },
-            "mems_allowed_list": {
-             "fields": {
-              "keyword": {
-               "ignore_above": 256,
-               "type": "keyword"
-              }
-             },
-             "type": "text"
-            },
             "name": {
              "fields": {
               "keyword": {
@@ -9616,9 +8671,6 @@
              "type": "text"
             },
             "ngid": {
-             "type": "long"
-            },
-            "nonvoluntar_ctxt_switches": {
              "type": "long"
             },
             "ns_pgid": {
@@ -9639,83 +8691,11 @@
             "ppid": {
              "type": "long"
             },
-            "rss_anon": {
-             "type": "long"
-            },
-            "rss_file": {
-             "type": "long"
-            },
-            "rss_shmem": {
-             "type": "long"
-            },
             "seccomp": {
              "type": "long"
             },
             "seccomp_filters": {
              "type": "long"
-            },
-            "shd_pnd": {
-             "fields": {
-              "keyword": {
-               "ignore_above": 256,
-               "type": "keyword"
-              }
-             },
-             "type": "text"
-            },
-            "sig_blk": {
-             "fields": {
-              "keyword": {
-               "ignore_above": 256,
-               "type": "keyword"
-              }
-             },
-             "type": "text"
-            },
-            "sig_cgt": {
-             "fields": {
-              "keyword": {
-               "ignore_above": 256,
-               "type": "keyword"
-              }
-             },
-             "type": "text"
-            },
-            "sig_ign": {
-             "fields": {
-              "keyword": {
-               "ignore_above": 256,
-               "type": "keyword"
-              }
-             },
-             "type": "text"
-            },
-            "sig_pnd": {
-             "fields": {
-              "keyword": {
-               "ignore_above": 256,
-               "type": "keyword"
-              }
-             },
-             "type": "text"
-            },
-            "sig_q": {
-             "fields": {
-              "keyword": {
-               "ignore_above": 256,
-               "type": "keyword"
-              }
-             },
-             "type": "text"
-            },
-            "speculation_store_bypass": {
-             "fields": {
-              "keyword": {
-               "ignore_above": 256,
-               "type": "keyword"
-              }
-             },
-             "type": "text"
             },
             "state": {
              "fields": {
@@ -9756,43 +8736,10 @@
              },
              "type": "text"
             },
-            "vm_data": {
-             "type": "long"
-            },
-            "vm_exe": {
-             "type": "long"
-            },
-            "vm_hwm": {
-             "type": "long"
-            },
-            "vm_lck": {
-             "type": "long"
-            },
-            "vm_lib": {
-             "type": "long"
-            },
             "vm_peak": {
              "type": "long"
             },
-            "vm_pin": {
-             "type": "long"
-            },
-            "vm_pte": {
-             "type": "long"
-            },
-            "vm_rss": {
-             "type": "long"
-            },
             "vm_size": {
-             "type": "long"
-            },
-            "vm_stk": {
-             "type": "long"
-            },
-            "vm_swap": {
-             "type": "long"
-            },
-            "voluntary_ctxt_switches": {
              "type": "long"
             }
            }
@@ -9943,12 +8890,6 @@
               },
               "file": {
                "properties": {
-                "blksize": {
-                 "type": "long"
-                },
-                "blocks": {
-                 "type": "long"
-                },
                 "capabilities": {
                  "properties": {
                   "effective": {
@@ -10042,9 +8983,6 @@
                   }
                  }
                 },
-                "device": {
-                 "type": "unsigned_long"
-                },
                 "entropy": {
                  "type": "float"
                 },
@@ -10057,57 +8995,14 @@
                  },
                  "type": "text"
                 },
-                "flags": {
-                 "properties": {
-                  "char_device": {
-                   "type": "boolean"
-                  },
-                  "containerized": {
-                   "type": "boolean"
-                  },
-                  "deleted": {
-                   "type": "boolean"
-                  },
-                  "device": {
-                   "type": "boolean"
-                  },
-                  "directory": {
-                   "type": "boolean"
-                  },
-                  "hidden": {
-                   "type": "boolean"
-                  },
-                  "immutable": {
-                   "type": "boolean"
-                  },
-                  "link": {
-                   "type": "boolean"
-                  },
-                  "named_pipe": {
-                   "type": "boolean"
-                  },
-                  "regular": {
-                   "type": "boolean"
-                  },
-                  "sgid": {
-                   "type": "boolean"
-                  },
-                  "sgid_root": {
-                   "type": "boolean"
-                  },
-                  "socket": {
-                   "type": "boolean"
-                  },
-                  "sticky": {
-                   "type": "boolean"
-                  },
-                  "suid": {
-                   "type": "boolean"
-                  },
-                  "suid_root": {
-                   "type": "boolean"
+                "flags_list": {
+                 "fields": {
+                  "keyword": {
+                   "ignore_above": 256,
+                   "type": "keyword"
                   }
-                 }
+                 },
+                 "type": "text"
                 },
                 "gid": {
                  "type": "long"
@@ -10160,9 +9055,6 @@
                    "type": "text"
                   }
                  }
-                },
-                "inode": {
-                 "type": "unsigned_long"
                 },
                 "magic_num": {
                  "properties": {
@@ -10300,9 +9192,6 @@
                   }
                  },
                  "type": "text"
-                },
-                "rdevice": {
-                 "type": "unsigned_long"
                 },
                 "selinux_context": {
                  "fields": {
@@ -10384,12 +9273,6 @@
               },
               "file": {
                "properties": {
-                "blksize": {
-                 "type": "long"
-                },
-                "blocks": {
-                 "type": "long"
-                },
                 "capabilities": {
                  "properties": {
                   "effective": {
@@ -10483,9 +9366,6 @@
                   }
                  }
                 },
-                "device": {
-                 "type": "unsigned_long"
-                },
                 "entropy": {
                  "type": "float"
                 },
@@ -10498,57 +9378,14 @@
                  },
                  "type": "text"
                 },
-                "flags": {
-                 "properties": {
-                  "char_device": {
-                   "type": "boolean"
-                  },
-                  "containerized": {
-                   "type": "boolean"
-                  },
-                  "deleted": {
-                   "type": "boolean"
-                  },
-                  "device": {
-                   "type": "boolean"
-                  },
-                  "directory": {
-                   "type": "boolean"
-                  },
-                  "hidden": {
-                   "type": "boolean"
-                  },
-                  "immutable": {
-                   "type": "boolean"
-                  },
-                  "link": {
-                   "type": "boolean"
-                  },
-                  "named_pipe": {
-                   "type": "boolean"
-                  },
-                  "regular": {
-                   "type": "boolean"
-                  },
-                  "sgid": {
-                   "type": "boolean"
-                  },
-                  "sgid_root": {
-                   "type": "boolean"
-                  },
-                  "socket": {
-                   "type": "boolean"
-                  },
-                  "sticky": {
-                   "type": "boolean"
-                  },
-                  "suid": {
-                   "type": "boolean"
-                  },
-                  "suid_root": {
-                   "type": "boolean"
+                "flags_list": {
+                 "fields": {
+                  "keyword": {
+                   "ignore_above": 256,
+                   "type": "keyword"
                   }
-                 }
+                 },
+                 "type": "text"
                 },
                 "gid": {
                  "type": "long"
@@ -10601,9 +9438,6 @@
                    "type": "text"
                   }
                  }
-                },
-                "inode": {
-                 "type": "unsigned_long"
                 },
                 "magic_num": {
                  "properties": {
@@ -10741,9 +9575,6 @@
                   }
                  },
                  "type": "text"
-                },
-                "rdevice": {
-                 "type": "unsigned_long"
                 },
                 "selinux_context": {
                  "fields": {
@@ -10825,12 +9656,6 @@
               },
               "file": {
                "properties": {
-                "blksize": {
-                 "type": "long"
-                },
-                "blocks": {
-                 "type": "long"
-                },
                 "capabilities": {
                  "properties": {
                   "effective": {
@@ -10924,9 +9749,6 @@
                   }
                  }
                 },
-                "device": {
-                 "type": "unsigned_long"
-                },
                 "entropy": {
                  "type": "float"
                 },
@@ -10939,57 +9761,14 @@
                  },
                  "type": "text"
                 },
-                "flags": {
-                 "properties": {
-                  "char_device": {
-                   "type": "boolean"
-                  },
-                  "containerized": {
-                   "type": "boolean"
-                  },
-                  "deleted": {
-                   "type": "boolean"
-                  },
-                  "device": {
-                   "type": "boolean"
-                  },
-                  "directory": {
-                   "type": "boolean"
-                  },
-                  "hidden": {
-                   "type": "boolean"
-                  },
-                  "immutable": {
-                   "type": "boolean"
-                  },
-                  "link": {
-                   "type": "boolean"
-                  },
-                  "named_pipe": {
-                   "type": "boolean"
-                  },
-                  "regular": {
-                   "type": "boolean"
-                  },
-                  "sgid": {
-                   "type": "boolean"
-                  },
-                  "sgid_root": {
-                   "type": "boolean"
-                  },
-                  "socket": {
-                   "type": "boolean"
-                  },
-                  "sticky": {
-                   "type": "boolean"
-                  },
-                  "suid": {
-                   "type": "boolean"
-                  },
-                  "suid_root": {
-                   "type": "boolean"
+                "flags_list": {
+                 "fields": {
+                  "keyword": {
+                   "ignore_above": 256,
+                   "type": "keyword"
                   }
-                 }
+                 },
+                 "type": "text"
                 },
                 "gid": {
                  "type": "long"
@@ -11042,9 +9821,6 @@
                    "type": "text"
                   }
                  }
-                },
-                "inode": {
-                 "type": "unsigned_long"
                 },
                 "magic_num": {
                  "properties": {
@@ -11182,9 +9958,6 @@
                   }
                  },
                  "type": "text"
-                },
-                "rdevice": {
-                 "type": "unsigned_long"
                 },
                 "selinux_context": {
                  "fields": {
@@ -11266,12 +10039,6 @@
               },
               "file": {
                "properties": {
-                "blksize": {
-                 "type": "long"
-                },
-                "blocks": {
-                 "type": "long"
-                },
                 "capabilities": {
                  "properties": {
                   "effective": {
@@ -11365,9 +10132,6 @@
                   }
                  }
                 },
-                "device": {
-                 "type": "unsigned_long"
-                },
                 "entropy": {
                  "type": "float"
                 },
@@ -11380,57 +10144,14 @@
                  },
                  "type": "text"
                 },
-                "flags": {
-                 "properties": {
-                  "char_device": {
-                   "type": "boolean"
-                  },
-                  "containerized": {
-                   "type": "boolean"
-                  },
-                  "deleted": {
-                   "type": "boolean"
-                  },
-                  "device": {
-                   "type": "boolean"
-                  },
-                  "directory": {
-                   "type": "boolean"
-                  },
-                  "hidden": {
-                   "type": "boolean"
-                  },
-                  "immutable": {
-                   "type": "boolean"
-                  },
-                  "link": {
-                   "type": "boolean"
-                  },
-                  "named_pipe": {
-                   "type": "boolean"
-                  },
-                  "regular": {
-                   "type": "boolean"
-                  },
-                  "sgid": {
-                   "type": "boolean"
-                  },
-                  "sgid_root": {
-                   "type": "boolean"
-                  },
-                  "socket": {
-                   "type": "boolean"
-                  },
-                  "sticky": {
-                   "type": "boolean"
-                  },
-                  "suid": {
-                   "type": "boolean"
-                  },
-                  "suid_root": {
-                   "type": "boolean"
+                "flags_list": {
+                 "fields": {
+                  "keyword": {
+                   "ignore_above": 256,
+                   "type": "keyword"
                   }
-                 }
+                 },
+                 "type": "text"
                 },
                 "gid": {
                  "type": "long"
@@ -11483,9 +10204,6 @@
                    "type": "text"
                   }
                  }
-                },
-                "inode": {
-                 "type": "unsigned_long"
                 },
                 "magic_num": {
                  "properties": {
@@ -11623,9 +10341,6 @@
                   }
                  },
                  "type": "text"
-                },
-                "rdevice": {
-                 "type": "unsigned_long"
                 },
                 "selinux_context": {
                  "fields": {
@@ -11881,12 +10596,6 @@
                 },
                 "file": {
                  "properties": {
-                  "blksize": {
-                   "type": "long"
-                  },
-                  "blocks": {
-                   "type": "long"
-                  },
                   "capabilities": {
                    "properties": {
                     "effective": {
@@ -11980,9 +10689,6 @@
                     }
                    }
                   },
-                  "device": {
-                   "type": "unsigned_long"
-                  },
                   "entropy": {
                    "type": "float"
                   },
@@ -11995,57 +10701,14 @@
                    },
                    "type": "text"
                   },
-                  "flags": {
-                   "properties": {
-                    "char_device": {
-                     "type": "boolean"
-                    },
-                    "containerized": {
-                     "type": "boolean"
-                    },
-                    "deleted": {
-                     "type": "boolean"
-                    },
-                    "device": {
-                     "type": "boolean"
-                    },
-                    "directory": {
-                     "type": "boolean"
-                    },
-                    "hidden": {
-                     "type": "boolean"
-                    },
-                    "immutable": {
-                     "type": "boolean"
-                    },
-                    "link": {
-                     "type": "boolean"
-                    },
-                    "named_pipe": {
-                     "type": "boolean"
-                    },
-                    "regular": {
-                     "type": "boolean"
-                    },
-                    "sgid": {
-                     "type": "boolean"
-                    },
-                    "sgid_root": {
-                     "type": "boolean"
-                    },
-                    "socket": {
-                     "type": "boolean"
-                    },
-                    "sticky": {
-                     "type": "boolean"
-                    },
-                    "suid": {
-                     "type": "boolean"
-                    },
-                    "suid_root": {
-                     "type": "boolean"
+                  "flags_list": {
+                   "fields": {
+                    "keyword": {
+                     "ignore_above": 256,
+                     "type": "keyword"
                     }
-                   }
+                   },
+                   "type": "text"
                   },
                   "gid": {
                    "type": "long"
@@ -12098,9 +10761,6 @@
                      "type": "text"
                     }
                    }
-                  },
-                  "inode": {
-                   "type": "unsigned_long"
                   },
                   "magic_num": {
                    "properties": {
@@ -12239,9 +10899,6 @@
                    },
                    "type": "text"
                   },
-                  "rdevice": {
-                   "type": "unsigned_long"
-                  },
                   "selinux_context": {
                    "fields": {
                     "keyword": {
@@ -12305,9 +10962,6 @@
                   },
                   "class_data_socket_packet": {
                    "properties": {
-                    "inode": {
-                     "type": "long"
-                    },
                     "interface": {
                      "type": "long"
                     },
@@ -12350,18 +11004,6 @@
                    "properties": {
                     "abstract": {
                      "type": "boolean"
-                    },
-                    "flags": {
-                     "fields": {
-                      "keyword": {
-                       "ignore_above": 256,
-                       "type": "keyword"
-                      }
-                     },
-                     "type": "text"
-                    },
-                    "inode": {
-                     "type": "long"
                     },
                     "path": {
                      "fields": {
@@ -12451,21 +11093,14 @@
                   }
                  }
                 },
-                "flags": {
-                 "properties": {
-                  "containerized": {
-                   "type": "boolean"
-                  },
-                  "deleted": {
-                   "type": "boolean"
-                  },
-                  "hidden": {
-                   "type": "boolean"
-                  },
-                  "immutable": {
-                   "type": "boolean"
+                "flags_list": {
+                 "fields": {
+                  "keyword": {
+                   "ignore_above": 256,
+                   "type": "keyword"
                   }
-                 }
+                 },
+                 "type": "text"
                 },
                 "gid": {
                  "type": "long"
@@ -12576,9 +11211,6 @@
                        },
                        "type": "text"
                       },
-                      "inode": {
-                       "type": "long"
-                      },
                       "ip_address_local": {
                        "fields": {
                         "keyword": {
@@ -12607,9 +11239,6 @@
                        "type": "unsigned_long"
                       },
                       "protocol_num": {
-                       "type": "unsigned_long"
-                      },
-                      "status": {
                        "type": "unsigned_long"
                       },
                       "status_text": {
@@ -12680,9 +11309,6 @@
                        },
                        "type": "text"
                       },
-                      "inode": {
-                       "type": "long"
-                      },
                       "ip_address_local": {
                        "fields": {
                         "keyword": {
@@ -12711,9 +11337,6 @@
                        "type": "unsigned_long"
                       },
                       "protocol_num": {
-                       "type": "unsigned_long"
-                      },
-                      "status": {
                        "type": "unsigned_long"
                       },
                       "status_text": {
@@ -12793,9 +11416,6 @@
                        },
                        "type": "text"
                       },
-                      "inode": {
-                       "type": "long"
-                      },
                       "ip_address_local": {
                        "fields": {
                         "keyword": {
@@ -12824,9 +11444,6 @@
                        "type": "unsigned_long"
                       },
                       "protocol_num": {
-                       "type": "unsigned_long"
-                      },
-                      "status": {
                        "type": "unsigned_long"
                       },
                       "status_text": {
@@ -12897,9 +11514,6 @@
                        },
                        "type": "text"
                       },
-                      "inode": {
-                       "type": "long"
-                      },
                       "ip_address_local": {
                        "fields": {
                         "keyword": {
@@ -12928,9 +11542,6 @@
                        "type": "unsigned_long"
                       },
                       "protocol_num": {
-                       "type": "unsigned_long"
-                      },
-                      "status": {
                        "type": "unsigned_long"
                       },
                       "status_text": {
@@ -13001,9 +11612,6 @@
                        },
                        "type": "text"
                       },
-                      "inode": {
-                       "type": "long"
-                      },
                       "ip_address_local": {
                        "fields": {
                         "keyword": {
@@ -13032,9 +11640,6 @@
                        "type": "unsigned_long"
                       },
                       "protocol_num": {
-                       "type": "unsigned_long"
-                      },
-                      "status": {
                        "type": "unsigned_long"
                       },
                       "status_text": {
@@ -13105,9 +11710,6 @@
                        },
                        "type": "text"
                       },
-                      "inode": {
-                       "type": "long"
-                      },
                       "ip_address_local": {
                        "fields": {
                         "keyword": {
@@ -13136,9 +11738,6 @@
                        "type": "unsigned_long"
                       },
                       "protocol_num": {
-                       "type": "unsigned_long"
-                      },
-                      "status": {
                        "type": "unsigned_long"
                       },
                       "status_text": {
@@ -13209,9 +11808,6 @@
                        },
                        "type": "text"
                       },
-                      "inode": {
-                       "type": "long"
-                      },
                       "ip_address_local": {
                        "fields": {
                         "keyword": {
@@ -13240,9 +11836,6 @@
                        "type": "unsigned_long"
                       },
                       "protocol_num": {
-                       "type": "unsigned_long"
-                      },
-                      "status": {
                        "type": "unsigned_long"
                       },
                       "status_text": {
@@ -13313,9 +11906,6 @@
                        },
                        "type": "text"
                       },
-                      "inode": {
-                       "type": "long"
-                      },
                       "ip_address_local": {
                        "fields": {
                         "keyword": {
@@ -13344,9 +11934,6 @@
                        "type": "unsigned_long"
                       },
                       "protocol_num": {
-                       "type": "unsigned_long"
-                      },
-                      "status": {
                        "type": "unsigned_long"
                       },
                       "status_text": {
@@ -13417,9 +12004,6 @@
                        },
                        "type": "text"
                       },
-                      "inode": {
-                       "type": "long"
-                      },
                       "ip_address_local": {
                        "fields": {
                         "keyword": {
@@ -13448,9 +12032,6 @@
                        "type": "unsigned_long"
                       },
                       "protocol_num": {
-                       "type": "unsigned_long"
-                      },
-                      "status": {
                        "type": "unsigned_long"
                       },
                       "status_text": {
@@ -13534,181 +12115,6 @@
                  },
                  "type": "text"
                 },
-                "stat": {
-                 "properties": {
-                  "arg_end": {
-                   "type": "unsigned_long"
-                  },
-                  "arg_start": {
-                   "type": "unsigned_long"
-                  },
-                  "cguest_time": {
-                   "type": "long"
-                  },
-                  "cmajflt": {
-                   "type": "unsigned_long"
-                  },
-                  "cminflt": {
-                   "type": "unsigned_long"
-                  },
-                  "cnswap": {
-                   "type": "unsigned_long"
-                  },
-                  "comm": {
-                   "fields": {
-                    "keyword": {
-                     "ignore_above": 256,
-                     "type": "keyword"
-                    }
-                   },
-                   "type": "text"
-                  },
-                  "cstime": {
-                   "type": "long"
-                  },
-                  "cutime": {
-                   "type": "long"
-                  },
-                  "delayacct_blkio_ticks": {
-                   "type": "unsigned_long"
-                  },
-                  "empty": {
-                   "type": "boolean"
-                  },
-                  "end_data": {
-                   "type": "unsigned_long"
-                  },
-                  "endcode": {
-                   "type": "unsigned_long"
-                  },
-                  "env_end": {
-                   "type": "unsigned_long"
-                  },
-                  "env_start": {
-                   "type": "unsigned_long"
-                  },
-                  "exit_code": {
-                   "type": "long"
-                  },
-                  "exit_signal": {
-                   "type": "long"
-                  },
-                  "flags": {
-                   "type": "unsigned_long"
-                  },
-                  "guest_time": {
-                   "type": "unsigned_long"
-                  },
-                  "itrealvalue": {
-                   "type": "long"
-                  },
-                  "kstkeip": {
-                   "type": "unsigned_long"
-                  },
-                  "kstkesp": {
-                   "type": "unsigned_long"
-                  },
-                  "locked": {
-                   "type": "unsigned_long"
-                  },
-                  "majflt": {
-                   "type": "unsigned_long"
-                  },
-                  "minflt": {
-                   "type": "unsigned_long"
-                  },
-                  "nice": {
-                   "type": "long"
-                  },
-                  "nswap": {
-                   "type": "unsigned_long"
-                  },
-                  "num_threads": {
-                   "type": "long"
-                  },
-                  "pgrp": {
-                   "type": "long"
-                  },
-                  "pid": {
-                   "type": "long"
-                  },
-                  "policy": {
-                   "type": "unsigned_long"
-                  },
-                  "ppid": {
-                   "type": "long"
-                  },
-                  "priority": {
-                   "type": "long"
-                  },
-                  "processor": {
-                   "type": "long"
-                  },
-                  "rss": {
-                   "type": "long"
-                  },
-                  "rsslim": {
-                   "type": "unsigned_long"
-                  },
-                  "rt_priority": {
-                   "type": "unsigned_long"
-                  },
-                  "session": {
-                   "type": "long"
-                  },
-                  "sigcatch": {
-                   "type": "unsigned_long"
-                  },
-                  "sigignore": {
-                   "type": "unsigned_long"
-                  },
-                  "signal": {
-                   "type": "unsigned_long"
-                  },
-                  "start_brk": {
-                   "type": "unsigned_long"
-                  },
-                  "start_data": {
-                   "type": "unsigned_long"
-                  },
-                  "startcode": {
-                   "type": "unsigned_long"
-                  },
-                  "startstack": {
-                   "type": "unsigned_long"
-                  },
-                  "starttime": {
-                   "type": "unsigned_long"
-                  },
-                  "state": {
-                   "fields": {
-                    "keyword": {
-                     "ignore_above": 256,
-                     "type": "keyword"
-                    }
-                   },
-                   "type": "text"
-                  },
-                  "stime": {
-                   "type": "unsigned_long"
-                  },
-                  "tpgid": {
-                   "type": "long"
-                  },
-                  "tty_nr": {
-                   "type": "long"
-                  },
-                  "utime": {
-                   "type": "unsigned_long"
-                  },
-                  "vsize": {
-                   "type": "unsigned_long"
-                  },
-                  "wchan": {
-                   "type": "unsigned_long"
-                  }
-                 }
-                },
                 "state": {
                  "fields": {
                   "keyword": {
@@ -13765,29 +12171,8 @@
                    },
                    "type": "text"
                   },
-                  "cpus_allowed": {
-                   "fields": {
-                    "keyword": {
-                     "ignore_above": 256,
-                     "type": "keyword"
-                    }
-                   },
-                   "type": "text"
-                  },
-                  "cpus_allowed_list": {
-                   "fields": {
-                    "keyword": {
-                     "ignore_above": 256,
-                     "type": "keyword"
-                    }
-                   },
-                   "type": "text"
-                  },
                   "empty": {
                    "type": "boolean"
-                  },
-                  "fdsize": {
-                   "type": "long"
                   },
                   "flags": {
                    "properties": {
@@ -13829,27 +12214,6 @@
                    },
                    "type": "text"
                   },
-                  "hugeltb_pages": {
-                   "type": "long"
-                  },
-                  "mems_allowed": {
-                   "fields": {
-                    "keyword": {
-                     "ignore_above": 256,
-                     "type": "keyword"
-                    }
-                   },
-                   "type": "text"
-                  },
-                  "mems_allowed_list": {
-                   "fields": {
-                    "keyword": {
-                     "ignore_above": 256,
-                     "type": "keyword"
-                    }
-                   },
-                   "type": "text"
-                  },
                   "name": {
                    "fields": {
                     "keyword": {
@@ -13860,9 +12224,6 @@
                    "type": "text"
                   },
                   "ngid": {
-                   "type": "long"
-                  },
-                  "nonvoluntar_ctxt_switches": {
                    "type": "long"
                   },
                   "ns_pgid": {
@@ -13883,83 +12244,11 @@
                   "ppid": {
                    "type": "long"
                   },
-                  "rss_anon": {
-                   "type": "long"
-                  },
-                  "rss_file": {
-                   "type": "long"
-                  },
-                  "rss_shmem": {
-                   "type": "long"
-                  },
                   "seccomp": {
                    "type": "long"
                   },
                   "seccomp_filters": {
                    "type": "long"
-                  },
-                  "shd_pnd": {
-                   "fields": {
-                    "keyword": {
-                     "ignore_above": 256,
-                     "type": "keyword"
-                    }
-                   },
-                   "type": "text"
-                  },
-                  "sig_blk": {
-                   "fields": {
-                    "keyword": {
-                     "ignore_above": 256,
-                     "type": "keyword"
-                    }
-                   },
-                   "type": "text"
-                  },
-                  "sig_cgt": {
-                   "fields": {
-                    "keyword": {
-                     "ignore_above": 256,
-                     "type": "keyword"
-                    }
-                   },
-                   "type": "text"
-                  },
-                  "sig_ign": {
-                   "fields": {
-                    "keyword": {
-                     "ignore_above": 256,
-                     "type": "keyword"
-                    }
-                   },
-                   "type": "text"
-                  },
-                  "sig_pnd": {
-                   "fields": {
-                    "keyword": {
-                     "ignore_above": 256,
-                     "type": "keyword"
-                    }
-                   },
-                   "type": "text"
-                  },
-                  "sig_q": {
-                   "fields": {
-                    "keyword": {
-                     "ignore_above": 256,
-                     "type": "keyword"
-                    }
-                   },
-                   "type": "text"
-                  },
-                  "speculation_store_bypass": {
-                   "fields": {
-                    "keyword": {
-                     "ignore_above": 256,
-                     "type": "keyword"
-                    }
-                   },
-                   "type": "text"
                   },
                   "state": {
                    "fields": {
@@ -14000,43 +12289,10 @@
                    },
                    "type": "text"
                   },
-                  "vm_data": {
-                   "type": "long"
-                  },
-                  "vm_exe": {
-                   "type": "long"
-                  },
-                  "vm_hwm": {
-                   "type": "long"
-                  },
-                  "vm_lck": {
-                   "type": "long"
-                  },
-                  "vm_lib": {
-                   "type": "long"
-                  },
                   "vm_peak": {
                    "type": "long"
                   },
-                  "vm_pin": {
-                   "type": "long"
-                  },
-                  "vm_pte": {
-                   "type": "long"
-                  },
-                  "vm_rss": {
-                   "type": "long"
-                  },
                   "vm_size": {
-                   "type": "long"
-                  },
-                  "vm_stk": {
-                   "type": "long"
-                  },
-                  "vm_swap": {
-                   "type": "long"
-                  },
-                  "voluntary_ctxt_switches": {
                    "type": "long"
                   }
                  }
@@ -14512,12 +12768,6 @@
               },
               "file": {
                "properties": {
-                "blksize": {
-                 "type": "long"
-                },
-                "blocks": {
-                 "type": "long"
-                },
                 "capabilities": {
                  "properties": {
                   "effective": {
@@ -14611,9 +12861,6 @@
                   }
                  }
                 },
-                "device": {
-                 "type": "unsigned_long"
-                },
                 "entropy": {
                  "type": "float"
                 },
@@ -14626,57 +12873,14 @@
                  },
                  "type": "text"
                 },
-                "flags": {
-                 "properties": {
-                  "char_device": {
-                   "type": "boolean"
-                  },
-                  "containerized": {
-                   "type": "boolean"
-                  },
-                  "deleted": {
-                   "type": "boolean"
-                  },
-                  "device": {
-                   "type": "boolean"
-                  },
-                  "directory": {
-                   "type": "boolean"
-                  },
-                  "hidden": {
-                   "type": "boolean"
-                  },
-                  "immutable": {
-                   "type": "boolean"
-                  },
-                  "link": {
-                   "type": "boolean"
-                  },
-                  "named_pipe": {
-                   "type": "boolean"
-                  },
-                  "regular": {
-                   "type": "boolean"
-                  },
-                  "sgid": {
-                   "type": "boolean"
-                  },
-                  "sgid_root": {
-                   "type": "boolean"
-                  },
-                  "socket": {
-                   "type": "boolean"
-                  },
-                  "sticky": {
-                   "type": "boolean"
-                  },
-                  "suid": {
-                   "type": "boolean"
-                  },
-                  "suid_root": {
-                   "type": "boolean"
+                "flags_list": {
+                 "fields": {
+                  "keyword": {
+                   "ignore_above": 256,
+                   "type": "keyword"
                   }
-                 }
+                 },
+                 "type": "text"
                 },
                 "gid": {
                  "type": "long"
@@ -14729,9 +12933,6 @@
                    "type": "text"
                   }
                  }
-                },
-                "inode": {
-                 "type": "unsigned_long"
                 },
                 "magic_num": {
                  "properties": {
@@ -14869,9 +13070,6 @@
                   }
                  },
                  "type": "text"
-                },
-                "rdevice": {
-                 "type": "unsigned_long"
                 },
                 "selinux_context": {
                  "fields": {
@@ -15042,12 +13240,6 @@
               },
               "file": {
                "properties": {
-                "blksize": {
-                 "type": "long"
-                },
-                "blocks": {
-                 "type": "long"
-                },
                 "capabilities": {
                  "properties": {
                   "effective": {
@@ -15141,9 +13333,6 @@
                   }
                  }
                 },
-                "device": {
-                 "type": "unsigned_long"
-                },
                 "entropy": {
                  "type": "float"
                 },
@@ -15156,57 +13345,14 @@
                  },
                  "type": "text"
                 },
-                "flags": {
-                 "properties": {
-                  "char_device": {
-                   "type": "boolean"
-                  },
-                  "containerized": {
-                   "type": "boolean"
-                  },
-                  "deleted": {
-                   "type": "boolean"
-                  },
-                  "device": {
-                   "type": "boolean"
-                  },
-                  "directory": {
-                   "type": "boolean"
-                  },
-                  "hidden": {
-                   "type": "boolean"
-                  },
-                  "immutable": {
-                   "type": "boolean"
-                  },
-                  "link": {
-                   "type": "boolean"
-                  },
-                  "named_pipe": {
-                   "type": "boolean"
-                  },
-                  "regular": {
-                   "type": "boolean"
-                  },
-                  "sgid": {
-                   "type": "boolean"
-                  },
-                  "sgid_root": {
-                   "type": "boolean"
-                  },
-                  "socket": {
-                   "type": "boolean"
-                  },
-                  "sticky": {
-                   "type": "boolean"
-                  },
-                  "suid": {
-                   "type": "boolean"
-                  },
-                  "suid_root": {
-                   "type": "boolean"
+                "flags_list": {
+                 "fields": {
+                  "keyword": {
+                   "ignore_above": 256,
+                   "type": "keyword"
                   }
-                 }
+                 },
+                 "type": "text"
                 },
                 "gid": {
                  "type": "long"
@@ -15259,9 +13405,6 @@
                    "type": "text"
                   }
                  }
-                },
-                "inode": {
-                 "type": "unsigned_long"
                 },
                 "magic_num": {
                  "properties": {
@@ -15399,9 +13542,6 @@
                   }
                  },
                  "type": "text"
-                },
-                "rdevice": {
-                 "type": "unsigned_long"
                 },
                 "selinux_context": {
                  "fields": {

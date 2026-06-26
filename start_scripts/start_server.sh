@@ -116,12 +116,67 @@ if [ ! -z "${selinux_status}" ]; then
     fi
 fi
 
+# In-container, Sandfly runs as UID:GID 1000:1000. Verify that the given file
+# is readable by that user or group, otherwise the server cannot read the
+# file. Returns 0 if readable, 1 if not.
+readable_by_sandfly_user() {
+    file="$1"
+    file_stat=$(stat -c '%u %g %a' "$file" 2>/dev/null)
+    if [ -z "$file_stat" ]; then
+        # Could not stat the file; let the caller treat this as not readable.
+        return 1
+    fi
+    file_uid=$(echo "$file_stat" | awk '{print $1}')
+    file_gid=$(echo "$file_stat" | awk '{print $2}')
+    file_perms=$(echo "$file_stat" | awk '{print $3}')
+
+    # Pad to three octal digits so owner/group/other positions are stable.
+    file_perms=$(printf '%03d' "$file_perms" 2>/dev/null)
+    owner_perm=${file_perms:0:1}
+    group_perm=${file_perms:1:1}
+    other_perm=${file_perms:2:1}
+
+    # World-readable (other read bit) means UID/GID 1000 can read it too.
+    case "$other_perm" in 4|5|6|7) return 0 ;; esac
+    # Owned by UID 1000 with the owner read bit set.
+    if [ "$file_uid" = "1000" ]; then
+        case "$owner_perm" in 4|5|6|7) return 0 ;; esac
+    fi
+    # Owned by GID 1000 with the group read bit set.
+    if [ "$file_gid" = "1000" ]; then
+        case "$group_perm" in 4|5|6|7) return 0 ;; esac
+    fi
+    return 1
+}
+
 # Check for user-managed TLS certificates
 TLS_VOLUME_MOUNT=""
 SETUP_DATA_ABS=$(cd $SETUP_DATA && pwd)
 if [ -f $SETUP_DATA/server_ssl_cert/cert.pem ] && \
    [ -f $SETUP_DATA/server_ssl_cert/privatekey.pem ]; then
     echo "Using user-managed TLS certificates from server_ssl_cert directory."
+    if [ "$CONTAINERMGR" != "podman" ] || [ "$(id -u)" -eq 0 ]; then
+        for cert_file in cert.pem privatekey.pem; do
+            if ! readable_by_sandfly_user "$SETUP_DATA/server_ssl_cert/$cert_file"; then
+                echo ""
+                echo "********************************** ERROR **********************************"
+                echo "*                                                                         *"
+                echo "* The TLS certificate file at:                                            *"
+                printf "*     %-67s *\n" "$SETUP_DATA/server_ssl_cert/$cert_file"
+                echo "* is not readable by UID 1000 or GID 1000.                                *"
+                echo "*                                                                         *"
+                echo "* Sandfly runs as user 1000:1000 inside the container and must be able to *"
+                echo "* read this file. For example, set the file's group to 1000 and make it   *"
+                echo "* group readable:                                                         *"
+                printf "*     %-67s *\n" "sudo chgrp 1000 $SETUP_DATA/server_ssl_cert/$cert_file"
+                printf "*     %-67s *\n" "sudo chmod g+r $SETUP_DATA/server_ssl_cert/$cert_file"
+                echo "*                                                                         *"
+                echo "********************************** ERROR **********************************"
+                echo ""
+                exit 1
+            fi
+        done
+    fi
     TLS_VOLUME_MOUNT="-v $SETUP_DATA_ABS/server_ssl_cert:/etc/sandflytls:$VOLUME_MOUNT_FLAGS"
 fi
 
@@ -137,7 +192,6 @@ $CONTAINERMGR run -v /dev/urandom:/dev/random:ro \
 $TLS_VOLUME_MOUNT \
 --env-file "${SETUP_DATA}/config.server.env" \
 ${HTTPS_PORT_REDIRECT_ARG} \
---disable-content-trust \
 --restart=always \
 --security-opt="no-new-privileges:true" \
 --network sandfly-net \
@@ -171,9 +225,9 @@ if [ "$CONTAINERMGR" = "podman" ]; then
     echo "LogDriver=json-file" >> $CONTAINER_FILE
     echo "Network=sandfly-net" >> $CONTAINER_FILE
     if [ "$t_cgroup_mgr" != "systemd" ]; then
-        echo "PodmanArgs=--cgroups=enabled --disable-content-trust --log-opt 'max-size=${LOG_MAX_SIZE}' --log-opt 'max-file=5'" >> $CONTAINER_FILE
+        echo "PodmanArgs=--cgroups=enabled --log-opt 'max-size=${LOG_MAX_SIZE}' --log-opt 'max-file=5'" >> $CONTAINER_FILE
     else
-        echo "PodmanArgs=--disable-content-trust --log-opt 'max-size=${LOG_MAX_SIZE}' --log-opt 'max-file=5'" >> $CONTAINER_FILE
+        echo "PodmanArgs=--log-opt 'max-size=${LOG_MAX_SIZE}' --log-opt 'max-file=5'" >> $CONTAINER_FILE
     fi
     echo "PublishPort=${SANDFLY_HTTPS_PORT}:8443" >> $CONTAINER_FILE
     echo "PublishPort=${SANDFLY_HTTP_PORT}:8000" >> $CONTAINER_FILE

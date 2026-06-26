@@ -27,13 +27,13 @@ fi
 # (no volume yet) default to Postgres 18.
 NEW_INSTALL=false
 if $CONTAINERMGR inspect sandfly-pg18-db-vol >/dev/null 2>&1; then
-    VERSION=18.2
+    VERSION=18.4
     VOLNAME=sandfly-pg18-db-vol
 elif $CONTAINERMGR inspect sandfly-pg14-db-vol >/dev/null 2>&1; then
-    VERSION=14.21
+    VERSION=14.23
     VOLNAME=sandfly-pg14-db-vol
 else
-    VERSION=18.2
+    VERSION=18.4
     VOLNAME=sandfly-pg18-db-vol
     NEW_INSTALL=true
 fi

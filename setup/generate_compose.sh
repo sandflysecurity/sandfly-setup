@@ -121,9 +121,6 @@ fi
 
 if [ $? -eq 0 ]; then
     echo ""
-    echo "Docker compose and environment files generated in"
-    echo "  $(readlink -f "$SETUP_DATA_DIR")"
-    echo ""
     echo "To start Sandfly, navigate to the directory ${SETUP_DATA_DIR}"
     echo ""
     echo "To run both the Sandfly server and nodes on this system, use the default"

@@ -81,7 +81,6 @@ fi
 $CONTAINERMGR run -v /dev/urandom:/dev/random:ro \
 --label sandfly-node \
 --env-file "${SETUP_DATA}/config.node.env" \
---disable-content-trust \
 --restart=always \
 --security-opt="no-new-privileges:true" \
 --log-driver json-file \
@@ -115,9 +114,9 @@ if [ "$CONTAINERMGR" = "podman" ]; then
                 echo "Environment=LOCAL_SERVER=true" >> $CONTAINER_FILE
             fi
             if [ "$t_cgroup_mgr" != "systemd" ]; then
-                echo "PodmanArgs=--cgroups=enabled --disable-content-trust --log-opt 'max-size=${LOG_MAX_SIZE}' --log-opt 'max-file=5'" >> $CONTAINER_FILE
+                echo "PodmanArgs=--cgroups=enabled --log-opt 'max-size=${LOG_MAX_SIZE}' --log-opt 'max-file=5'" >> $CONTAINER_FILE
             else
-                echo "PodmanArgs=--disable-content-trust --log-opt 'max-size=${LOG_MAX_SIZE}' --log-opt 'max-file=5'" >> $CONTAINER_FILE
+                echo "PodmanArgs=--log-opt 'max-size=${LOG_MAX_SIZE}' --log-opt 'max-file=5'" >> $CONTAINER_FILE
             fi
             echo "User=sandfly" >> $CONTAINER_FILE
             echo "Volume=/dev/urandom:/dev/random:ro" >> $CONTAINER_FILE
