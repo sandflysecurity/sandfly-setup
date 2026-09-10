@@ -7,7 +7,7 @@ info:
     name: Sandfly Security, Ltd.
     url: https://www.sandflysecurity.com
   title: Sandfly API
-  version: 5.8.1
+  version: 5.8.2
 servers:
   - url: https://{sandfly-api-host}/v4
 security:
@@ -5855,7 +5855,7 @@ paths:
           name: type
           required: true
           schema:
-            $ref: "#/components/schemas/SshMode"
+            $ref: "#/components/schemas/SshGraphType"
         - description: The ID of the entity of the root graph node
           in: path
           name: id
@@ -11803,17 +11803,17 @@ components:
         - $ref: "#/components/schemas/ResultEngineFile"
         - $ref: "#/components/schemas/ResultEngineKModule"
         - $ref: "#/components/schemas/ResultEngineLastLog"
-        - $ref: "#/components/schemas/ResultEngineLastLog"
-        - $ref: "#/components/schemas/ResultEngineLastLog"
+        - $ref: "#/components/schemas/ResultEngineLogTamperingLastLogHistoryMissingRecord"
+        - $ref: "#/components/schemas/ResultEngineLogTamperingLastLogWtmpMissingRecord"
         - $ref: "#/components/schemas/ResultEngineOsIdentify"
         - $ref: "#/components/schemas/ResultEngineProcess"
-        - $ref: "#/components/schemas/ResultEngineProcess"
-        - $ref: "#/components/schemas/ResultEngineProcess"
-        - $ref: "#/components/schemas/ResultEngineProcess"
+        - $ref: "#/components/schemas/ResultEngineProcessMasqueradeBinaryMismatched"
+        - $ref: "#/components/schemas/ResultEngineProcessMasqueradeBinaryRenamed"
+        - $ref: "#/components/schemas/ResultEngineProcessMasqueradeMixedCase"
         - $ref: "#/components/schemas/ResultEngineSystemdSession"
         - $ref: "#/components/schemas/ResultEngineSystemd"
-        - $ref: "#/components/schemas/ResultEngineUser"
-        - $ref: "#/components/schemas/ResultEngineUser"
+        - $ref: "#/components/schemas/ResultEngineUserPasswordAuditor"
+        - $ref: "#/components/schemas/ResultEngineUserPasswordHashDuplicates"
         - $ref: "#/components/schemas/ResultEngineUser"
         - $ref: "#/components/schemas/ResultEngineUtmp"
         - $ref: "#/components/schemas/ResultEngineWtmp"
