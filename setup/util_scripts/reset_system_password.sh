@@ -20,7 +20,12 @@ SETUP_DATA=../setup_data
 VERSION=${SANDFLY_VERSION:-$(cat ../../VERSION)}
 IMAGE_BASE=${SANDFLY_IMAGE_BASE:-quay.io/sandfly}
 
-$CONTAINERMGR network create sandfly-net 2>/dev/null
+../setup_scripts/create_sandfly_net.sh
+if [ "$?" -ne 0 ]; then
+  echo "Error creating sandfly-net."
+  exit 1
+fi
+
 $CONTAINERMGR rm sandfly-server-mgmt 2>/dev/null
 
 $CONTAINERMGR run --name sandfly-server-mgmt \

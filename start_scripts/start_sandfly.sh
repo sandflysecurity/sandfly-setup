@@ -27,6 +27,15 @@ if [ ! -f ../setup/setup_data/config.server.env -a ! -f ../setup/setup_data/conf
     exit 1
 fi
 
+# Make sure we are using 'pasta' as the default rootless network manager to support IPv6
+if [ "$CONTAINERMGR" = "podman" ]; then
+  ../setup/setup_scripts/podman_rootless_network_cmd.sh
+  if [ "$?" -ne 0 ]; then
+    echo "WARNING: must use 'pasta' as the rootlessNetworkCmd to support IPv6."
+    # Just continue with existing network even if it isn't pasta
+  fi
+fi
+
 ### Start Postgres if not already running
 esresult=$($CONTAINERMGR inspect --format="{{.State.Running}}" sandfly-postgres 2> /dev/null)
 if [ "${esresult}" != "true" ]; then

@@ -64,5 +64,22 @@ $CONTAINERMGR rmi -f $($CONTAINERMGR images quay.io/sandfly/sandfly -q) 2>/dev/n
 $CONTAINERMGR rmi $($CONTAINERMGR images docker.io/library/postgres -q) 2>/dev/null
 $CONTAINERMGR rmi $($CONTAINERMGR images postgres -q) 2>/dev/null
 
+# Fetch and loop through each image reference to account for podman unable to delete
+# image with more than one tag error
+if [ "$CONTAINERMGR" = "podman" ]; then
+    $CONTAINERMGR images postgres --format "{{.Repository}}:{{.Tag}}" | while read -r image; do
+        # Skip "<none>:<none>" dangling/intermediae images
+        if [[ "$image" != "<none>:<none>" ]]; then
+            $CONTAINERMGR rmi $image
+        fi
+    done
+fi
+
 # Clean up anything left dangling.
 $CONTAINERMGR image prune -f 2>/dev/null
+
+# Delete the sandfly network
+$CONTAINERMGR network rm sandfly-net 2>/dev/null
+
+# Always return 0, even if the network rm failed
+exit 0

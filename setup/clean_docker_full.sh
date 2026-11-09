@@ -49,3 +49,9 @@ $CONTAINERMGR stop $($CONTAINERMGR ps -a -q) 2>/dev/null
 $CONTAINERMGR rm -f $($CONTAINERMGR ps -a -q) 2>/dev/null
 # Delete all images
 $CONTAINERMGR rmi -f $($CONTAINERMGR images -q) 2>/dev/null
+
+# Delete the sandfly network
+$CONTAINERMGR network rm sandfly-net 2>/dev/null
+
+# Always return 0, even if the network rm failed
+exit 0

@@ -23,13 +23,16 @@ fi
 PG_VERSION_14=$(grep -oP 'VERSION=\K(14\.[0-9]+)' ../../start_scripts/start_postgres.sh | head -n1)
 PG_VERSION_18=$(grep -oP 'VERSION=\K(18\.[0-9]+)' ../../start_scripts/start_postgres.sh | head -n1)
 
-# Determine postgres version based on presence of existing volume
-if $CONTAINERMGR inspect sandfly-pg18-db-vol >/dev/null 2>&1; then
-    PG_VERSION=$PG_VERSION_18
-elif $CONTAINERMGR inspect sandfly-pg14-db-vol >/dev/null 2>&1; then
-    PG_VERSION=$PG_VERSION_14
-else
-    PG_VERSION=$PG_VERSION_18
+# Determine postgres version(s) needed based on the existing volume, using
+# the same volume precedence as start_postgres.sh. A legacy pg14 volume needs
+# both images: Postgres 14 until it is upgraded (and to run the upgrade), and
+# Postgres 18 once upgrade_postgres.sh has upgraded its data in place. All
+# other volumes (or a new install) need only Postgres 18.
+PG_VERSIONS="$PG_VERSION_18"
+if ! $CONTAINERMGR volume inspect sandfly-pg-db-vol >/dev/null 2>&1 && \
+        ! $CONTAINERMGR volume inspect sandfly-pg18-db-vol >/dev/null 2>&1 && \
+        $CONTAINERMGR volume inspect sandfly-pg14-db-vol >/dev/null 2>&1; then
+    PG_VERSIONS="$PG_VERSION_14 $PG_VERSION_18"
 fi
 
 NEED_IMAGES=0
@@ -39,10 +42,12 @@ if [ "$?" -ne 0 ]; then
     NEED_IMAGES=1
 fi
 
-$CONTAINERMGR inspect docker.io/library/postgres:${PG_VERSION} >/dev/null 2>&1
-if [ "$?" -ne 0 ]; then
-    NEED_IMAGES=1
-fi
+for PG_VERSION in $PG_VERSIONS; do
+    $CONTAINERMGR inspect docker.io/library/postgres:${PG_VERSION} >/dev/null 2>&1
+    if [ "$?" -ne 0 ]; then
+        NEED_IMAGES=1
+    fi
+done
 
 # If either image didn't exist, load the bundle.
 if [ "$NEED_IMAGES" -gt 0 ]; then
@@ -74,9 +79,13 @@ if [ "$NEED_IMAGES" -gt 0 ]; then
     # If restoring with podman, the postgres image may not get restored with
     # the prefix docker.io/library. Look for the right postgres image version
     # and tag it properly if it's not already there.
-    $CONTAINERMGR inspect docker.io/library/postgres:${PG_VERSION} >/dev/null 2>&1
-    if [ "$?" -ne 0 ]; then
-        postgres_id=$($CONTAINERMGR images -q postgres:${PG_VERSION})
-        $CONTAINERMGR tag $postgres_id docker.io/library/postgres:${PG_VERSION}
-    fi
+    for PG_VERSION in $PG_VERSIONS; do
+        $CONTAINERMGR inspect docker.io/library/postgres:${PG_VERSION} >/dev/null 2>&1
+        if [ "$?" -ne 0 ]; then
+            postgres_id=$($CONTAINERMGR images -q postgres:${PG_VERSION})
+            if [ -n "$postgres_id" ]; then
+                $CONTAINERMGR tag $postgres_id docker.io/library/postgres:${PG_VERSION}
+            fi
+        fi
+    done
 fi

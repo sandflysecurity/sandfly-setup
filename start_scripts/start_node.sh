@@ -9,13 +9,6 @@ SETUP_DATA=../setup/setup_data
 VERSION=${SANDFLY_VERSION:-$(cat ../VERSION)}
 IMAGE_BASE=${SANDFLY_IMAGE_BASE:-quay.io/sandfly}
 
-# Use valid (#m or #g) env variable, otherwise the Sandfly default.
-if  [[ "${SANDFLY_LOG_MAX_SIZE}" =~ ^[1-9][0-9]*[m|g]$ ]]; then
-  LOG_MAX_SIZE=${SANDFLY_LOG_MAX_SIZE}
-else
-  LOG_MAX_SIZE="100m"
-fi
-
 # Remove old scripts
 ../setup/setup_scripts/clean_scripts.sh
 
@@ -64,6 +57,15 @@ if [ "$?" -ne 0 ]; then
   exit 1
 fi
 
+# Make sure we are using 'pasta' as the default rootless network manager to support IPv6
+if [ "$CONTAINERMGR" = "podman" ]; then
+  ../setup/setup_scripts/podman_rootless_network_cmd.sh
+  if [ "$?" -ne 0 ]; then
+    echo "WARNING: must use 'pasta' as the rootlessNetworkCmd to support IPv6."
+    # Just continue with existing network even if it isn't pasta
+  fi
+fi
+
 # If the node is running on the server (judging by the presence of the server
 # config file), use internal Docker network to communicate with the server.
 # We will pass in an environment variable to the startup script that will
@@ -75,7 +77,26 @@ if [ -f $SETUP_DATA/config.server.env ]; then
   echo "         same host as the Sandfly Server."
   echo
 
-  EXTRA_PARAMS="--network sandfly-net -e LOCAL_SERVER=true"
+  EXTRA_PARAMS="-e LOCAL_SERVER=true"
+fi
+
+# Use valid (#m or #g) env variable, otherwise check the config file,
+# last resort use the Sandfly default.
+if  [[ "${SANDFLY_LOG_MAX_SIZE}" =~ ^[1-9][0-9]*[mg]$ ]]; then
+  LOG_MAX_SIZE=${SANDFLY_LOG_MAX_SIZE}
+else
+  ENV_LOG_MAX_SIZE=$(grep "^DOCKER_LOG_MAX_SIZE=" $SETUP_DATA/config.node.env | tail -n 1 | cut -d '=' -f 2 | tr -d '[:space:]')
+  if  [[ "${ENV_LOG_MAX_SIZE}" =~ ^[1-9][0-9]*[mg]$ ]]; then
+    LOG_MAX_SIZE=${ENV_LOG_MAX_SIZE}
+  else
+    LOG_MAX_SIZE="100m"
+  fi
+fi
+
+../setup/setup_scripts/create_sandfly_net.sh
+if [ "$?" -ne 0 ]; then
+  echo "Error creating sandfly-net."
+  exit 1
 fi
 
 $CONTAINERMGR run -v /dev/urandom:/dev/random:ro \
@@ -87,6 +108,7 @@ $CONTAINERMGR run -v /dev/urandom:/dev/random:ro \
 --log-opt max-size=${LOG_MAX_SIZE} \
 --log-opt max-file=5 \
 --user sandfly:sandfly \
+--network sandfly-net \
 $EXTRA_PARAMS \
 -d $IMAGE_BASE/sandfly${IMAGE_SUFFIX}:"$VERSION" /opt/sandfly/start_node.sh
 
@@ -109,8 +131,8 @@ if [ "$CONTAINERMGR" = "podman" ]; then
             echo "Image=$IMAGE_BASE/sandfly${IMAGE_SUFFIX}:$VERSION" >> $CONTAINER_FILE
             echo "Label=sandfly-node=" >> $CONTAINER_FILE
             echo "LogDriver=json-file" >> $CONTAINER_FILE
+            echo "Network=sandfly-net" >> $CONTAINER_FILE
             if [ -f sandfly-server.container ]; then
-                echo "Network=sandfly-net" >> $CONTAINER_FILE
                 echo "Environment=LOCAL_SERVER=true" >> $CONTAINER_FILE
             fi
             if [ "$t_cgroup_mgr" != "systemd" ]; then
@@ -145,7 +167,10 @@ if [ "$CONTAINERMGR" = "podman" ]; then
                 echo "*** Linger Status: [$linger_status]"
                 if [ "$linger_status" = "no" ]; then
                     echo "*** Enable Linger for user $USER"
-                    loginctl enable-linger $USER
+                    loginctl enable-linger $USER 2>/dev/null
+                    if [ $? -ne 0 ]; then
+                        sudo loginctl enable-linger $USER
+                    fi
                 fi
             fi
             if [ ! -d $TARGET_DIR ]; then

@@ -61,7 +61,7 @@ echo ""
 read -p "Are you sure you want to do this (type YES)? " RESPONSE
 if [[ "$RESPONSE" = "YES" ]]; then
     echo "db clear started"
-    $CONTAINERMGR exec sandfly-postgres psql -U sandfly -c "TRUNCATE TABLE results, results_json, results_updates, audit_log, errors;"
+    $CONTAINERMGR exec sandfly-postgres psql -U sandfly -c "TRUNCATE TABLE results, results_json, results_sandflies, results_sandflies_updates, audit_log, errors;"
 else
     echo "Aborting clear init."
 fi

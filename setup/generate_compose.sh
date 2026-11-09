@@ -118,27 +118,29 @@ if [ "$?" -ne 0 ]; then
 fi
 
 ./setup_scripts/setuphelper compose -postgres-version "$PG_VERSION_18" -output-dir "$SETUP_DATA_DIR" "$@"
-
-if [ $? -eq 0 ]; then
-    echo ""
-    echo "To start Sandfly, navigate to the directory ${SETUP_DATA_DIR}"
-    echo ""
-    echo "To run both the Sandfly server and nodes on this system, use the default"
-    echo "'docker-compose.yaml' file:"
-    echo "  cd ${SETUP_DATA_DIR}"
-    echo "  docker compose up -d"
-    echo ""
-    echo "To run just the Sandfly server on this system, use the server only"
-    echo "'docker-compose-server_only.yaml' file:"
-    echo "  cd ${SETUP_DATA_DIR}"
-    echo "  docker compose -f docker-compose-server_only.yaml up -d"
-    echo ""
-    echo "To run the Sandfly nodes on a different system, copy the node only"
-    echo "'docker-compose-node_only.yaml' file and the 'config.node.env' file"
-    echo "to the target system and use the command:"
-    echo "  docker compose -f docker-compose-node_only.yaml up -d"
-    echo ""
-    echo "For more information see the documentation at the following URL:"
-    echo "  https://docs.sandflysecurity.com/"
-    echo ""
+rc=$?
+if [ $rc -ne 0 ]; then
+    exit $rc
 fi
+
+echo ""
+echo "To start Sandfly, navigate to the directory ${SETUP_DATA_DIR}"
+echo ""
+echo "To run both the Sandfly server and nodes on this system, use the default"
+echo "'docker-compose.yaml' file:"
+echo "  cd ${SETUP_DATA_DIR}"
+echo "  docker compose up -d"
+echo ""
+echo "To run just the Sandfly server on this system, use the server only"
+echo "'docker-compose-server_only.yaml' file:"
+echo "  cd ${SETUP_DATA_DIR}"
+echo "  docker compose -f docker-compose-server_only.yaml up -d"
+echo ""
+echo "To run the Sandfly nodes on a different system, copy the node only"
+echo "'docker-compose-node_only.yaml' file and the 'config.node.env' file"
+echo "to the target system and use the command:"
+echo "  docker compose -f docker-compose-node_only.yaml up -d"
+echo ""
+echo "For more information see the documentation at the following URL:"
+echo "  https://docs.sandflysecurity.com/"
+echo ""

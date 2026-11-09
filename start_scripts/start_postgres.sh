@@ -22,19 +22,27 @@ if [ -n "$($CONTAINERMGR ps -q -f name=^/sandfly-postgres$)" ]; then
   exit 1
 fi
 
-# Determine which Postgres version and volume to use. If a pg18 volume
-# exists, use it. Otherwise check for a legacy pg14 volume. New installs
-# (no volume yet) default to Postgres 18.
+# Postgres versions. Other scripts (load_images.sh, upgrade_postgres.sh,
+# generate_compose.sh, etc.) read these values from this file.
+PG14_VERSION=14.24
+PG18_VERSION=18.6
+
+# Determine which volume to use. New installs use sandfly-pg-db-vol, which
+# isn't tied to a Postgres version since upgrades happen in place. Older
+# installs use a legacy volume named for the Postgres version they were
+# installed with: sandfly-pg18-db-vol, or sandfly-pg14-db-vol. Note that a
+# pg14 volume may hold Postgres 18 data if it was upgraded in place by
+# upgrade_postgres.sh. The Postgres version is determined from the volume's
+# contents below, not from its name.
 NEW_INSTALL=false
-if $CONTAINERMGR inspect sandfly-pg18-db-vol >/dev/null 2>&1; then
-    VERSION=18.6
+if $CONTAINERMGR volume inspect sandfly-pg-db-vol >/dev/null 2>&1; then
+    VOLNAME=sandfly-pg-db-vol
+elif $CONTAINERMGR volume inspect sandfly-pg18-db-vol >/dev/null 2>&1; then
     VOLNAME=sandfly-pg18-db-vol
-elif $CONTAINERMGR inspect sandfly-pg14-db-vol >/dev/null 2>&1; then
-    VERSION=14.24
+elif $CONTAINERMGR volume inspect sandfly-pg14-db-vol >/dev/null 2>&1; then
     VOLNAME=sandfly-pg14-db-vol
 else
-    VERSION=18.6
-    VOLNAME=sandfly-pg18-db-vol
+    VOLNAME=sandfly-pg-db-vol
     NEW_INSTALL=true
 fi
 
@@ -44,6 +52,100 @@ if [ "$?" -ne 0 ]; then
   echo "Error loading container images."
   exit 1
 fi
+
+# Inspect the contents of an existing volume to determine which Postgres
+# version and directory layout it holds. Prints one of: 14, 18, empty,
+# upgrading, or unknown.
+#
+# Postgres 14 data lives at the root of the volume, which is mounted at
+# /var/lib/postgresql/data. Postgres 18 data lives in 18/docker inside the
+# volume, which is mounted at /var/lib/postgresql. This is the layout the
+# official Postgres 18+ images expect, and it allows future major version
+# upgrades to be done in place with "pg_upgrade --link".
+#
+# Earlier versions of this script mounted sandfly-pg18-db-vol at
+# /var/lib/postgresql/data like Postgres 14. If Postgres 18 data is found at
+# the root of the volume, it is moved into 18/docker. The move is a handful
+# of renames within the volume, so it is instant regardless of database size,
+# and resumes safely if interrupted.
+probe_volume() {
+    local image=$1
+    $CONTAINERMGR run --rm --network none \
+        --mount type=volume,source=${VOLNAME},target=/sfvol \
+        --entrypoint sh "$image" -c '
+set -e
+V=/sfvol
+S=$V/.sandfly-relayout
+if [ -d "$S" ] || [ "$(cat $V/PG_VERSION 2>/dev/null)" = "18" ]; then
+    echo "*** Moving Postgres 18 data to 18/docker within the volume" >&2
+    mkdir -p "$S"
+    chown --reference="$V" "$S"
+    chmod 700 "$S"
+    find "$V" -mindepth 1 -maxdepth 1 ! -name .sandfly-relayout ! -name 18 \
+        -exec mv -t "$S" {} +
+    mkdir -p "$V/18"
+    chown --reference="$V" "$V/18"
+    mv -T "$S" "$V/18/docker"
+fi
+if [ -e "$V/14" ] || [ -e "$V/.sandfly-upgrade-stage" ] || \
+        [ -e "$V/18/.sandfly-upgrade-done" ]; then
+    echo upgrading
+elif [ -s "$V/18/docker/PG_VERSION" ]; then
+    cat "$V/18/docker/PG_VERSION"
+elif [ -s "$V/PG_VERSION" ]; then
+    cat "$V/PG_VERSION"
+elif [ -z "$(ls -A "$V")" ]; then
+    echo empty
+else
+    echo unknown
+fi'
+}
+
+if [ "$NEW_INSTALL" = "true" ]; then
+    DATA_VERSION=18
+elif [ "$VOLNAME" = "sandfly-pg14-db-vol" ]; then
+    DATA_VERSION=$(probe_volume ${IMAGE_BASE}/postgres:${PG14_VERSION})
+    # An empty pg14 volume gets initialized as Postgres 14.
+    [ "$DATA_VERSION" = "empty" ] && DATA_VERSION=14
+else
+    DATA_VERSION=$(probe_volume ${IMAGE_BASE}/postgres:${PG18_VERSION})
+    # An empty volume gets initialized as Postgres 18.
+    [ "$DATA_VERSION" = "empty" ] && DATA_VERSION=18
+fi
+
+case "$DATA_VERSION" in
+    18)
+        VERSION=$PG18_VERSION
+        MOUNT_TARGET=/var/lib/postgresql
+        PG_DATA_DIR=/var/lib/postgresql/18/docker
+        ;;
+    14)
+        VERSION=$PG14_VERSION
+        MOUNT_TARGET=/var/lib/postgresql/data
+        PG_DATA_DIR=/var/lib/postgresql/data
+        echo ""
+        echo "*** NOTE: Sandfly is using Postgres 14. Please upgrade to Postgres 18"
+        echo "*** with setup/util_scripts/upgrade_postgres.sh at your convenience."
+        echo ""
+        ;;
+    upgrading)
+        echo ""
+        echo "********************************** ERROR **********************************"
+        echo "*                                                                         *"
+        echo "* A Postgres upgrade was started on the ${VOLNAME} volume        *"
+        echo "* but did not finish. Please run upgrade_postgres.sh in the               *"
+        echo "* setup/util_scripts directory again to complete it.                      *"
+        echo "*                                                                         *"
+        echo "********************************** ERROR **********************************"
+        echo ""
+        exit 1
+        ;;
+    *)
+        echo "ERROR: Unable to determine the Postgres version of the data in the" >&2
+        echo "${VOLNAME} volume (got: '${DATA_VERSION}')." >&2
+        exit 1
+        ;;
+esac
 
 # After the first time Postgres starts, the admin password will be set in the
 # database in the Docker volume we use, and setting the password through the
@@ -61,7 +163,7 @@ fi
 
 # Pool sizes are stored in the database config table and managed through
 # the API. Use defaults here for Postgres max_connections calculation.
-POOL_SIZE=20
+POOL_SIZE=50
 POOL_SIZE_NODES=30
 RESULT_WORKERS=20
 
@@ -114,7 +216,12 @@ if [[ $parallel_workers -gt 4 ]]; then
     # cap parallel_workers (per task) at 4
     parallel_workers=4
 fi
-work_mem=$(( ($ram_postgres - $shared_buffers) / ($max_connections * 3) / $parallel_workers ))
+# work_mem is sized for a fixed number of connections rather than
+# max_connections. Most of the interactive pool sits idle or runs short
+# queries, so growing the pool shouldn't shrink the memory available to the
+# queries that do sort and hash large result sets.
+work_mem_connections=50
+work_mem=$(( ($ram_postgres - $shared_buffers) / ($work_mem_connections * 3) / $parallel_workers ))
 if [[ $work_mem -lt 64 ]]; then
     # minimum of 64kB for work_mem
     work_mem=64
@@ -181,14 +288,22 @@ if [[ $diskuse -gt 85 ]]; then
     fi
 fi
 
-$CONTAINERMGR network create sandfly-net 2>/dev/null
-$CONTAINERMGR rm sandfly-postgres 2>/dev/null
+../setup/setup_scripts/create_sandfly_net.sh
+if [ "$?" -ne 0 ]; then
+  echo "Error creating sandfly-net."
+  exit 1
+fi
+
+# -v also removes any anonymous volumes attached to the old container. (Older
+# versions of this script left an anonymous volume behind on every start.)
+# Named volumes, such as our data volume, are never removed by -v.
+$CONTAINERMGR rm -v sandfly-postgres 2>/dev/null
 
 $CONTAINERMGR run \
---mount type=volume,source=${VOLNAME},target=/var/lib/postgresql/data \
+--mount type=volume,source=${VOLNAME},target=${MOUNT_TARGET} \
 -d \
 -e POSTGRES_PASSWORD="$POSTGRES_ADMIN_PASSWORD" \
--e PGDATA=/var/lib/postgresql/data \
+-e PGDATA=${PG_DATA_DIR} \
 --shm-size=${ram_total}k \
 --restart=always \
 --security-opt="no-new-privileges:true" \
@@ -234,7 +349,7 @@ if [ "$CONTAINERMGR" = "podman" ]; then
     echo "*** Generate $CONTAINER_FILE for sandfly-postgres"
     echo "[Container]" > $CONTAINER_FILE
     echo "ContainerName=sandfly-postgres" >> $CONTAINER_FILE
-    echo "Environment=POSTGRES_PASSWORD=${POSTGRES_ADMIN_PASSWORD} PGDATA=/var/lib/postgresql/data" >> $CONTAINER_FILE
+    echo "Environment=POSTGRES_PASSWORD=${POSTGRES_ADMIN_PASSWORD} PGDATA=${PG_DATA_DIR}" >> $CONTAINER_FILE
     echo "Exec=-c max_connections=$(($max_connections+10)) \
         -c shared_buffers=${shared_buffers}kB \
         -c effective_cache_size=${effective_cache_size}kB \
@@ -254,7 +369,7 @@ if [ "$CONTAINERMGR" = "podman" ]; then
     echo "Image=$IMAGE_BASE/postgres:$VERSION" >> $CONTAINER_FILE
     echo "Label=sandfly-postgres=" >> $CONTAINER_FILE
     echo "LogDriver=json-file" >> $CONTAINER_FILE
-    echo "Mount=type=volume,source=${VOLNAME},destination=/var/lib/postgresql/data" >> $CONTAINER_FILE
+    echo "Mount=type=volume,source=${VOLNAME},destination=${MOUNT_TARGET}" >> $CONTAINER_FILE
     echo "Network=sandfly-net" >> $CONTAINER_FILE
     if [ "$t_cgroup_mgr" != "systemd" ]; then
         echo "PodmanArgs=--cgroups=enabled --log-opt 'max-size=${LOG_MAX_SIZE}' --log-opt 'max-file=5' --tty" >> $CONTAINER_FILE
@@ -281,7 +396,10 @@ if [ "$CONTAINERMGR" = "podman" ]; then
         echo "*** Linger Status: [$linger_status]"
         if [ "$linger_status" = "no" ]; then
             echo "*** Enable Linger for user $USER"
-            loginctl enable-linger $USER
+            loginctl enable-linger $USER 2>/dev/null
+            if [ $? -ne 0 ]; then
+                sudo loginctl enable-linger $USER
+            fi
         fi
     fi
     if [ ! -d $TARGET_DIR ]; then

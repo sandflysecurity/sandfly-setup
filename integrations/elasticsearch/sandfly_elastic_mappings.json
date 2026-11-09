@@ -1055,6 +1055,49 @@
         }
        }
       },
+      "threat_feed": {
+       "properties": {
+        "description": {
+         "fields": {
+          "keyword": {
+           "ignore_above": 256,
+           "type": "keyword"
+          }
+         },
+         "type": "text"
+        },
+        "hash": {
+         "fields": {
+          "keyword": {
+           "ignore_above": 256,
+           "type": "keyword"
+          }
+         },
+         "type": "text"
+        },
+        "hash_type": {
+         "fields": {
+          "keyword": {
+           "ignore_above": 256,
+           "type": "keyword"
+          }
+         },
+         "type": "text"
+        },
+        "id": {
+         "type": "long"
+        },
+        "name": {
+         "fields": {
+          "keyword": {
+           "ignore_above": 256,
+           "type": "keyword"
+          }
+         },
+         "type": "text"
+        }
+       }
+      },
       "whitelisted": {
        "type": "boolean"
       }
@@ -2309,6 +2352,9 @@
   },
   "sandfly_results": {
    "properties": {
+    "artifact_id": {
+     "type": "long"
+    },
     "containerized": {
      "type": "boolean"
     },
@@ -2758,6 +2804,19 @@
         "drift_result": {
          "type": "boolean"
         },
+        "error": {
+         "properties": {
+          "message": {
+           "fields": {
+            "keyword": {
+             "ignore_above": 256,
+             "type": "keyword"
+            }
+           },
+           "type": "text"
+          }
+         }
+        },
         "explanation": {
          "fields": {
           "keyword": {
@@ -2769,6 +2828,9 @@
         },
         "file": {
          "properties": {
+          "analysis": {
+           "properties": {}
+          },
           "capabilities": {
            "properties": {
             "effective": {
@@ -3135,6 +3197,9 @@
           },
           "file": {
            "properties": {
+            "analysis": {
+             "properties": {}
+            },
             "capabilities": {
              "properties": {
               "effective": {
@@ -3953,6 +4018,33 @@
         },
         "match_hashes": {
          "properties": {
+          "base_moderate": {
+           "fields": {
+            "keyword": {
+             "ignore_above": 256,
+             "type": "keyword"
+            }
+           },
+           "type": "text"
+          },
+          "base_permissive": {
+           "fields": {
+            "keyword": {
+             "ignore_above": 256,
+             "type": "keyword"
+            }
+           },
+           "type": "text"
+          },
+          "base_strict": {
+           "fields": {
+            "keyword": {
+             "ignore_above": 256,
+             "type": "keyword"
+            }
+           },
+           "type": "text"
+          },
           "extra_values": {
            "fields": {
             "keyword": {
@@ -5152,6 +5244,9 @@
           },
           "file": {
            "properties": {
+            "analysis": {
+             "properties": {}
+            },
             "capabilities": {
              "properties": {
               "effective": {
@@ -6796,6 +6891,9 @@
             },
             "file": {
              "properties": {
+              "analysis": {
+               "properties": {}
+              },
               "capabilities": {
                "properties": {
                 "effective": {
@@ -8890,6 +8988,9 @@
               },
               "file": {
                "properties": {
+                "analysis": {
+                 "properties": {}
+                },
                 "capabilities": {
                  "properties": {
                   "effective": {
@@ -9273,6 +9374,9 @@
               },
               "file": {
                "properties": {
+                "analysis": {
+                 "properties": {}
+                },
                 "capabilities": {
                  "properties": {
                   "effective": {
@@ -9656,6 +9760,9 @@
               },
               "file": {
                "properties": {
+                "analysis": {
+                 "properties": {}
+                },
                 "capabilities": {
                  "properties": {
                   "effective": {
@@ -10039,6 +10146,9 @@
               },
               "file": {
                "properties": {
+                "analysis": {
+                 "properties": {}
+                },
                 "capabilities": {
                  "properties": {
                   "effective": {
@@ -10596,6 +10706,9 @@
                 },
                 "file": {
                  "properties": {
+                  "analysis": {
+                   "properties": {}
+                  },
                   "capabilities": {
                    "properties": {
                     "effective": {
@@ -12768,6 +12881,9 @@
               },
               "file": {
                "properties": {
+                "analysis": {
+                 "properties": {}
+                },
                 "capabilities": {
                  "properties": {
                   "effective": {
@@ -13240,6 +13356,9 @@
               },
               "file": {
                "properties": {
+                "analysis": {
+                 "properties": {}
+                },
                 "capabilities": {
                  "properties": {
                   "effective": {
@@ -13878,6 +13997,9 @@
     "last_seen": {
      "type": "date"
     },
+    "revision": {
+     "type": "unsigned_long"
+    },
     "sequence_id": {
      "type": "unsigned_long"
     },
@@ -13893,6 +14015,9 @@
    "properties": {
     "bits": {
      "type": "long"
+    },
+    "created_at": {
+     "type": "date"
     },
     "first_seen": {
      "type": "date"

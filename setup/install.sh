@@ -114,50 +114,29 @@ Welcome to the Sandfly $VERSION server setup.
 
 EOF
 
-# Sandfly Postgres Docker volumes already exists?
-$CONTAINERMGR inspect sandfly-pg14-db-vol >/dev/null 2>&1
-if [[ $? -eq 0 ]]
-then
-    echo ""
-    echo "********************************** ERROR **********************************"
-    echo "*                                                                         *"
-    echo "* Sandfly is already installed (the database Docker volume,               *"
-    echo "* sandfly-pg14-db-vol, exists).                                           *"
-    echo "*                                                                         *"
-    echo "* If you are upgrading to a new version of Sandfly, please follow the     *"
-    echo "* instructions at:                                                        *"
-    echo "* https://docs.sandflysecurity.com/docs/upgrading-sandfly                 *"
-    echo "*                                                                         *"
-    echo "* If you wish to completely delete your old Sandfly configuration and     *"
-    echo "* database, please use delete_sandfly_installation.sh in the util_scripts *"
-    echo "* directory.                                                              *"
-    echo "*                                                                         *"
-    echo "********************************** ERROR **********************************"
-    echo ""
-    exit 1
-fi
-
-$CONTAINERMGR inspect sandfly-pg18-db-vol >/dev/null 2>&1
-if [[ $? -eq 0 ]]
-then
-    echo ""
-    echo "********************************** ERROR **********************************"
-    echo "*                                                                         *"
-    echo "* Sandfly is already installed (the database Docker volume,               *"
-    echo "* sandfly-pg18-db-vol, exists).                                           *"
-    echo "*                                                                         *"
-    echo "* If you are upgrading to a new version of Sandfly, please follow the     *"
-    echo "* instructions at:                                                        *"
-    echo "* https://docs.sandflysecurity.com/docs/upgrading-sandfly                 *"
-    echo "*                                                                         *"
-    echo "* If you wish to completely delete your old Sandfly configuration and     *"
-    echo "* database, please use delete_sandfly_installation.sh in the util_scripts *"
-    echo "* directory.                                                              *"
-    echo "*                                                                         *"
-    echo "********************************** ERROR **********************************"
-    echo ""
-    exit 1
-fi
+# Sandfly Postgres Docker volume already exists? Check the current volume name
+# and the legacy version-specific names.
+for vol in sandfly-pg-db-vol sandfly-pg18-db-vol sandfly-pg14-db-vol; do
+    if $CONTAINERMGR volume inspect $vol >/dev/null 2>&1; then
+        echo ""
+        echo "********************************** ERROR **********************************"
+        echo "*                                                                         *"
+        echo "* Sandfly is already installed (the database Docker volume,               *"
+        printf "* %-72s*\n" "$vol, exists)."
+        echo "*                                                                         *"
+        echo "* If you are upgrading to a new version of Sandfly, please follow the     *"
+        echo "* instructions at:                                                        *"
+        echo "* https://docs.sandflysecurity.com/docs/upgrading-sandfly                 *"
+        echo "*                                                                         *"
+        echo "* If you wish to completely delete your old Sandfly configuration and     *"
+        echo "* database, please use delete_sandfly_installation.sh in the util_scripts *"
+        echo "* directory.                                                              *"
+        echo "*                                                                         *"
+        echo "********************************** ERROR **********************************"
+        echo ""
+        exit 1
+    fi
+done
 
 # Are we using Podman?
 if [ "$CONTAINERMGR" = "podman" ]; then
@@ -187,12 +166,13 @@ if [ "$CONTAINERMGR" = "podman" ]; then
         echo "* 1. Modify sysctl.conf to allow an unprivileged process to bind to       *"
         echo "*    ports 80 and 443 (requires root access via sudo)                     *"
         echo "* 2. Enable Linger mode for the current user to prevent containers from   *"
-        echo "*    shutting down at logout and to start containers at boot time         *"
+        echo "*    shutting down at logout and to start containers at boot time (may    *"
+        echo "*    require root access via sudo)                                        *"
         echo "* 3. Create container files in the ~/.config/containers/systemd folder    *"
         echo "*    to allow systemd to start the containers at boot time                *"
         echo "* 4. If Podman is version 5 or later and the default Rootless Network     *"
-        echo "*    Cmd is configured to use 'pasta' we will create or modify the        *"
-        echo "*    ~/.config/containers/containers.conf file to use 'slirp4netns'       *"
+        echo "*    Cmd is configured to use 'slirp4netns' we will create or modify the  *"
+        echo "*    ~/.config/containers/containers.conf file to use 'pasta'             *"
         echo "*    as the default_rootless_network_cmd.                                 *"
         echo "*                                                                         *"
         echo "********************************* WARNING *********************************"
@@ -209,7 +189,7 @@ if [ "$CONTAINERMGR" = "podman" ]; then
     # change unprivileged_port_start to allow non-root process to bind to ports
     #   80 and 443 (requires sudo)
     # enable Linger for non-root user
-    # configure 'slirp4netns' as the default_rootless_network_cmd
+    # configure 'pasta' as the default_rootless_network_cmd
     #
     if [ $(id -u) -ne 0 ]; then
         live_port_start=$(sudo sysctl --values net.ipv4.ip_unprivileged_port_start)
@@ -226,74 +206,20 @@ if [ "$CONTAINERMGR" = "podman" ]; then
             echo "net.ipv4.ip_unprivileged_port_start=80" | sudo tee -a /etc/sysctl.conf
         fi
 
-        echo "Enable Linger for user $USER"
-        loginctl enable-linger $USER
-
-        containers_conf=~/.config/containers/containers.conf
-        mkdir -p ~/.config/containers
-        podman_version=$(podman version -f '{{.Client.Version}}' 2>/dev/null)
-        podman_major_version=$(podman version -f '{{index (split .Client.Version ".") 0}}' 2>/dev/null)
-        if [ ! -z "${podman_major_version}" ]; then
-            if [ $podman_major_version -gt 4 ]; then
-                t_podman_network=$(podman info --format='{{.Host.RootlessNetworkCmd}}' 2>/dev/null)
-                echo "Podman rootless network cmd : $t_podman_network"
-                if [ ! "$t_podman_network" == "slirp4netns" ]; then
-                    if ! command -v slirp4netns >/dev/null 2>&1; then
-                        echo ""
-                        echo "********************************** ERROR **********************************"
-                        echo "*                                                                         *"
-                        echo "* slirp4netns is required for networking when using rootless Podman.      *"
-                        echo "*                                                                         *"
-                        echo "* Please install the slirp4netns package (e.g. 'dnf install slirp4netns') *"
-                        echo "* and try again.                                                          *"
-                        echo "*                                                                         *"
-                        echo "********************************** ERROR **********************************"
-                        echo ""
-                        exit 1
-                    fi
-                    echo "INFO: will use slirp4netns as rootlessNetworkCmd"
-                    if [ -f ${containers_conf} ]; then
-                        # Save a copy of the original containers.conf file
-                        cp -f -p -v ${containers_conf} ${containers_conf}.bak
-
-                        # Remove any previously configured default_rootless_network_cmd entries:
-                        sed -i '/^default_rootless_network_cmd/d' ${containers_conf}
-
-                        diff -c ${containers_conf}.bak ${containers_conf}
-
-                        # Make sure we have a [network] stanza in the containers.conf file
-                        t_network=$(grep "^\[network\]" ${containers_conf} | wc -l)
-                        if [ $t_network -eq 0 ]; then
-                            echo "[network]" >> ${containers_conf}
-                        fi
-
-                        # Configure slirp4netns as default_rootless_network_cmd
-                        t_count=$(grep "^#default_rootless_network_cmd =" ${containers_conf} | wc -l)
-                        if [ $t_count -ge 1 ]; then
-                            sed -i '/^#default_rootless_network_cmd/a default_rootless_network_cmd = "slirp4netns"' ${containers_conf}
-                        else
-                            sed -i '/^\[network\]/a default_rootless_network_cmd = "slirp4netns"' ${containers_conf}
-                        fi
-
-                        diff -c ${containers_conf}.bak ${containers_conf}
-                    else
-                        # Create the containers.conf file with [network] stanza
-                        echo "[network]" > ${containers_conf}
-                        sed -i '/^\[network\]/a default_rootless_network_cmd = "slirp4netns"' ${containers_conf}
-                    fi
-
-                    t_verify_network=$(podman info --format='{{.Host.RootlessNetworkCmd}}' 2>/dev/null)
-                    echo "Podman rootless network cmd : $t_verify_network"
-                    if [ ! "$t_verify_network" == "slirp4netns" ]; then
-                        echo ""
-                        echo "ERROR: must use slirp4netns as rootlessNetworkCmd, exit"
-                        echo ""
-                        exit 1
-                    fi
-                fi
-            else
-                echo "*** RootlessNetworkCmd not supported in Podman Version $podman_version"
+        linger_status=$(loginctl show-user $USER | grep ^Linger | awk -F= '{print $2}')
+        if [ "$linger_status" = "no" ]; then
+            echo "Enable Linger for user $USER"
+            loginctl enable-linger $USER 2>/dev/null
+            if [ $? -ne 0 ]; then
+                sudo loginctl enable-linger $USER
             fi
+        fi
+
+        # Make sure we are using 'pasta' as the default rootless network manager
+        ./setup_scripts/podman_rootless_network_cmd.sh
+        if [ "$?" -ne 0 ]; then
+            echo "Error must use 'pasta' as the rootlessNetworkCmd."
+            exit 1
         fi
     fi
 fi
@@ -306,7 +232,12 @@ Sandfly Image: $SANDFLY_MGMT_DOCKER_IMAGE
 
 EOF
 
-$CONTAINERMGR network create sandfly-net 2>/dev/null
+./setup_scripts/create_sandfly_net.sh
+if [ "$?" -ne 0 ]; then
+  echo "Error creating sandfly-net."
+  exit 1
+fi
+
 $CONTAINERMGR rm sandfly-server-mgmt 2>/dev/null
 
 # Load images if offline bundle is present and not already loaded

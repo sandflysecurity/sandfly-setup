@@ -30,7 +30,9 @@
 		"Tags": [
 			"sandflyTag1",
 			"SandflyTag2"
-		]
+		],
+		"Superseded": false,
+		"Revision": 99999
 	},
 	"ResultsData": {
 		"containerized": false,

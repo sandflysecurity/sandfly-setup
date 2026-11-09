@@ -131,10 +131,12 @@ Kubernetes manifest files for deploying Sandfly.
 EOF
 
 ./setup_scripts/$SETUPTOOL k8s -postgres-version "$PG_VERSION_18" -output-dir "$SETUP_DATA_DIR" "$@"
-
-if [ $? -eq 0 ]; then
-    echo ""
-    echo "K8s yaml files generated in"
-    echo "  $(readlink -f "$SETUP_DATA_DIR")"
-    echo ""
+rc=$?
+if [ $rc -ne 0 ]; then
+    exit $rc
 fi
+
+echo ""
+echo "K8s yaml files generated in"
+echo "  $(readlink -f "$SETUP_DATA_DIR")"
+echo ""

@@ -9,18 +9,6 @@ SETUP_DATA=../setup/setup_data
 VERSION=${SANDFLY_VERSION:-$(cat ../VERSION)}
 IMAGE_BASE=${SANDFLY_IMAGE_BASE:-quay.io/sandfly}
 
-# External ports to publish. Override to use non-standard ports, e.g.:
-#   SANDFLY_HTTPS_PORT=8443 SANDFLY_HTTP_PORT=8080 ./start_server.sh
-SANDFLY_HTTP_PORT=${SANDFLY_HTTP_PORT:-80}
-SANDFLY_HTTPS_PORT=${SANDFLY_HTTPS_PORT:-443}
-
-# Use valid (#m or #g) env variable, otherwise the Sandfly default.
-if  [[ "${SANDFLY_LOG_MAX_SIZE}" =~ ^[1-9][0-9]*[m|g]$ ]]; then
-  LOG_MAX_SIZE=${SANDFLY_LOG_MAX_SIZE}
-else
-  LOG_MAX_SIZE="100m"
-fi
-
 # Remove old scripts
 ../setup/setup_scripts/clean_scripts.sh
 
@@ -63,7 +51,7 @@ if [ -f $SETUP_DATA/config.server.json ] && \
        "$SETUP_DATA/config.server.json.retired"
 fi
 
-if [ ! -f ../setup/setup_data/config.server.env ]; then
+if [ ! -f $SETUP_DATA/config.server.env ]; then
     echo ""
     echo "********************************** ERROR **********************************"
     echo "*                                                                         *"
@@ -180,12 +168,51 @@ if [ -f $SETUP_DATA/server_ssl_cert/cert.pem ] && \
     TLS_VOLUME_MOUNT="-v $SETUP_DATA_ABS/server_ssl_cert:/etc/sandflytls:$VOLUME_MOUNT_FLAGS"
 fi
 
+# Use valid (#m or #g) env variable, otherwise check the env file,
+# last resort use the Sandfly default.
+if  [[ "${SANDFLY_LOG_MAX_SIZE}" =~ ^[1-9][0-9]*[mg]$ ]]; then
+  LOG_MAX_SIZE=${SANDFLY_LOG_MAX_SIZE}
+else
+  ENV_LOG_MAX_SIZE=$(grep "^DOCKER_LOG_MAX_SIZE=" $SETUP_DATA/config.server.env | tail -n 1 | cut -d '=' -f 2 | tr -d '[:space:]')
+  if  [[ "${ENV_LOG_MAX_SIZE}" =~ ^[1-9][0-9]*[mg]$ ]]; then
+    LOG_MAX_SIZE=${ENV_LOG_MAX_SIZE}
+  else
+    LOG_MAX_SIZE="100m"
+  fi
+fi
+
+# External ports to publish. Override to use non-standard ports, e.g.:
+#   SANDFLY_HTTPS_PORT=8443 SANDFLY_HTTP_PORT=8080 ./start_server.sh
+
+if [ -z "${SANDFLY_HTTPS_PORT}" ]; then
+  ENV_HTTPS_PORT=$(grep "^DOCKER_HTTPS_PORT=" $SETUP_DATA/config.server.env | tail -n 1 | cut -d '=' -f 2 | tr -d '[:space:]')
+  if [ ! -z "${ENV_HTTPS_PORT}" ]; then
+    SANDFLY_HTTPS_PORT=${ENV_HTTPS_PORT}
+  else
+    SANDFLY_HTTPS_PORT=443
+  fi
+fi
+
+if [ -z "${SANDFLY_HTTP_PORT}" ]; then
+  ENV_HTTP_PORT=$(grep "^DOCKER_HTTP_PORT=" $SETUP_DATA/config.server.env | tail -n 1 | cut -d '=' -f 2 | tr -d '[:space:]')
+  if [ ! -z "${ENV_HTTP_PORT}" ]; then
+    SANDFLY_HTTP_PORT=${ENV_HTTP_PORT}
+  else
+    SANDFLY_HTTP_PORT=80
+  fi
+fi
+
 HTTPS_PORT_REDIRECT_ARG=""
 if [ "$SANDFLY_HTTPS_PORT" != "443" ]; then
     HTTPS_PORT_REDIRECT_ARG="-e SF_HTTP_REDIRECT_PORT=$SANDFLY_HTTPS_PORT"
 fi
 
-$CONTAINERMGR network create sandfly-net 2>/dev/null
+../setup/setup_scripts/create_sandfly_net.sh
+if [ "$?" -ne 0 ]; then
+  echo "Error creating sandfly-net."
+  exit 1
+fi
+
 $CONTAINERMGR rm sandfly-server 2>/dev/null
 
 $CONTAINERMGR run -v /dev/urandom:/dev/random:ro \
@@ -263,7 +290,10 @@ if [ "$CONTAINERMGR" = "podman" ]; then
         echo "*** Linger Status: [$linger_status]"
         if [ "$linger_status" = "no" ]; then
             echo "*** Enable Linger for user $USER"
-            loginctl enable-linger $USER
+            loginctl enable-linger $USER 2>/dev/null
+            if [ $? -ne 0 ]; then
+                sudo loginctl enable-linger $USER
+            fi
         fi
     fi
     if [ ! -d $TARGET_DIR ]; then

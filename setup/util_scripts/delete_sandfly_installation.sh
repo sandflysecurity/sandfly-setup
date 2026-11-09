@@ -56,7 +56,7 @@ done
 $CONTAINERMGR network rm sandfly-net 2>/dev/null
 
 # Delete config
-rm -f $SETUP_DATA_DIR/*.json $SETUP_DATA_DIR/*.txt $SETUP_DATA_DIR/*.env $SETUP_DATA_DIR/*.yaml
+rm -f $SETUP_DATA_DIR/*.json $SETUP_DATA_DIR/*.txt $SETUP_DATA_DIR/*.env $SETUP_DATA_DIR/*.yaml $SETUP_DATA_DIR/*.declined
 
 echo ""
 echo "Done."
