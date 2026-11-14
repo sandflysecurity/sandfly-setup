@@ -7,7 +7,7 @@ info:
     name: Sandfly Security, Ltd.
     url: https://www.sandflysecurity.com
   title: Sandfly API
-  version: 6.0.0
+  version: 6.0.1
 servers:
   - url: https://{sandfly-api-host}/v4
 security:
@@ -17,13 +17,18 @@ paths:
     get:
       description: Gets all of the email alert entries.
       operationId: getEmailAlerts
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       responses:
         "200":
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ScrollingResponse"
+                  - $ref: "#/components/schemas/TotalledResponse"
                 required:
                   - data
                 properties:
@@ -62,6 +67,10 @@ paths:
     post:
       description: Adds an email entry.
       operationId: addEmailAlert
+      x-required-roles:
+        - admin
+        - power_user
+      x-license-limit: email_notifications
       requestBody:
         content:
           application/json:
@@ -86,6 +95,9 @@ paths:
     post:
       description: Tests an email entry.
       operationId: testEmailAlert
+      x-required-roles:
+        - admin
+        - power_user
       parameters:
         - description: email name to test
           in: path
@@ -120,6 +132,9 @@ paths:
     delete:
       description: Deletes an email entry.
       operationId: deleteEmailAlert
+      x-required-roles:
+        - admin
+        - power_user
       parameters:
         - description: email name to delete
           in: path
@@ -153,6 +168,11 @@ paths:
     get:
       description: Gets an email entry by name.
       operationId: getEmailAlert
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: email name to retrieve
           in: path
@@ -186,6 +206,9 @@ paths:
     put:
       description: Updates an email entry.
       operationId: updateEmailAlert
+      x-required-roles:
+        - admin
+        - power_user
       parameters:
         - description: email name to update
           in: path
@@ -221,13 +244,18 @@ paths:
     get:
       description: Gets all syslog entries
       operationId: getSyslogAlerts
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       responses:
         "200":
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ScrollingResponse"
+                  - $ref: "#/components/schemas/TotalledResponse"
                 required:
                   - data
                 properties:
@@ -257,6 +285,10 @@ paths:
     post:
       description: Adds a syslog entry.
       operationId: addSyslogAlert
+      x-required-roles:
+        - admin
+        - power_user
+      x-license-limit: syslog_notifications
       requestBody:
         content:
           application/json:
@@ -281,6 +313,9 @@ paths:
     delete:
       description: Deletes a syslog entry.
       operationId: deleteSyslogAlert
+      x-required-roles:
+        - admin
+        - power_user
       parameters:
         - description: syslog name to delete
           in: path
@@ -314,6 +349,11 @@ paths:
     get:
       description: Get a syslog entry.
       operationId: getSyslogAlert
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: syslog name to get
           in: path
@@ -344,6 +384,9 @@ paths:
     put:
       description: Updates a syslog entry.
       operationId: updateSyslogAlert
+      x-required-roles:
+        - admin
+        - power_user
       parameters:
         - description: syslog name to update
           in: path
@@ -379,6 +422,8 @@ paths:
     delete:
       description: Deletes the audit log.
       operationId: deleteAuditLog
+      x-required-roles:
+        - admin
       responses:
         "200":
           content:
@@ -410,6 +455,9 @@ paths:
     get:
       description: Gets the audit log.
       operationId: getAuditLog
+      x-required-roles:
+        - admin
+        - power_user
       parameters:
         - description: page number to retrieve
           in: query
@@ -457,6 +505,14 @@ paths:
   /auth:
     get:
       operationId: getMe
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
+        - api_scan
+        - system
       description: Get the current logged in user.
       summary: Get current user
       tags:
@@ -531,6 +587,14 @@ paths:
     post:
       description: Gets a new authentication token but marks old one as non-fresh.
       operationId: apiLoginRefresh
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
+        - api_scan
+        - system
       requestBody:
         content:
           application/json:
@@ -572,6 +636,14 @@ paths:
     delete:
       description: Log out user and revoke token.
       operationId: logout
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
+        - api_scan
+        - system
       responses:
         "200":
           content:
@@ -598,6 +670,9 @@ paths:
     get:
       description: Gets the current server configurations in the system.
       operationId: getConfig
+      x-required-roles:
+        - admin
+        - power_user
       responses:
         "200":
           content:
@@ -626,6 +701,9 @@ paths:
 
         Only an admin can change the SSO settings: the `sso` object and `advanced.sso_redirect_prefix`, and, while SAML is enabled, `server_hostname`, which the SAML service provider URLs are built from. Other users allowed to update the configuration can send those settings back unchanged, as they were read from GET /config, along with the settings they are changing. A request from them that would change an SSO setting is rejected with a 403, and nothing in it is applied.
       operationId: updateConfig
+      x-required-roles:
+        - admin
+        - power_user
       requestBody:
         content:
           application/json:
@@ -671,6 +749,7 @@ paths:
     get:
       description: "Returns pre-login information needed by the login page: whether SSO is enabled and the optional login warning message."
       operationId: getLoginInfo
+      security: []
       responses:
         "200":
           description: Returns whether the license allows for SSO and SSO is configured and enabled in settings, along with the optional login warning message to display on the login page.
@@ -705,6 +784,7 @@ paths:
     get:
       description: Returns SSO enabled boolean.
       operationId: isSsoEnabled
+      security: []
       responses:
         "200":
           description: Returns true if license allows for SSO, SSO is configured and enabled in settings.
@@ -725,6 +805,9 @@ paths:
     post:
       description: Forces regeneration of the self-signed TLS certificate. This is a debug endpoint since certificates are auto-renewed before expiration.
       operationId: regenerateTlsCert
+      x-required-roles:
+        - admin
+        - power_user
       responses:
         "200":
           content:
@@ -745,6 +828,11 @@ paths:
     delete:
       description: This deletes all credential_ids passed into the body as bulk operation.
       operationId: deleteCredentials
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       requestBody:
         content:
           application/json:
@@ -776,6 +864,13 @@ paths:
         - Credentials
     get:
       operationId: getCredentials
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
+        - api_scan
       description: Gets all of the credentials that are entered in the system.
       responses:
         "200":
@@ -810,6 +905,11 @@ paths:
     delete:
       description: Deletes a remote system login credential encrypted record.
       operationId: deleteCredential
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: credentials_id to delete.
           in: path
@@ -849,6 +949,13 @@ paths:
     get:
       description: Gets the encrypted credentials to allow scanning nodes to login to a remote host.
       operationId: getCredential
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
+        - api_scan
       parameters:
         - description: credentials_id to retrieve.
           in: path
@@ -882,6 +989,11 @@ paths:
     post:
       description: Creates either an sshkey/sshkey password or username/password to an encrypted remote host credential record.
       operationId: addCredential
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: credentials_id to create.
           in: path
@@ -922,6 +1034,11 @@ paths:
     put:
       description: Updates the sshkey/sshkey password or username/password to an encrypted remote host credential record.
       operationId: updateCredential
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: credentials_id to update.
           in: path
@@ -976,6 +1093,11 @@ paths:
     delete:
       description: Deletes all errors.
       operationId: deleteScanErrorLog
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       responses:
         "200":
           content:
@@ -1001,6 +1123,13 @@ paths:
     get:
       description: Gets the error log.
       operationId: getScanErrorLog
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
+        - api_scan
       parameters:
         - description: get summary data
           in: query
@@ -1043,6 +1172,11 @@ paths:
     delete:
       description: Deletes all host_ids passed into the body as a bulk operation.
       operationId: deleteHosts
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       requestBody:
         content:
           application/json:
@@ -1085,6 +1219,13 @@ paths:
         - Hosts
     get:
       operationId: getHosts
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
+        - api_scan
       description: "Gets a list of the hosts in the system. Results are paginated with the `page` and `size` parameters, and the `more_results` property of the response indicates whether further pages are available. **NOTE**: almost all uses of this function should use the `?summary=true` parameter; the raw call without a summary parameter or with `?summary=false` exists only for backward compatability."
       parameters:
         - name: summary
@@ -1168,6 +1309,14 @@ paths:
     post:
       description: Adds new hosts.
       operationId: addHosts
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+      x-license-features-when:
+        tags:
+          - host_tags
       requestBody:
         content:
           application/json:
@@ -1207,6 +1356,11 @@ paths:
     post:
       description: Retry the attempt to connect to inactive hosts to add them to the system.
       operationId: retryHosts
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       requestBody:
         content:
           application/json:
@@ -1257,6 +1411,11 @@ paths:
       description: Bulk update tags on hosts.
       summary: Bulk tag hosts
       operationId: bulkTagHosts
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: operation - add or remove the requested tags
           in: query
@@ -1296,6 +1455,11 @@ paths:
     delete:
       description: Deletes a registered host by host ID.
       operationId: deleteHost
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: host_id or host_sequence_id to delete.
           in: path
@@ -1334,6 +1498,13 @@ paths:
     get:
       description: Gets a registered host by host ID.
       operationId: getHost
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
+        - api_scan
       parameters:
         - description: host_id or host_sequence_id to retrieve.
           in: path
@@ -1381,6 +1552,11 @@ paths:
     put:
       description: "Allows users to update a host (such as credentials to use, host aliases, jump_hosts and tags). An active value in the request is ignored, so a whole host object can be sent back unchanged: a host's active state is maintained by Sandfly as hosts are scanned. Use POST /hosts/retry to have an inactive host checked again."
       operationId: updateHost
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: Unique host_id or host_sequence_id to update.
           in: path
@@ -1426,6 +1602,12 @@ paths:
   "/hosts/{host_id}/info/kernelmodules":
     get:
       operationId: hostInfoKernelModules
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
       description: Get kernel modules list for host.
       summary: Host kernel modules list
       tags:
@@ -1479,6 +1661,12 @@ paths:
   "/hosts/{host_id}/info/lastlog":
     get:
       operationId: hostInfoLastlog
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
       description: Get lastlog entry list for host.
       summary: Host lastlog entry list
       tags:
@@ -1532,6 +1720,12 @@ paths:
   "/hosts/{host_id}/info/listeners":
     get:
       operationId: hostInfoListeners
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
       description: Get network listeners list for host.
       summary: Host network listeners list
       tags:
@@ -1585,6 +1779,12 @@ paths:
   "/hosts/{host_id}/info/loggedinusers":
     get:
       operationId: hostInfoLoggedInUsers
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
       description: Get logged in users for host.
       summary: Host logged in users
       tags:
@@ -1638,6 +1838,12 @@ paths:
   "/hosts/{host_id}/info/processes":
     get:
       operationId: hostInfoProcesses
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
       description: Get process list for host.
       summary: Host process list
       tags:
@@ -1691,6 +1897,12 @@ paths:
   "/hosts/{host_id}/info/scheduledtasks":
     get:
       operationId: hostInfoScheduledTasks
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
       description: Get scheduled tasks list for host.
       summary: Host scheduled tasks list
       tags:
@@ -1744,6 +1956,12 @@ paths:
   "/hosts/{host_id}/info/services":
     get:
       operationId: hostInfoServices
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
       description: Get systemd service unit list for host.
       summary: Host systemd service list
       tags:
@@ -1797,6 +2015,12 @@ paths:
   "/hosts/{host_id}/info/users":
     get:
       operationId: hostInfoUsers
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
       description: Get user list for host.
       summary: Host user list
       tags:
@@ -1850,6 +2074,12 @@ paths:
   "/hosts/{host_id}/triage":
     get:
       operationId: getHostTriage
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
       description: |-
         Get the cached AI triage verdict for a host.
 
@@ -1893,6 +2123,13 @@ paths:
           description: Unexpected error
     post:
       operationId: beginHostTriage
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+      x-server-toggles:
+        - llm
       description: |-
         Request a fresh AI triage submission for a host.
 
@@ -1943,6 +2180,11 @@ paths:
   "/hosts/{host_id}/triage/overrides":
     delete:
       operationId: revertHostTriageSeverities
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       description: |-
         Remove the AI severity from every artifact on a host, so each reports the severity its sandflies give it again.
 
@@ -1987,6 +2229,9 @@ paths:
   "/hosts/{host_id}/triage/document":
     get:
       operationId: getHostTriageDocument
+      x-required-roles:
+        - admin
+        - power_user
       description: |-
         Build the AI triage submission for a host and return it without sending it: the system instruction, the JSON document describing the host, and the question, exactly as a triage submission for the host would send them now.
 
@@ -2042,6 +2287,13 @@ paths:
   /hosts/triage:
     post:
       operationId: beginHostsTriage
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+      x-server-toggles:
+        - llm
       description: |-
         Request AI triage for several hosts at once.
 
@@ -2083,6 +2335,12 @@ paths:
   "/artifacts/{artifact_id}/triage":
     get:
       operationId: getArtifactTriage
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
       description: |-
         Get what AI triage has concluded about one artifact.
 
@@ -2127,6 +2385,13 @@ paths:
           description: Unexpected error
     post:
       operationId: beginArtifactTriage
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+      x-server-toggles:
+        - llm
       description: |-
         Request AI classification of one artifact.
 
@@ -2180,6 +2445,11 @@ paths:
   "/artifacts/{artifact_id}/triage/override":
     delete:
       operationId: revertArtifactTriageSeverity
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       description: |-
         Remove the AI severity from one artifact, so it reports the severity its sandflies give it again.
 
@@ -2219,6 +2489,12 @@ paths:
   /triage/queue:
     get:
       operationId: getTriageQueue
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
       summary: AI triage queue
       description: |-
         List the AI triage queue: every host waiting for a verdict or being judged now, and every artifact waiting to be classified, in `position` order.
@@ -2268,6 +2544,11 @@ paths:
   /triage/deletequeue:
     post:
       operationId: removeTriageQueueItems
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       summary: Remove AI triage queue items
       description: |-
         Take the given items off the AI triage queue.
@@ -2307,6 +2588,11 @@ paths:
   /triage/deletequeue/all:
     delete:
       operationId: clearTriageQueue
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       summary: Clear the AI triage queue
       description: |-
         Take every item off the AI triage queue. Nothing goes back on it until a scan, a change to a host's alerting artifacts or a request made by hand puts it there.
@@ -2334,6 +2620,11 @@ paths:
   "/triage/deletequeue/{queue_item_id}":
     delete:
       operationId: removeTriageQueueItem
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       summary: Remove an AI triage queue item
       description: |-
         Take one item off the AI triage queue.
@@ -2379,6 +2670,13 @@ paths:
   "/triage/queue/{queue_item_id}/run":
     post:
       operationId: runTriageQueueItemNow
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+      x-server-toggles:
+        - llm
       summary: Run an AI triage queue item now
       description: |-
         Turn a waiting item into a request made by hand, so that it is worked as soon as a submission slot is free.
@@ -2437,6 +2735,13 @@ paths:
     get:
       description: "Get a brief view of a host by host ID: its IDs, hostname, OS node name, tags, OS distribution, and when a node last connected to it. Use `GET /v4/hosts/{host_id}` for the full host."
       operationId: getHostBrief
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
+        - api_scan
       summary: Get host brief
       tags:
         - Hosts
@@ -2476,6 +2781,12 @@ paths:
     get:
       description: Get a host and associated host data by host ID.
       operationId: getHostRollup
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
       summary: Get host rollup
       tags:
         - Hosts
@@ -2534,6 +2845,11 @@ paths:
     delete:
       description: Deletes all jump hosts passed into the body as bulk operation.
       operationId: deleteJumpHosts
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       requestBody:
         content:
           application/json:
@@ -2566,13 +2882,20 @@ paths:
     get:
       description: Gets all of the jump hosts in the system.
       operationId: getJumpHosts
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
+        - api_scan
       responses:
         "200":
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ScrollingResponse"
+                  - $ref: "#/components/schemas/TotalledResponse"
                 properties:
                   data:
                     description: List of Jump Hosts
@@ -2608,6 +2931,11 @@ paths:
     delete:
       description: Deletes a jump host by name.
       operationId: deleteJumpHost
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: jump_host_name delete.
           in: path
@@ -2641,6 +2969,13 @@ paths:
     get:
       description: Gets a jump host by jump host name.
       operationId: getJumpHost
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
+        - api_scan
       parameters:
         - description: jump_host_name to retrieve.
           in: path
@@ -2680,6 +3015,12 @@ paths:
     post:
       description: Allows users to create a jump host.
       operationId: addJumpHost
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+      x-license-limit: jump_hosts
       parameters:
         - description: jump_host_name to add.
           in: path
@@ -2720,6 +3061,11 @@ paths:
     put:
       description: Allows users to update a jump host (such as credentials to use or new hostname).
       operationId: updateJumpHost
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: jump_host_name to update.
           in: path
@@ -2761,6 +3107,10 @@ paths:
     delete:
       description: Deletes a license.
       operationId: deleteLicense
+      x-required-roles:
+        - admin
+        - power_user
+        - system
       responses:
         "200":
           content:
@@ -2786,6 +3136,14 @@ paths:
     get:
       description: Gets the license data.
       operationId: getLicense
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
+        - api_scan
+        - system
       responses:
         "200":
           content:
@@ -2811,6 +3169,10 @@ paths:
     post:
       description: Adds a license entry.
       operationId: addLicense
+      x-required-roles:
+        - admin
+        - power_user
+        - system
       requestBody:
         content:
           application/json:
@@ -2834,6 +3196,10 @@ paths:
     put:
       description: Updates a license entry.
       operationId: updateLicense
+      x-required-roles:
+        - admin
+        - power_user
+        - system
       requestBody:
         content:
           application/json:
@@ -2858,6 +3224,9 @@ paths:
     post:
       description: Refresh an online license entitlement.
       operationId: refreshLicense
+      x-required-roles:
+        - admin
+        - power_user
       responses:
         "200":
           content:
@@ -2885,6 +3254,12 @@ paths:
       summary: Get LLM analyses
       description: Get list of all LLM analyses. The returned list will be in reverse chronological order of modification date. If a hostid, resultid, or artifactid query parameter is supplied, the list will be limited to analyses involving that host, result, or artifact. If more than one is provided, an analysis must match all of them.
       operationId: getLlmAnalyses
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
       tags:
         - LLM Analysis
       parameters:
@@ -2927,7 +3302,7 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ScrollingResponse"
+                  - $ref: "#/components/schemas/MoreResultsResponse"
                 properties:
                   data:
                     description: List of LLM analyses
@@ -2954,6 +3329,13 @@ paths:
       summary: Begin LLM analysis
       description: Begin a new LLM analysis for a host, or for results and/or artifacts.
       operationId: beginLlmAnalysis
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+      x-server-toggles:
+        - llm
       tags:
         - LLM Analysis
       requestBody:
@@ -3000,6 +3382,11 @@ paths:
       tags:
         - LLM Analysis
       operationId: deleteLlmAnalysisBulk
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       requestBody:
         content:
           application/json:
@@ -3038,6 +3425,12 @@ paths:
       summary: Get LLM analysis
       description: Get an LLM analysis, with its metadata and model response(s).
       operationId: getLlmAnalysis
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
       tags:
         - LLM Analysis
       parameters:
@@ -3076,6 +3469,11 @@ paths:
       summary: Delete LLM analysis
       description: Delete an LLM analysis. Call is idempotent; will return OK even if LLM analysis ID does not exist.
       operationId: deleteLlmAnalysis
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       tags:
         - LLM Analysis
       parameters:
@@ -3109,6 +3507,13 @@ paths:
       summary: Add chat to LLM analysis
       description: Add a new user chat message to an LLM analysis and submit to the model to get a response. The LLM analysis must be in the "ready" state.
       operationId: addLlmAnalysisChat
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+      x-server-toggles:
+        - llm
       tags:
         - LLM Analysis
       parameters:
@@ -3162,6 +3567,12 @@ paths:
       tags:
         - LLM Analysis
       operationId: waitLlmAnalysisComplete
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
       parameters:
         - description: LLM analysis ID to wait for.
           in: path
@@ -3206,6 +3617,12 @@ paths:
       summary: Get the AI request log
       description: "Get the log of requests sent to LLM providers by AI analysis and AI triage, newest first, with the tokens each one used. Entries are kept for the data retention period, in whole UTC days: with a retention of three days, the log holds the current day so far and the three full days before it."
       operationId: getLlmRequestLog
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
       tags:
         - LLM Analysis
       parameters:
@@ -3260,6 +3677,11 @@ paths:
       summary: Get notifications
       description: Get a list of all event notification configurations.
       operationId: getNotifications
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       responses:
         "200":
           description: Notifications retrieved.
@@ -3284,6 +3706,10 @@ paths:
       summary: Create notification
       description: Create a new event notification configuration.
       operationId: notificationAdd
+      x-required-roles:
+        - admin
+        - power_user
+      x-license-limit: notifications
       requestBody:
         content:
           application/json:
@@ -3328,6 +3754,9 @@ paths:
       summary: Get notification details
       description: Get details of an event notification configuration.
       operationId: getNotification
+      x-required-roles:
+        - admin
+        - power_user
       parameters:
         - description: Notification ID to get.
           in: path
@@ -3360,6 +3789,9 @@ paths:
       summary: Update notification
       description: Change an existing event notification configuration.
       operationId: updateNotification
+      x-required-roles:
+        - admin
+        - power_user
       parameters:
         - description: Notification ID to replace.
           in: path
@@ -3404,6 +3836,9 @@ paths:
       summary: Delete notification
       description: Delete an event notification configuration.
       operationId: deleteNotification
+      x-required-roles:
+        - admin
+        - power_user
       parameters:
         - description: Notification ID to delete.
           in: path
@@ -3443,6 +3878,9 @@ paths:
       summary: Test notification
       description: Attempt to send a test notification.
       operationId: testNotification
+      x-required-roles:
+        - admin
+        - power_user
       parameters:
         - description: Notification ID to test.
           in: path
@@ -3488,6 +3926,9 @@ paths:
       description: Pauses notifications by ID.
       summary: Pause notifications
       operationId: pauseNotifications
+      x-required-roles:
+        - admin
+        - power_user
       requestBody:
         content:
           application/json:
@@ -3512,6 +3953,9 @@ paths:
       description: Unpauses notifications by ID.
       summary: Unpause notifications
       operationId: unpauseNotifications
+      x-required-roles:
+        - admin
+        - power_user
       requestBody:
         content:
           application/json:
@@ -3535,6 +3979,9 @@ paths:
     put:
       description: Pause a notification.
       operationId: pauseNotification
+      x-required-roles:
+        - admin
+        - power_user
       parameters:
         - description: notification ID to pause
           in: path
@@ -3559,6 +4006,9 @@ paths:
     put:
       description: Unpause a notification.
       operationId: unpauseNotification
+      x-required-roles:
+        - admin
+        - power_user
       parameters:
         - description: notification ID to unpause
           in: path
@@ -3584,6 +4034,11 @@ paths:
       description: Host snapshot report.
       summary: Host snapshot report
       operationId: getHostSnapshot
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       responses:
         "200":
           description: Get snapshot successful.
@@ -3625,6 +4080,11 @@ paths:
       description: Scan performance report.
       summary: Scan performance report
       operationId: getScanPerformance
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       responses:
         "200":
           description: Get scan performance successful.
@@ -3645,6 +4105,11 @@ paths:
       summary: AI usage report
       description: The AI request log (see `/llmrequestlog`) totalled by UTC day, provider and model, newest day first, for every day the log holds, with AI analysis and AI triage totalled separately. The oldest day is always a complete day; the newest is the current day so far.
       operationId: getLlmUsageReport
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       tags:
         - Reports
       responses:
@@ -3673,6 +4138,11 @@ paths:
 
         Returns a ResponseActionResponse in both the queued (HTTP 202) and cached-fulfillment (HTTP 200, retrieve actions only) cases.
       operationId: dispatchResultAction
+      x-required-roles:
+        - responder
+      x-license-active: true
+      x-server-toggles:
+        - response_actions
       parameters:
         - description: Numeric result ID to act on.
           in: path
@@ -3735,6 +4205,11 @@ paths:
 
         Returns a ResponseActionResponse in both the queued (HTTP 202) and cached-fulfillment (HTTP 200, retrieve actions only) cases.
       operationId: dispatchArtifactAction
+      x-required-roles:
+        - responder
+      x-license-active: true
+      x-server-toggles:
+        - response_actions
       parameters:
         - description: Numeric artifact ID to act on.
           in: path
@@ -3794,6 +4269,11 @@ paths:
     post:
       description: Performs an SSH key response action (remove or deduplicate) across all hosts and users where the key is deployed. Requires the responder role. Creates one order per affected host, each containing one action per affected user. Can be disabled server-wide with SF_DISABLE_RESPONSES and at the node level with SF_NODE_DISABLE_RESPONSES. For 'remove' actions, a last-key protection safety check denies the request with HTTP 409 if any affected host would be left with zero SSH keys known to Sandfly; set allow_last_key_removal=true in the request body to override.
       operationId: dispatchSshKeyAction
+      x-required-roles:
+        - responder
+      x-license-active: true
+      x-server-toggles:
+        - response_actions
       parameters:
         - description: SSH public key ID (integer) from SSH Hunter.
           in: path
@@ -3858,6 +4338,11 @@ paths:
     post:
       description: Performs an SSH key response action on a specific host for all users that have the key. Requires the responder role. For 'remove' actions, a last-key protection safety check denies the request with HTTP 409 if the host would be left with zero SSH keys known to Sandfly; set allow_last_key_removal=true in the request body to override.
       operationId: dispatchSshKeyHostAction
+      x-required-roles:
+        - responder
+      x-license-active: true
+      x-server-toggles:
+        - response_actions
       parameters:
         - description: SSH public key ID (integer) from SSH Hunter.
           in: path
@@ -3929,6 +4414,11 @@ paths:
     post:
       description: Performs an SSH key response action for a specific user on a specific host. Requires the responder role. For 'remove' actions, a last-key protection safety check denies the request with HTTP 409 if the host would be left with zero SSH keys known to Sandfly after removing the key for this user; set allow_last_key_removal=true in the request body to override.
       operationId: dispatchSshKeyHostUserAction
+      x-required-roles:
+        - responder
+      x-license-active: true
+      x-server-toggles:
+        - response_actions
       parameters:
         - description: SSH public key ID (integer) from SSH Hunter.
           in: path
@@ -4006,6 +4496,11 @@ paths:
     get:
       description: Returns a paginated list of response action log entries, ordered by request time descending. Includes a summary of each action without the bulky source result and action result JSON blobs.
       operationId: getResponseActionLog
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: Page number (1-indexed). Defaults to 1.
           in: query
@@ -4039,6 +4534,11 @@ paths:
     get:
       description: Returns a single response action log entry by action ID, including the source result JSON and action result JSON.
       operationId: getResponseActionLogEntry
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: Action ID.
           in: path
@@ -4073,6 +4573,10 @@ paths:
     delete:
       description: Delete the data blob associated with a process retrieve or file retrieve action from the database.
       operationId: deleteResponseActionLogEntryData
+      x-required-roles:
+        - responder
+        - admin
+        - power_user
       parameters:
         - description: Action ID.
           in: path
@@ -4113,6 +4617,8 @@ paths:
     get:
       description: Downloads the binary blob retrieved by a response action (process binary or file). Identified by SHA-512 content hash. Multiple action log entries may reference the same blob. Requires the responder role.
       operationId: getBinary
+      x-required-roles:
+        - responder
       parameters:
         - description: SHA-512 content hash of the blob (hex-encoded).
           in: path
@@ -4156,6 +4662,11 @@ paths:
 
         A filter with no items deletes every result. A filter whose conditions all have empty values narrows nothing, so it is rejected with a 400 rather than treated as a request to delete everything.
       operationId: deleteResults
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       requestBody:
         content:
           application/json:
@@ -4194,6 +4705,12 @@ paths:
     post:
       description: Gets all of the results.
       operationId: getResults
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
       requestBody:
         content:
           application/json:
@@ -4245,6 +4762,12 @@ paths:
       tags:
         - Results
       operationId: getMaxID
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
       responses:
         "200":
           content:
@@ -4267,6 +4790,11 @@ paths:
       tags:
         - Results
       operationId: getResultsTimeline
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       requestBody:
         content:
           application/json:
@@ -4322,6 +4850,11 @@ paths:
     delete:
       description: Deletes all results.
       operationId: deleteAllResults
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       responses:
         "200":
           content:
@@ -4354,6 +4887,11 @@ paths:
     delete:
       description: Deletes a result by result ID.
       operationId: deleteResult
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: result_id delete.
           in: path
@@ -4392,6 +4930,12 @@ paths:
     get:
       description: Gets a result by result ID.
       operationId: getResult
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
       parameters:
         - description: result_id to retrieve.
           in: path
@@ -4437,6 +4981,12 @@ paths:
     get:
       description: Gets a result by ID along with additional mutable status data, including the response action log for this result.
       operationId: getResultDetail
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
       parameters:
         - description: Numeric result ID to retrieve.
           in: path
@@ -4474,6 +5024,12 @@ paths:
 
         Set `host_counts` to have each entry report how many hosts share the artifact; that form is limited to pages of 200 artifacts and its counts are capped per hash.
       operationId: searchArtifacts
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
       requestBody:
         content:
           application/json:
@@ -4563,6 +5119,11 @@ paths:
 
         A filter with no items deletes every artifact. A filter whose conditions all have empty values narrows nothing, so it is rejected with a 400 rather than treated as a request to delete everything.
       operationId: deleteArtifacts
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       requestBody:
         content:
           application/json:
@@ -4596,6 +5157,12 @@ paths:
     get:
       description: Gets one artifact by ID.
       operationId: getArtifact
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
       parameters:
         - description: Numeric artifact ID to retrieve.
           in: path
@@ -4629,6 +5196,11 @@ paths:
     delete:
       description: "Deletes one artifact and all of its per-sandfly results. The delete is idempotent: an artifact ID that does not exist (or was already deleted) returns 200 rather than 404, matching DELETE /results/{result_id}."
       operationId: deleteArtifact
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: Numeric artifact ID to delete.
           in: path
@@ -4657,6 +5229,12 @@ paths:
     get:
       description: 'Returns the sandfly scan coverage audit for a host: every sandfly that has run against it, with first/last run times, run count, and the most recent outcome. This replaces stored per-sandfly "pass" results as the record that a sandfly ran clean on a host.'
       operationId: getHostSandflyRuns
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
       parameters:
         - description: Host ID to retrieve sandfly run coverage for.
           in: path
@@ -4698,6 +5276,11 @@ paths:
       tags:
         - Results
       operationId: deleteHostSandflyResults
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       requestBody:
         content:
           application/json:
@@ -4742,6 +5325,11 @@ paths:
       tags:
         - Results
       operationId: deleteSandflyHostResults
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       requestBody:
         content:
           application/json:
@@ -4784,6 +5372,11 @@ paths:
       summary: Get result profiles
       description: Get summary list of all result profiles.
       operationId: getProfiles
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       responses:
         "200":
           content:
@@ -4811,6 +5404,11 @@ paths:
       summary: Create new result profile
       description: Create new result profile. One or more host IDs, result IDs, and/or artifact IDs must be included in the request, which will add the associated eligible results to the result profile.
       operationId: createProfile
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       deprecated: true
       requestBody:
         content:
@@ -4852,6 +5450,11 @@ paths:
       summary: Create auto-drift profile
       description: Create a new result profile that will automatically gather results from a set of model hosts for a period of time before applying them as a drift (and optionally whitelist) profile on a set of covered hosts.
       operationId: createProfileAutoDrift
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       tags:
         - Drift Detection
         - Result Profiles
@@ -4885,6 +5488,11 @@ paths:
       summary: Edit autodrift profile
       description: Edit an autodrift profile. Optionally edit different parts of the profile by setting the objects non-null; null objects (or keys left out) indicate that that portion of the profile will not be modified.
       operationId: editAutoDriftProfile
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       tags:
         - Drift Detection
         - Result Profiles
@@ -4931,6 +5539,11 @@ paths:
       summary: Remove gather configuration
       description: Remove gather configuration from an autodrift profile.
       operationId: deleteAutoDriftGather
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       tags:
         - Drift Detection
         - Result Profiles
@@ -4965,6 +5578,11 @@ paths:
       summary: Switch to enforce mode
       description: Immediately transition an autodrift profile to enforce mode.
       operationId: enforceAutoDriftProfile
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       tags:
         - Drift Detection
         - Result Profiles
@@ -5005,6 +5623,11 @@ paths:
       summary: Restart gather period
       description: Restart/re-enter gather period on an autodrift profile.
       operationId: restartAutoDriftGather
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       tags:
         - Drift Detection
         - Result Profiles
@@ -5045,6 +5668,11 @@ paths:
       summary: Remove schedule configuration
       description: Remove scan schedule configuration from an autodrift profile.
       operationId: deleteAutoDriftSchedule
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       tags:
         - Drift Detection
         - Result Profiles
@@ -5079,6 +5707,11 @@ paths:
       summary: Get auto-drift templates
       description: Get recommended auto-drift result profile templates for various use cases.
       operationId: getAutoDriftTemplates
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       tags:
         - Drift Detection
         - Result Profiles
@@ -5096,6 +5729,11 @@ paths:
       summary: Get a result profile
       description: Get details of a result profile by ID.
       operationId: getProfile
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: Result profile ID to get.
           in: path
@@ -5129,6 +5767,11 @@ paths:
       summary: Update result profile
       description: Update the details and associations of a result profile. This replaces all existing associations on the result profile.
       operationId: updateProfile
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       deprecated: true
       parameters:
         - description: Result profile ID to update.
@@ -5169,6 +5812,11 @@ paths:
       summary: Delete a result profile
       description: Delete a single result profile by ID.
       operationId: deleteProfile
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: Result profile ID to delete.
           in: path
@@ -5208,6 +5856,11 @@ paths:
     post:
       summary: Append results to result profile
       operationId: appendProfile
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       description: Append additional results from model host(s), result IDs, and/or artifact IDs to an existing result profile.
       parameters:
         - description: Result profile ID to append results to.
@@ -5262,6 +5915,11 @@ paths:
     post:
       summary: Automatically append results to an autodrift profile
       operationId: autoappendProfile
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       description: Append all current results from the previously configured model hosts to an existing auto-drift profile.
       parameters:
         - description: Result profile ID to append results to. Must be a profile for which autodrift=true.
@@ -5315,6 +5973,11 @@ paths:
       summary: Get result profile sandfly results
       description: Get a list of results that are part of a result profile for a given sandfly.
       operationId: getProfileSandfly
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       tags:
         - Drift Detection
         - Result Profiles
@@ -5360,6 +6023,11 @@ paths:
       summary: Delete a sandfly from a result profile
       description: Delete all of the results for a sandfly on a result profile, removing enforcement of drift/whitelisting for the sandfly from the profile.
       operationId: deleteProfileSandfly
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       tags:
         - Drift Detection
         - Result Profiles
@@ -5400,6 +6068,11 @@ paths:
       summary: Bulk delete sandflies from profile
       description: Bulk delete sandflies from a result profile.
       operationId: bulkDeleteProfileSandflies
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       tags:
         - Drift Detection
         - Result Profiles
@@ -5449,6 +6122,11 @@ paths:
       summary: Delete result hash from result profile.
       description: Delete a specific result hash from a sandfly on a result profile.
       operationId: deleteProfileResult
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       tags:
         - Drift Detection
         - Result Profiles
@@ -5495,6 +6173,11 @@ paths:
       summary: Bulk delete results from profile
       description: Bulk delete results from a sandfly on a result profile.
       operationId: bulkDeleteProfileResults
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       tags:
         - Drift Detection
         - Result Profiles
@@ -5550,6 +6233,11 @@ paths:
       summary: Get result profiles for host
       description: Get summary of all result profiles that apply to this host ID.
       operationId: getProfilesForHost
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: Host to retrieve. Accepts a host_id or host_sequence_id.
           in: path
@@ -5600,6 +6288,11 @@ paths:
   /resultprofiles/export:
     post:
       operationId: exportProfiles
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       description: Export selected result profiles for backup or to move to another system.
       summary: Export result profiles
       tags:
@@ -5628,6 +6321,11 @@ paths:
   /resultprofiles/import:
     post:
       operationId: importProfiles
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       description: Import selected result profiles from backup.
       summary: Import result profiles
       tags:
@@ -5662,6 +6360,11 @@ paths:
     put:
       summary: Bulk pause result profiles
       operationId: bulkPauseProfiles
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       description: Pause result profiles in bulk, preventing them from creating drift alerts or whitelisting incoming results.
       tags:
         - Drift Detection
@@ -5687,6 +6390,11 @@ paths:
     put:
       summary: Bulk unpause result profiles
       operationId: bulkunPauseProfiles
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       description: Unpause result profiles in bulk.
       tags:
         - Drift Detection
@@ -5712,6 +6420,11 @@ paths:
     put:
       summary: Pause result profile
       operationId: pauseProfile
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       description: Pause a result profile, preventing it from creating drift alerts or whitelisting incoming results.
       tags:
         - Drift Detection
@@ -5743,6 +6456,11 @@ paths:
     put:
       summary: Unpause result profile
       operationId: unpauseProfile
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       description: Unause a result profile.
       tags:
         - Drift Detection
@@ -5774,6 +6492,11 @@ paths:
     post:
       summary: Delete result profiles
       operationId: deleteProfiles
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       description: Bulk delete result profiles with a list of result profile IDs.
       requestBody:
         content:
@@ -5809,6 +6532,11 @@ paths:
       summary: Get result profile result
       description: Get result JSON for a result profile result ID.
       operationId: getProfileResultJson
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       tags:
         - Drift Detection
         - Result Profiles
@@ -5855,6 +6583,12 @@ paths:
     get:
       description: Gets results grouped by sandfly for a particular host.
       operationId: getHostResultSummary
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
       parameters:
         - description: host to retrieve results for. Accepts a host_id or host_sequence_id.
           in: path
@@ -5900,6 +6634,12 @@ paths:
     get:
       description: Gets results grouped by host for a particular sandfly.
       operationId: getSandflyResultSummary
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
       parameters:
         - description: sandfly to retrieve results for.
           in: path
@@ -5940,6 +6680,13 @@ paths:
     get:
       description: Gets all of the registered sandflies.
       operationId: getSandflies
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
+        - api_scan
       parameters:
         - description: Returns flattened summary view of all sandflies.
           in: query
@@ -6003,6 +6750,13 @@ paths:
     post:
       description: Adds a custom sandfly.
       operationId: addSandfly
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+      x-license-features:
+        - custom_sandflies
       parameters:
         - description: Will allow existing sandflies with the same name to be overwritten.
           in: query
@@ -6045,6 +6799,13 @@ paths:
     put:
       description: Updates a custom sandfly.
       operationId: updateSandfly
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+      x-license-features:
+        - custom_sandflies
       parameters:
         - description: Will update the sandfly as a partner sandfly.
           in: query
@@ -6079,6 +6840,11 @@ paths:
     put:
       description: Activates all sandflies passed into the body as bulk operation.
       operationId: activateSandflies
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       requestBody:
         content:
           application/json:
@@ -6112,6 +6878,11 @@ paths:
     get:
       description: This displays all registered custom sandflies as a big JSON object for backup purposes.
       operationId: backupSandflies
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: Will display all registered partner sandflies as a big JSON object for backup purposes.
           in: query
@@ -6151,6 +6922,11 @@ paths:
     put:
       description: Deactivates all sandflies passed into the body as bulk operation.
       operationId: deactivateSandflies
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       requestBody:
         content:
           application/json:
@@ -6184,6 +6960,11 @@ paths:
     delete:
       description: Deletes a custom sandfly entry by name.
       operationId: deleteSandflies
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: Deletes a partner sandfly entry by name.
           in: query
@@ -6224,6 +7005,11 @@ paths:
     delete:
       description: Deletes a custom sandfly entry.
       operationId: deleteSandfly
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: sandfly name to delete
           in: path
@@ -6263,6 +7049,13 @@ paths:
     get:
       description: Gets a sandfly with the supplied name.
       operationId: getSandfly
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
+        - api_scan
       parameters:
         - description: Sandfly name to retrieve
           in: path
@@ -6304,6 +7097,11 @@ paths:
     put:
       description: Activates a sandfly by name.
       operationId: activateSandfly
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: sandfly name to activate.
           in: path
@@ -6344,6 +7142,11 @@ paths:
     put:
       description: Deactivates a sandfly by name.
       operationId: deactivateSandfly
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: sandfly name to deactivate.
           in: path
@@ -6384,6 +7187,11 @@ paths:
     post:
       description: Reloads all of the sandflies in server's sandfly directory to their default settings.
       operationId: reloadSandflies
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: Will delete all partner sandflies.
           in: query
@@ -6417,6 +7225,13 @@ paths:
     put:
       description: Updates the system sandfly response options.
       operationId: updateResponse
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+      x-license-features:
+        - sandfly_auto_response
       parameters:
         - description: sandfly name to update.
           in: path
@@ -6450,6 +7265,11 @@ paths:
       description: Deletes a single custom grid view, for a specific data grid, for the current user.
       summary: Delete custom view
       operationId: deleteView
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: namespace of grid
           in: path
@@ -6480,6 +7300,14 @@ paths:
     post:
       description: Scan remote hosts with host_id list and sandfly list.
       operationId: startScan
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_scan
+      x-license-limit: hosts
+      x-license-active: true
       requestBody:
         content:
           application/json:
@@ -6519,6 +7347,16 @@ paths:
     post:
       description: Scan remote hosts on an ad hoc basis with supplied key and sandflies.
       operationId: startAdhocScan
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_scan
+      x-license-features:
+        - ad_hoc_scan
+      x-license-limit: hosts
+      x-license-active: true
       requestBody:
         content:
           application/json:
@@ -6558,6 +7396,11 @@ paths:
     delete:
       description: Deletes all schedule_ids passed into the body as a bulk operation. Schedules that don't exist will be ignored without error; schedules that are of type result_profile_gather will not be deleted, but any current trickle run will be canceled.
       operationId: deleteSchedules
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       requestBody:
         content:
           application/json:
@@ -6590,13 +7433,18 @@ paths:
     get:
       description: Gets everything that is scheduled.
       operationId: getSchedules
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       responses:
         "200":
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ScrollingResponse"
+                  - $ref: "#/components/schemas/TotalledResponse"
                 properties:
                   data:
                     description: List of schedules
@@ -6625,6 +7473,12 @@ paths:
     post:
       description: Adds a scheduled scan.
       operationId: addSchedule
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+      x-license-limit: schedules
       requestBody:
         content:
           application/json:
@@ -6649,6 +7503,11 @@ paths:
     post:
       description: Manually runs a schedule.
       operationId: runSchedule
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: schedule name to run
           in: path
@@ -6693,6 +7552,11 @@ paths:
     put:
       description: Deactivates (pauses) schedules by ID.
       operationId: pauseSchedules
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       requestBody:
         content:
           application/json:
@@ -6717,6 +7581,11 @@ paths:
     put:
       description: Activates (unpauses) schedules by ID.
       operationId: unpauseSchedules
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       requestBody:
         content:
           application/json:
@@ -6741,6 +7610,11 @@ paths:
     put:
       description: Deactivates (pauses) a schedule.
       operationId: pauseSchedule
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: schedule name to deactivate
           in: path
@@ -6766,6 +7640,11 @@ paths:
     put:
       description: Activates (unpauses) a schedule.
       operationId: resumeSchedule
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: schedule name to activate
           in: path
@@ -6791,6 +7670,11 @@ paths:
     delete:
       description: Deletes a schedule by schedule_name. Only schedules of type scan and discover can be deleted, result_profile_gather schedules can only be removed by editing or deleting the related result profile.
       operationId: deleteSchedule
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: schedule_name to delete
           in: path
@@ -6830,6 +7714,11 @@ paths:
     get:
       description: Gets a schedule by schedule_name
       operationId: getSchedule
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: schedule name to retrieve
           in: path
@@ -6863,6 +7752,11 @@ paths:
     put:
       description: Updates a scheduled scan.
       operationId: updateSchedule
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: schedule name to update
           in: path
@@ -6896,6 +7790,11 @@ paths:
       summary: Abort schedule run
       description: Abort an active schedule run, preventing additional hosts from being added to the scan queue during this run.Note that this only prevents new hosts from being added to the scan queue, it does not affect scans that have already begun.
       operationId: abortSchedule
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       tags:
         - Schedule
       parameters:
@@ -6922,6 +7821,14 @@ paths:
     get:
       description: Get graph of relationships between SSH public keys, hosts, and users from SSH Hunter.
       operationId: getSshGraph
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
+      x-license-features:
+        - ssh_hunter
       parameters:
         - description: Type of entity of the root graph node
           in: path
@@ -6979,6 +7886,14 @@ paths:
       deprecated: true
       description: Get list of hosts with SSH public keys from SSH Hunter. Deprecated in favor of `GET /v4/hosts?summary=true&...` which now includes all of the same data.
       operationId: getSshHosts
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
+      x-license-features:
+        - ssh_hunter
       parameters:
         - description: If present, restricts the host list data to the specific key ID.
           in: query
@@ -7004,7 +7919,7 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ScrollingResponse"
+                  - $ref: "#/components/schemas/MoreResultsResponse"
                 properties:
                   data:
                     properties:
@@ -7036,6 +7951,14 @@ paths:
       deprecated: true
       description: Get details of a host with SSH public keys from SSH Hunter. Deprecated in favor of `GET /v4/hostsrollup/{host_id}`, which includes all of the same data.
       operationId: getSshHost
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
+      x-license-features:
+        - ssh_hunter
       parameters:
         - description: ID of host to retrieve
           in: path
@@ -7085,6 +8008,13 @@ paths:
       tags:
         - SSH Hunter
       operationId: addSshKeys
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+      x-license-features:
+        - ssh_hunter
       requestBody:
         content:
           application/json:
@@ -7115,6 +8045,14 @@ paths:
     get:
       description: Get details of an SSH public key from SSH Hunter.
       operationId: getSshKey
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
+      x-license-features:
+        - ssh_hunter
       parameters:
         - description: ID of key to retrieve
           in: path
@@ -7145,6 +8083,13 @@ paths:
       description: Bulk update tags on SSH public keys.
       summary: Bulk tag SSH keys
       operationId: bulkTagSshKeys
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+      x-license-features:
+        - ssh_hunter
       parameters:
         - description: operation - add or remove the requested tags
           in: query
@@ -7187,6 +8132,13 @@ paths:
       description: Set tags on an SSH public key.
       summary: Tag SSH key
       operationId: tagSshKey
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+      x-license-features:
+        - ssh_hunter
       parameters:
         - description: ID of key to modify
           in: path
@@ -7232,6 +8184,13 @@ paths:
   /sshhunter/hosttags:
     post:
       operationId: getSshKeysHostTags
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+      x-license-features:
+        - ssh_hunter
       description: For the set of requested keys, get the hosts tags for the hosts the keys were found on. The result object will contain an entry for each key in the input key list that exists in the database. Keys that don't exist will be ignored.
       summary: Get SSH keys host tags
       tags:
@@ -7274,6 +8233,13 @@ paths:
   /sshhunter/keyhosttags:
     post:
       operationId: getSshHostsAndTagsForKeys
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+      x-license-features:
+        - ssh_hunter
       description: For the requested list of SSH key IDs, returns a list of all hosts with those keys and the host tags on each host.
       summary: Get hosts+tags for SSH keys
       tags:
@@ -7314,6 +8280,13 @@ paths:
   /sshhunter/hostkeytags:
     post:
       operationId: getSshKeysAndTagsForHosts
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+      x-license-features:
+        - ssh_hunter
       description: For the requested list of Host IDs, returns a list of all keys on those hosts and the key tags on each key.
       summary: Get keys+tags for hosts
       tags:
@@ -7354,6 +8327,14 @@ paths:
   /sshhunter/summary:
     get:
       operationId: getSshSummary
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
+      x-license-features:
+        - ssh_hunter
       description: Get list of SSH public keys from SSH Hunter.
       parameters:
         - description: number of results per page
@@ -7374,7 +8355,7 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ScrollingResponse"
+                  - $ref: "#/components/schemas/MoreResultsResponse"
                 properties:
                   data:
                     description: List of SSH Keys
@@ -7400,6 +8381,14 @@ paths:
     get:
       description: Get list of users with SSH public keys from SSH Hunter.
       operationId: getSshUsers
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
+      x-license-features:
+        - ssh_hunter
       parameters:
         - description: If present, restricts the user list data to the specific key ID.
           in: query
@@ -7425,7 +8414,7 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ScrollingResponse"
+                  - $ref: "#/components/schemas/MoreResultsResponse"
                 properties:
                   data:
                     type: object
@@ -7454,6 +8443,14 @@ paths:
     get:
       description: Get details of a user with SSH public keys from SSH Hunter.
       operationId: getSshUser
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
+      x-license-features:
+        - ssh_hunter
       parameters:
         - description: username to retrieve
           in: path
@@ -7495,6 +8492,13 @@ paths:
       summary: Get SSH security zones
       description: Get summary list of all SSH security zones.
       operationId: getSshZones
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+      x-license-features:
+        - ssh_hunter
       responses:
         "200":
           content:
@@ -7519,6 +8523,13 @@ paths:
         - SSH Zones
     post:
       operationId: createSshZone
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+      x-license-features:
+        - ssh_hunter
       summary: Create SSH security zone
       description: Create a new SSH security zone.
       tags:
@@ -7561,6 +8572,13 @@ paths:
       summary: Get an SSH security zone
       description: Get details of an SSH security zone by ID.
       operationId: getSshZone
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+      x-license-features:
+        - ssh_hunter
       parameters:
         - description: SSH security zone ID to get.
           in: path
@@ -7591,6 +8609,13 @@ paths:
         - SSH Zones
     put:
       operationId: updateSshZone
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+      x-license-features:
+        - ssh_hunter
       summary: Update SSH security zone
       description: Update an SSH security zone.
       tags:
@@ -7643,6 +8668,11 @@ paths:
                 $ref: "#/components/schemas/StandardResponse"
     delete:
       operationId: deleteSshZone
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       summary: Delete SSH security zone
       description: Delete an SSH security zone.
       tags:
@@ -7671,6 +8701,11 @@ paths:
     get:
       deprecated: true
       operationId: getStatus
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       description: Gets system status statistics.
       responses:
         "200":
@@ -7698,6 +8733,11 @@ paths:
     get:
       description: Gets node status statistics.
       operationId: getStatusByNodes
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - name: summary
           in: query
@@ -7731,6 +8771,11 @@ paths:
     get:
       description: 'Reports the build state of each result-JSON search index: "ready" (built and queryable), "building" (currently being built), or "pending" (not built yet), plus roll-up counts.'
       operationId: getStatusResultIndexes
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       responses:
         "200":
           content:
@@ -7752,6 +8797,11 @@ paths:
       deprecated: true
       description: Gets system status by tags over time.
       operationId: getStatusByTag
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       requestBody:
         content:
           application/json:
@@ -7795,6 +8845,11 @@ paths:
     get:
       description: Gets all of the host tags in a unique list format.
       operationId: getHostTags
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       responses:
         "200":
           content:
@@ -7821,6 +8876,11 @@ paths:
     get:
       description: Gets all of the sandfly tags in a unique list format.
       operationId: getSandflyTags
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       responses:
         "200":
           content:
@@ -7847,6 +8907,11 @@ paths:
     get:
       description: Gets all unique SSH key tags.
       operationId: getSshKeyTags
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       responses:
         "200":
           content:
@@ -7869,6 +8934,11 @@ paths:
     delete:
       description: Purge the server's knowledge of all outstanding tasks.
       operationId: purgeTaskQueues
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       summary: Purge task queues
       responses:
         "200":
@@ -7889,6 +8959,11 @@ paths:
     get:
       description: Gets the active queue names with node counts.
       operationId: getActiveTaskQueues
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       responses:
         "200":
           content:
@@ -7910,6 +8985,11 @@ paths:
       summary: Get threat feeds
       description: Get a list of all threat feed configurations.
       operationId: getThreatfeeds
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       responses:
         "200":
           description: Threat feeds retrieved.
@@ -7936,6 +9016,11 @@ paths:
       summary: Create threat feed
       description: Create a new threat feed configuration.
       operationId: addThreatfeed
+      x-required-roles:
+        - admin
+        - power_user
+      x-license-features:
+        - threat_feed
       requestBody:
         content:
           application/json:
@@ -7974,6 +9059,11 @@ paths:
       summary: Get threat feed details
       description: Get details of a threat feed configuration.
       operationId: getThreatfeed
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: Threat feed ID to get.
           in: path
@@ -8006,6 +9096,11 @@ paths:
       summary: Update threat feed
       description: Change an existing threat feed configuration.
       operationId: updateThreatfeed
+      x-required-roles:
+        - admin
+        - power_user
+      x-license-features:
+        - threat_feed
       parameters:
         - description: Threat feed ID to replace.
           in: path
@@ -8056,6 +9151,9 @@ paths:
       summary: Delete threat feed
       description: Delete a threat feed configuration.
       operationId: deleteThreatfeed
+      x-required-roles:
+        - admin
+        - power_user
       parameters:
         - description: Threat feed ID to delete.
           in: path
@@ -8093,6 +9191,8 @@ paths:
   /users:
     get:
       operationId: getUsers
+      x-required-roles:
+        - admin
       description: Gets all of the users.
       parameters:
         - $ref: "#/components/parameters/include_system"
@@ -8129,6 +9229,15 @@ paths:
   "/users/password/{username}":
     put:
       operationId: updateUserPassword
+      x-required-roles:
+        - admin
+      x-only-self-roles:
+        - power_user
+        - user
+        - responder
+        - api_result_read
+        - api_scan
+        - system
       description: Updates the password of a user.
       parameters:
         - description: username to update password
@@ -8182,6 +9291,8 @@ paths:
   "/users/{username}":
     delete:
       operationId: deleteUser
+      x-required-roles:
+        - admin
       description: Deletes a user.
       parameters:
         - description: username to delete
@@ -8215,6 +9326,15 @@ paths:
         - Users
     get:
       operationId: getUser
+      x-required-roles:
+        - admin
+      x-only-self-roles:
+        - power_user
+        - user
+        - responder
+        - api_result_read
+        - api_scan
+        - system
       description: Gets a user by username.
       parameters:
         - description: username to get
@@ -8248,6 +9368,9 @@ paths:
         - Users
     post:
       operationId: createUser
+      x-required-roles:
+        - admin
+      x-license-limit: users
       description: Adds a user.
       parameters:
         - description: username to add
@@ -8288,6 +9411,8 @@ paths:
         - Users
     put:
       operationId: updateUser
+      x-required-roles:
+        - admin
       description: Updates a user.
       parameters:
         - description: username to update
@@ -8330,6 +9455,14 @@ paths:
     get:
       description: Gets the version of the product.
       operationId: getSystemVersion
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
+        - api_result_read
+        - api_scan
+        - system
       responses:
         "200":
           content:
@@ -8362,6 +9495,11 @@ paths:
     get:
       description: Get all whitelist rules.
       operationId: getWhitelistRules
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       summary: Get whitelist rules
       parameters:
         - name: tags
@@ -8397,6 +9535,11 @@ paths:
         - Whitelist
     post:
       operationId: createWhitelistRule
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       description: Add a whitelist rule.
       parameters:
         - description: allow this whitelist to be merged into an existing whitelist if the conditions are the same
@@ -8456,6 +9599,11 @@ paths:
   /whitelistrules/autowhitelist:
     post:
       operationId: autoWhitelistArtifacts
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       summary: Whitelist alerting artifacts automatically
       description: |-
         Create whitelist rules from alerting artifacts, and set the alerts those rules cover to pass.
@@ -8517,6 +9665,11 @@ paths:
     get:
       description: Get a whitelist rule by ID.
       operationId: getWhitelistRule
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       summary: Get whitelist rule
       parameters:
         - description: whitelist ID to retrieve
@@ -8542,6 +9695,11 @@ paths:
         - Whitelist
     put:
       operationId: updateWhitelistRule
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       description: Update a whitelist rule.
       parameters:
         - description: whitelist ID to update
@@ -8602,6 +9760,11 @@ paths:
         - Whitelist
     delete:
       operationId: deleteWhitelistRule
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       description: Delete a whitelist rule.
       parameters:
         - description: whitelist ID to delete
@@ -8636,6 +9799,11 @@ paths:
     put:
       description: Activate whitelist rules by ID.
       operationId: activateWhitelistRules
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       requestBody:
         content:
           application/json:
@@ -8663,6 +9831,11 @@ paths:
     put:
       description: Deactivate whitelist rules by ID.
       operationId: deactivateWhitelistRules
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       requestBody:
         content:
           application/json:
@@ -8690,6 +9863,11 @@ paths:
     put:
       description: Activate a whitelist.
       operationId: activateWhitelistRule
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: whitelist ID to activate
           in: path
@@ -8717,6 +9895,11 @@ paths:
     put:
       description: Deactivate a whitelist.
       operationId: deactivateWhitelistRule
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       parameters:
         - description: whitelist ID to deactivate
           in: path
@@ -8744,6 +9927,11 @@ paths:
     get:
       description: Get all whitelist rules for a particular host.
       operationId: getHostWhitelistRules
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       summary: Get whitelists for host
       parameters:
         - description: Host to retrieve. Accepts a host_id or host_sequence_id.
@@ -8793,6 +9981,11 @@ paths:
     get:
       description: Get every whitelist rule that applies to a particular sandfly. This includes the rules that name the sandfly and the rules that apply to all sandflies. The sandfly must exist.
       operationId: getSandflyWhitelistRules
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       summary: Get whitelists for sandfly
       parameters:
         - description: Name of the sandfly whose whitelist rules are retrieved.
@@ -8835,6 +10028,11 @@ paths:
   /whitelistrulesDelete:
     post:
       operationId: deleteWhitelistRules
+      x-required-roles:
+        - admin
+        - power_user
+        - user
+        - responder
       description: Bulk deletes whitelist rules.
       requestBody:
         content:
@@ -8869,6 +10067,9 @@ paths:
     post:
       description: Generates a new JWT signing key and saves it to the database. This invalidates all existing user sessions, requiring users to log in again. The new key takes effect immediately.
       operationId: rotateJwtKey
+      x-required-roles:
+        - admin
+        - power_user
       responses:
         "200":
           content:
@@ -10365,6 +11566,10 @@ components:
             explanation:
               title: Data.explanation
               type: string
+            containerized:
+              title: Data.containerized
+              description: Is this host within a container?
+              type: boolean
           required:
             - explanation
           additionalProperties: false
@@ -10398,6 +11603,10 @@ components:
           title: Host.host_id
           description: A unique ID for this host (ssh key fingerprint), or the host_name if we saw no SSH.
           type: string
+        host_id_version:
+          title: Host.host_id_version
+          description: Version of the host ID scheme used to identify the host.
+          type: integer
         host_sequence_id:
           title: Host.host_sequence_id
           description: Alternative integer ID assigned to this host.
@@ -10579,6 +11788,7 @@ components:
         - date_last_scan
         - first_seen_ip_addr
         - host_id
+        - host_id_version
         - host_sequence_id
         - hostname
         - id
@@ -12168,9 +13378,7 @@ components:
               type: string
               description: If present and non-empty, any messages that should be displayed to users about the status of the Sandfly subscription.
         usage:
-          allOf:
-            - $ref: "#/components/schemas/LicenseLimits"
-          type: object
+          $ref: "#/components/schemas/LicenseUsage"
         version:
           description: License version.
           type: integer
@@ -12195,6 +13403,79 @@ components:
         - online_status
       type: object
     LicenseLevel:
+      x-enumPresets:
+        "0":
+          features:
+            - host_tags
+            - ssh_hunter
+          limits:
+            hosts: 500
+            alerts: 3
+            email_notifications: 1
+            syslog_notifications: 0
+            notifications: 0
+            data_retention_max_hours: 24
+            schedules: 2
+            users: 5
+            jump_hosts: 0
+            named_queues: 0
+        "1":
+          features:
+            - host_tags
+            - ssh_hunter
+          limits:
+            hosts: 10
+            alerts: -1
+            email_notifications: 1
+            syslog_notifications: 0
+            notifications: 2
+            data_retention_max_hours: -1
+            schedules: 2
+            users: 0
+            jump_hosts: 0
+            named_queues: 0
+        "4":
+          features:
+            - host_tags
+            - ssh_hunter
+            - sandfly_auto_response
+            - user_roles
+            - custom_sandflies
+          limits:
+            hosts: key
+            alerts: -1
+            email_notifications: -1
+            syslog_notifications: -1
+            notifications: 0
+            data_retention_max_hours: -1
+            schedules: -1
+            users: -1
+            jump_hosts: -1
+            named_queues: -1
+        "8":
+          features:
+            - host_tags
+            - ssh_hunter
+            - sandfly_auto_response
+            - user_roles
+            - custom_sandflies
+            - elasticsearch_replication
+            - splunk_connector
+            - siem_sentinel
+            - ad_hoc_scan
+            - sso
+            - threat_feed
+          limits:
+            hosts: key
+            alerts: -1
+            email_notifications: -1
+            syslog_notifications: -1
+            notifications: -1
+            data_retention_max_hours: -1
+            schedules: -1
+            users: -1
+            jump_hosts: -1
+            named_queues: -1
       description: License level.
       example: 8
       type: integer
@@ -12265,6 +13546,43 @@ components:
           description: Number of users allowed.
           example: 100
           type: integer
+      description: Limits of a license. -1 means unlimited. A limit of 0 (none) is left out of the response, so every limit except `hosts` is optional and a missing one means none.
+      required:
+        - hosts
+      type: object
+    LicenseUsage:
+      description: Current usage counted against each license limit. Every count is always present. `alerts` and `data_retention_max_hours` repeat the license's limits rather than counting usage.
+      properties:
+        alerts:
+          description: The license's alerts limit.
+          type: integer
+        data_retention_max_hours:
+          description: The license's data retention limit in hours.
+          type: integer
+        email_notifications:
+          description: Number of email notifications configured.
+          type: integer
+        hosts:
+          description: Number of hosts in use.
+          type: integer
+        jump_hosts:
+          description: Number of jump hosts configured.
+          type: integer
+        named_queues:
+          description: Number of named queues in use.
+          type: integer
+        notifications:
+          description: Number of notification event configurations.
+          type: integer
+        schedules:
+          description: Number of schedules configured.
+          type: integer
+        syslog_notifications:
+          description: Number of syslog notifications configured.
+          type: integer
+        users:
+          description: Number of users.
+          type: integer
       required:
         - alerts
         - data_retention_max_hours
@@ -12273,11 +13591,8 @@ components:
         - jump_hosts
         - named_queues
         - notifications
-        - queues
-        - reports
-        - rules
-        - scheduled_reports
-        - scheduled_rules
+        - schedules
+        - syslog_notifications
         - users
       type: object
     LicenseUpdate:
@@ -12481,7 +13796,7 @@ components:
           description: Sequence ID of the host the artifact is on.
         engine:
           type: string
-          description: Engine that reported the artifact.
+          description: The engine the artifact is stored under. Sibling engines share their artifacts; see the engine field of the artifact endpoints.
         key_data:
           type: string
           description: Key data element of the artifact.
@@ -13036,7 +14351,7 @@ components:
         - first_seen
         - last_seen
         - key_tags
-        - key_bits
+        - bits
         - key_parse_error
       properties:
         id:
@@ -13089,7 +14404,7 @@ components:
           description: Time when this key was most recently seen on a host during a scan. If a user directly added the key to Sandfly and it hasn't yet been found on any scanned host, the value will be null.
         key_tags:
           $ref: "#/components/schemas/SshKeyTags"
-        key_bits:
+        bits:
           type: integer
           description: Number of bits in the key.
         key_parse_error:
@@ -14756,7 +16071,9 @@ components:
           items:
             type: string
         engine:
-          $ref: "#/components/schemas/SandflyEngineType"
+          description: "The engine the artifact is stored under. Engines that report the same kind of artifact and identify it the same way share one artifact, stored under the first engine of the family: an artifact from sandfly_engine_user_password_auditor or sandfly_engine_user_password_hash_duplicates is stored under sandfly_engine_user, and one from any sandfly_engine_process_masquerade_* engine under sandfly_engine_process. A user that both the password auditor and a user engine sandfly flag is therefore one artifact with a verdict from each. The engine of each verdict is that of its sandfly. An error artifact with no artifact data keeps the engine of the sandfly that failed."
+          allOf:
+            - $ref: "#/components/schemas/SandflyEngineType"
         key_type:
           $ref: "#/components/schemas/ArtifactKeyType"
         key_data:
@@ -15082,6 +16399,7 @@ components:
       description: |-
         The artifact field to filter on. This is a fixed set (see `enum`); filtering on any other field is rejected.
         - `sandfly`, `sandfly_type` and `sandfly_tags` are **membership tests** against the artifact's non-superseded per-sandfly results: they match an artifact when ANY of its matching sandflies satisfies the comparison, and a negated operator (`notEquals`, `notContains`, ...) means NO matching sandfly does. They cannot be used in `sort`.
+        - `engine` is the engine the artifact is stored under, which for the password auditor, password hash duplicates and process masquerade engines is the user or process engine they share their artifacts with. To find the artifacts one of those engines alerted on, filter on its `sandfly` names instead.
         - An exact `host_id` match is resolved to `host_sequence_id` internally, so filtering on either performs the same.
         - `base_permissive_hash` and `base_moderate_hash` are the artifact's own identity hashes, taken before any per-sandfly supplement, so an exact match on one finds the same artifact on every other host that has it. They are NOT the same values as the result endpoint's `match_hashes.*`, which are the supplemented per-sandfly hashes. The third base hash, `base_strict_hash`, is reported but not filterable: it has no index, and for a hash-keyed artifact it holds the same value as the artifact key.
         - The `data.results...` fields search the stored result JSON, and are the same fields, with the same names and operators, that POST /results accepts; see GET /results/indexes for their build state. The JSON payload belongs to the artifact, so these mean the same thing on either endpoint.
@@ -16511,7 +17829,6 @@ components:
           required:
             - rules
             - engines
-            - explanation
           type: object
           properties:
             rules:
@@ -16583,11 +17900,9 @@ components:
         severity:
           $ref: "#/components/schemas/SandflySeverity"
         tags:
-          description: Tags for this sandfly.
+          description: Tags for this sandfly. Always includes the sandfly's own type as a tag; a tag that names a sandfly type must be that type. Factory and vendor sandflies also carry `default_active` or `default_inactive`, and vendor sandflies `partner_sandfly`.
           items:
-            oneOf:
-              - $ref: "#/components/schemas/SandflyTypeGeneral"
-              - type: string
+            type: string
           type: array
         version:
           description: Version of this Sandfly.
@@ -16747,12 +18062,14 @@ components:
           description: Sandfly format.
           type: string
         max_cpu_load:
-          description: Sandfly max CPU load.
-          maximum: 1
-          minimum: 0
+          description: The amount of relative CPU intensity this sandfly needs (1 - low, 3 - high).
+          maximum: 3
+          minimum: 1
           type: integer
         max_disk_load:
-          description: Sandfly max disk load.
+          description: The amount of relative disk intensity this sandfly needs (1 - low, 3 - high).
+          maximum: 3
+          minimum: 1
           type: integer
         max_timeout:
           description: Sandfly max timeout in seconds. Max is 1800
@@ -16773,15 +18090,6 @@ components:
               properties:
                 process:
                   $ref: "#/components/schemas/SandflyOptionsResponseProcess"
-          type: object
-        os_compat:
-          description: Sandfly OS compatibility.
-          properties:
-            linux:
-              description: Sandfly Linux compatibility.
-              items:
-                type: object
-              type: array
           type: object
         results_alert:
           description: Number of current (not superseded) alert results from this sandfly.
@@ -16826,7 +18134,6 @@ components:
         - max_cpu_load
         - max_disk_load
         - max_timeout
-        - os_compat
         - date_added
         - options
         - results_alert
@@ -17003,18 +18310,16 @@ components:
           format: date-time
           description: End time of this report data period.
         scan_summary:
-          type: array
-          description: Aggregate counts of scan activity.
-          items:
-            type: object
-            required:
-              - unique_hosts_scanned
-            properties:
-              unique_hosts_scanned:
-                type: integer
-                description: Number of unique hosts scanned.
-            allOf:
-              - $ref: "#/components/schemas/ScanSummary"
+          type: object
+          description: Aggregate counts of scan activity over the whole period.
+          required:
+            - unique_hosts_scanned
+          properties:
+            unique_hosts_scanned:
+              type: integer
+              description: Number of unique hosts scanned.
+          allOf:
+            - $ref: "#/components/schemas/ScanSummary"
         hourly_scan_summary:
           type: array
           description: Hourly summary of scan activity.
@@ -17048,6 +18353,7 @@ components:
                 description: Host ID.
               host_sequence_id:
                 type: integer
+                nullable: true
                 description: Host sequence ID. Will be null if the host has been deleted.
               target_address:
                 type: string
@@ -17077,10 +18383,10 @@ components:
                 $ref: "#/components/schemas/ResultTagCategory"
     ScanSummary:
       type: object
+      description: "Scan counts shared by the period, hourly and per-host summaries. `unique_hosts_scanned` is not here: the period and hourly summaries add it, and a per-host summary has none."
       required:
         - total_scans_completed
         - total_scans_failed
-        - unique_hosts_scanned
         - total_sandflies_executed
         - total_alerts
         - total_errors
@@ -17092,9 +18398,6 @@ components:
         total_scans_failed:
           type: integer
           description: Number of scans that experienced scan errors.
-        unique_hosts_scanned:
-          type: integer
-          description: Number of hosts scanned.
         total_sandflies_executed:
           type: integer
           description: Number of individual sandflies executed across hosts.
@@ -17555,6 +18858,14 @@ components:
       required:
         - total
       type: object
+    MoreResultsResponse:
+      properties:
+        more_results:
+          description: Indicates if there are more results to be returned.
+          type: boolean
+      required:
+        - more_results
+      type: object
     ServerConfiguration:
       allOf:
         - $ref: "#/components/schemas/ServerConfigCommon"
@@ -17652,14 +18963,23 @@ components:
           description: Take the provider, API key, URL and CA certificate from the AI analysis configuration, leaving `model` the only field set here. Requires AI analysis to be enabled.
         provider:
           type: string
-          description: AI API service to use. Ignored when `inherit` is true.
+          description: AI API service to use. Ignored when `inherit` is true. An empty string until a provider is configured; the stored value is not checked while `inherit` is true, so it can stay empty even when triage is enabled.
           enum:
+            - ""
             - Claude
             - custom
             - DigitalOcean
             - Gemini
             - OpenAI
             - xAI
+          x-enum-varnames:
+            - NONE
+            - CLAUDE
+            - CUSTOM
+            - DIGITAL_OCEAN
+            - GEMINI
+            - OPEN_AI
+            - X_AI
         password:
           type: string
           nullable: true
@@ -17933,14 +19253,23 @@ components:
           description: Indicates of LLM analysis integration is enabled or not.
         provider:
           type: string
-          description: LLM API service to use.
+          description: LLM API service to use. An empty string until a provider is configured; a provider is required only when `enabled` is true.
           enum:
+            - ""
             - Claude
             - custom
             - DigitalOcean
             - Gemini
             - OpenAI
             - xAI
+          x-enum-varnames:
+            - NONE
+            - CLAUDE
+            - CUSTOM
+            - DIGITAL_OCEAN
+            - GEMINI
+            - OPEN_AI
+            - X_AI
         password:
           type: string
           nullable: true
@@ -19436,11 +20765,12 @@ components:
             type: object
             required:
               - time
-              - value
+              - total
             properties:
               time:
                 type: string
-              value:
+              total:
+                description: Count for this hour; 0 when there was none.
                 type: integer
     TimeBasedTotalGraphData:
       type: object
@@ -19590,7 +20920,6 @@ components:
         - logins
         - logins_failed
         - logins_failed_count
-        - password
         - preferences
         - roles
         - sso
@@ -19601,9 +20930,8 @@ components:
           format: date-time
           type: string
         email:
-          description: Email address for the user.
+          description: "Email address for the user. An empty string when the user has none: it is optional when a user is created or handed over by SSO."
           type: string
-          format: email
         full_name:
           description: Full name of user.
           type: string
@@ -19633,6 +20961,7 @@ components:
         password:
           description: User's password (used for setting during creation; not returned)
           type: string
+          writeOnly: true
         preferences:
           description: Preferences for user.
           type: string
@@ -19664,7 +20993,6 @@ components:
         - logins
         - logins_failed
         - logins_failed_count
-        - password
         - preferences
         - roles
         - sso
@@ -19675,9 +21003,8 @@ components:
           format: date-time
           type: string
         email:
-          description: Email address for the user.
+          description: "Email address for the user. An empty string when the user has none: it is optional when a user is created or handed over by SSO."
           type: string
-          format: email
         full_name:
           description: Full name of user.
           type: string
@@ -19707,6 +21034,7 @@ components:
         password:
           description: User's password (used for setting during creation; not returned)
           type: string
+          writeOnly: true
         preferences:
           description: Preferences for user.
           type: string
@@ -22344,7 +23672,7 @@ components:
         binary:
           $ref: "#/components/schemas/BinaryAnalysis"
           title: Analysis.binary
-    file:
+    ResultFile:
       type: object
       required:
         - date
@@ -22571,7 +23899,7 @@ components:
       properties:
         file:
           allOf:
-            - $ref: "#/components/schemas/file"
+            - $ref: "#/components/schemas/ResultFile"
           description: The at job spool file.
         atjob:
           type: object
@@ -22753,226 +24081,7 @@ components:
         - file
       properties:
         file:
-          type: object
-          required:
-            - date
-            - mode
-            - nlink
-            - uid
-            - username
-            - gid
-            - groupname
-            - size
-            - size_mismatch
-            - path
-            - path_root
-            - name
-            - flags_list
-            - entropy
-            - hash
-            - magic_num
-            - container
-            - mount
-          properties:
-            date:
-              type: object
-              description: File timestamps from stat(2)
-              required:
-                - created
-                - created_minutes
-                - modified
-                - modified_minutes
-                - accessed
-                - accessed_minutes
-              properties:
-                created:
-                  type: string
-                  description: File creation time (ctime) as formatted string
-                created_minutes:
-                  type: integer
-                  description: Minutes since file creation
-                modified:
-                  type: string
-                  description: File modification time (mtime) as formatted string
-                modified_minutes:
-                  type: integer
-                  description: Minutes since file modification
-                accessed:
-                  type: string
-                  description: File access time (atime) as formatted string
-                accessed_minutes:
-                  type: integer
-                  description: Minutes since file access
-            mode:
-              type: string
-              description: File permission mode as octal string (e.g. 0755)
-            nlink:
-              type: integer
-              description: Number of hard links to the file from stat(2)
-            uid:
-              type: integer
-              description: Numeric user ID of file owner
-            username:
-              type: string
-              description: Username of file owner
-            gid:
-              type: integer
-              description: Numeric group ID of file owner
-            groupname:
-              type: string
-              description: Group name of file owner
-            selinux_context:
-              type: string
-              description: SELinux security context label of the file
-            capabilities:
-              type: object
-              description: libcap capabilties stored in the file's security.capability xattr.
-              properties:
-                permitted:
-                  description: Decoded list of permitted capabilities
-                  type: array
-                  items:
-                    $ref: "#/components/schemas/LinuxCapability"
-                inheritable:
-                  description: Decoded list of inheritable capabilities
-                  type: array
-                  items:
-                    $ref: "#/components/schemas/LinuxCapability"
-                effective:
-                  description: Decoded list of effective capabilities
-                  type: array
-                  items:
-                    $ref: "#/components/schemas/LinuxCapability"
-            size:
-              type: integer
-              description: File size in bytes from stat(2)
-            size_byte_count:
-              type: integer
-              description: Actual byte count read from the file
-            size_byte_count_status:
-              type: string
-              description: Explanation of why the raw byte count could not be calculated (e.g. not a regular file). Only present when the count failed.
-            size_mismatch:
-              type: boolean
-              description: True if stat size differs from actual bytes read (possible tampering or race)
-            path:
-              type: string
-              description: Full filesystem path to the file
-            path_root:
-              type: string
-              description: Root path prefix (e.g. container overlay root or chroot path)
-            path_link:
-              type: string
-              description: Symlink target path if the file is a symbolic link
-            true_path:
-              type: string
-              description: Resolved absolute path after following symlinks
-            name:
-              type: string
-              description: Base filename without directory path
-            extension:
-              type: string
-              description: File extension (e.g. .so, .sh, .conf)
-            flags_list:
-              type: array
-              items:
-                $ref: "#/components/schemas/FileFlag"
-            entropy:
-              type: number
-              description: Shannon entropy of file contents (0.0-8.0 bits per byte). High values suggest encryption or compression.
-            hash:
-              type: object
-              description: Cryptographic hashes of the file contents
-              required:
-                - md5
-                - sha1
-                - sha256
-                - sha512
-              properties:
-                md5:
-                  type: string
-                  description: MD5 hash (hex-encoded)
-                sha1:
-                  type: string
-                  description: SHA-1 hash (hex-encoded)
-                sha256:
-                  type: string
-                  description: SHA-256 hash (hex-encoded)
-                sha512:
-                  type: string
-                  description: SHA-512 hash (hex-encoded)
-            magic_num:
-              type: object
-              description: File type identification from magic number (first bytes of file)
-              required:
-                - hex
-                - text
-                - type
-                - class
-                - expected_extensions
-              properties:
-                hex:
-                  type: string
-                  description: Raw magic bytes as hex string
-                text:
-                  type: string
-                  description: Magic bytes as printable text
-                type:
-                  type: string
-                  description: 'Detected file type (e.g. elf, script, gzip). An open vocabulary: an unencrypted private key reports "<key type>-unencrypted".'
-                class:
-                  $ref: "#/components/schemas/MagicClass"
-                public_key:
-                  type: string
-                  description: If the file is an unencrypted private key, the corresponding public key value. Absent if not computable.
-                expected_extensions:
-                  type: array
-                  description: File extensions normally associated with this file type
-                  items:
-                    type: string
-            data:
-              type: array
-              nullable: true
-              items:
-                type: string
-              description: Extracted file content lines for small or text-based files (e.g. scripts, configs). Null for binary files.
-            container:
-              type: object
-              description: Container information if the file resides inside a container
-              properties:
-                id:
-                  type: string
-                  description: Full container ID
-                id_short:
-                  type: string
-                  description: Short (12-character) container ID
-                rootdir:
-                  type: string
-                  description: Container root filesystem path on the host
-              required:
-                - id
-                - id_short
-                - rootdir
-            mount:
-              type: object
-              description: Mount point information for the filesystem containing this file
-              required:
-                - mountpoint
-                - device
-                - fs_type
-              properties:
-                mountpoint:
-                  type: string
-                  description: Mount point path
-                device:
-                  type: string
-                  description: Block device or source
-                fs_type:
-                  type: string
-                  description: Filesystem type (e.g. ext4, xfs, overlay)
-            analysis:
-              $ref: "#/components/schemas/Analysis"
-              title: File.analysis
+          $ref: "#/components/schemas/ResultFile"
     CloakedDirentryEngineResponse:
       type: object
       allOf:
@@ -22986,7 +24095,7 @@ components:
       properties:
         file:
           allOf:
-            - $ref: "#/components/schemas/file"
+            - $ref: "#/components/schemas/ResultFile"
           description: The crontab file the entry came from.
         cron:
           type: object
@@ -23040,92 +24149,96 @@ components:
             message:
               type: string
               description: "What went wrong, as reported by the sandfly, the agent, or the scanning node: the error result's explanation for an error artifact with no other data, and its status message for an artifact with data of its own."
+    KernelModuleEngineResponse:
+      type: object
+      description: A kmodule engine result about one loaded kernel module.
+      required:
+        - kernel_module
+      properties:
+        kernel_module:
+          type: object
+          description: The loaded kernel module this result is about.
+          required:
+            - name
+            - memory_size
+            - instance_count
+            - state
+            - memory_offset
+            - taints
+            - taints_list
+            - kernel_taint_missing
+            - hidden
+            - vmalloc_artifact
+            - missing_file
+            - dependencies
+            - module_file_path
+            - file
+          properties:
+            name:
+              type: string
+            memory_size:
+              type: integer
+            instance_count:
+              type: integer
+            state:
+              type: string
+            memory_offset:
+              type: string
+            taints:
+              type: array
+              items:
+                type: object
+                properties:
+                  taint:
+                    type: string
+                    description: A single kernel taint letter from /proc/modules. Recognized letters are those of KernelTaintLetter; a distribution-specific letter is reported as-is with taint_reason "(unknown)".
+                  taint_reason:
+                    type: string
+                    description: The kernel's reason for the taint, or "(unknown)" for an unrecognized letter.
+            taints_list:
+              type: string
+            kernel_taint_missing:
+              type: boolean
+            hidden:
+              type: boolean
+            vmalloc_artifact:
+              type: boolean
+              description: Indicates that this kernel module is a name that we saw in /proc/vmallocinfo but we don't see the module name in the loaded modules list.
+            missing_file:
+              type: boolean
+            dependencies:
+              type: array
+              items:
+                type: string
+            module_file_path:
+              type: string
+            file:
+              allOf:
+                - $ref: "#/components/schemas/ResultFile"
+              description: On-disk attributes of the kernel module file, in the same shape as the file engine's file object.
+    KernelTaintEngineResponse:
+      type: object
+      description: A kmodule engine result about a kernel taint flag that no loaded module accounts for.
+      required:
+        - kernel_taint
+      properties:
+        kernel_taint:
+          type: object
+          description: A taint flag set in /proc/sys/kernel/tainted that no currently loaded module accounts for.
+          required:
+            - taint
+            - taint_reason
+          properties:
+            taint:
+              $ref: "#/components/schemas/KernelTaintLetter"
+            taint_reason:
+              type: string
+              description: The kernel's reason for the taint.
     KmodulesEngineResponse:
       description: A kmodule engine result carries exactly one of kernel_module or kernel_taint. Most kmodule sandflies report a loaded kernel module in kernel_module; a sandfly that checks the kernel's tainted state against the loaded modules instead reports, in kernel_taint, a taint flag that no loaded module accounts for.
       oneOf:
-        - type: object
-          description: A kmodule engine result about one loaded kernel module.
-          required:
-            - kernel_module
-          properties:
-            kernel_module:
-              type: object
-              description: The loaded kernel module this result is about.
-              required:
-                - name
-                - memory_size
-                - instance_count
-                - state
-                - memory_offset
-                - taints
-                - taints_list
-                - kernel_taint_missing
-                - hidden
-                - vmalloc_artifact
-                - missing_file
-                - dependencies
-                - module_file_path
-                - file
-              properties:
-                name:
-                  type: string
-                memory_size:
-                  type: integer
-                instance_count:
-                  type: integer
-                state:
-                  type: string
-                memory_offset:
-                  type: string
-                taints:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      taint:
-                        type: string
-                        description: A single kernel taint letter from /proc/modules. Recognized letters are those of KernelTaintLetter; a distribution-specific letter is reported as-is with taint_reason "(unknown)".
-                      taint_reason:
-                        type: string
-                        description: The kernel's reason for the taint, or "(unknown)" for an unrecognized letter.
-                taints_list:
-                  type: string
-                kernel_taint_missing:
-                  type: boolean
-                hidden:
-                  type: boolean
-                vmalloc_artifact:
-                  type: boolean
-                  description: Indicates that this kernel module is a name that we saw in /proc/vmallocinfo but we don't see the module name in the loaded modules list.
-                missing_file:
-                  type: boolean
-                dependencies:
-                  type: array
-                  items:
-                    type: string
-                module_file_path:
-                  type: string
-                file:
-                  allOf:
-                    - $ref: "#/components/schemas/file"
-                  description: On-disk attributes of the kernel module file, in the same shape as the file engine's file object.
-        - type: object
-          description: A kmodule engine result about a kernel taint flag that no loaded module accounts for.
-          required:
-            - kernel_taint
-          properties:
-            kernel_taint:
-              type: object
-              description: A taint flag set in /proc/sys/kernel/tainted that no currently loaded module accounts for.
-              required:
-                - taint
-                - taint_reason
-              properties:
-                taint:
-                  $ref: "#/components/schemas/KernelTaintLetter"
-                taint_reason:
-                  type: string
-                  description: The kernel's reason for the taint.
+        - $ref: "#/components/schemas/KernelModuleEngineResponse"
+        - $ref: "#/components/schemas/KernelTaintEngineResponse"
     LastlogEngineResponse:
       type: object
       required:
@@ -23185,7 +24298,7 @@ components:
         immutable: 5
         containerized: 0
         hidden: 5
-    process:
+    ResultProcess:
       type: object
       required:
         - name
@@ -23390,11 +24503,11 @@ components:
               type: string
         file:
           allOf:
-            - $ref: "#/components/schemas/file"
+            - $ref: "#/components/schemas/ResultFile"
           description: On-disk attributes of the process binary, in the same shape as the file engine's file object. Omitted when there is no binary to analyze, such as for a kernel thread.
         parent_process:
           allOf:
-            - $ref: "#/components/schemas/process"
+            - $ref: "#/components/schemas/ResultProcess"
           description: The parent of this process, in the same shape as the process object itself. Omitted when the parent could not be read.
         status:
           type: object
@@ -23498,312 +24611,7 @@ components:
         - process
       properties:
         process:
-          type: object
-          required:
-            - name
-            - extension
-            - cmdline
-            - command
-            - date
-            - pid
-            - ppid
-            - pgid
-            - uid
-            - username
-            - gid
-            - groupname
-            - path
-            - true_path
-            - cwd
-            - entropy
-            - state
-            - system_uptime
-            - selinux_context
-            - flags_list
-            - file_descriptors
-            - environ
-            - stack
-            - cgroup
-            - status
-          properties:
-            name:
-              type: string
-            extension:
-              type: string
-            cmdline:
-              type: string
-            cmdargs:
-              type: array
-              items:
-                type: string
-            command:
-              type: string
-            date:
-              type: object
-              properties:
-                created:
-                  type: string
-                  format: date-time
-                created_minutes:
-                  type: integer
-              required:
-                - created
-                - created_minutes
-            pid:
-              type: integer
-            ppid:
-              type: integer
-            pgid:
-              type: integer
-            uid:
-              type: integer
-            username:
-              type: string
-            gid:
-              type: integer
-            groupname:
-              type: string
-            login_uid:
-              type: integer
-            login_uid_username:
-              type: string
-            session_id:
-              type: integer
-            path:
-              type: string
-            true_path:
-              type: string
-            cwd:
-              type: string
-            entropy:
-              type: number
-            state:
-              type: string
-              description: "Process state as the single letter from /proc/PID/stat: R running, S sleeping, D uninterruptible sleep, Z zombie, T stopped, t tracing stop, X or x dead, I idle, K wakekill, W waking, P parked. Reported verbatim from the kernel, so other letters are possible."
-            system_uptime:
-              type: string
-              format: date-time
-            selinux_context:
-              type: string
-            flags_list:
-              type: array
-              items:
-                $ref: "#/components/schemas/ProcessFlag"
-            file_descriptors:
-              type: array
-              items:
-                type: object
-                properties:
-                  number:
-                    type: integer
-                  path:
-                    type: string
-                  type:
-                    type: string
-                  class:
-                    type: string
-                  class_data_socket_packet:
-                    type: object
-                    properties:
-                      type:
-                        type: integer
-                      type_text:
-                        type: string
-                      protocol:
-                        type: string
-                      protocol_text:
-                        type: string
-                      uid:
-                        type: integer
-                      interface:
-                        type: integer
-                  class_data_socket_unix:
-                    type: object
-                    properties:
-                      type:
-                        type: integer
-                      type_text:
-                        type: string
-                      protocol:
-                        type: string
-                      protocol_text:
-                        type: string
-                      state:
-                        type: integer
-                      state_text:
-                        type: string
-                      path:
-                        type: string
-                      abstract:
-                        type: boolean
-                  hidden:
-                    type: boolean
-                  selinux_context:
-                    type: string
-                    description: SELinux security context label of the file descriptor target
-                required:
-                  - number
-                  - path
-                  - type
-                  - class
-                  - hidden
-                  - selinux_context
-            environ:
-              type: array
-              items:
-                type: string
-            stack:
-              type: array
-              items:
-                type: string
-            cgroup:
-              type: array
-              items:
-                type: object
-                properties:
-                  hierarchy_id:
-                    type: string
-                  controller_list:
-                    type: string
-                  path:
-                    type: string
-                required:
-                  - hierarchy_id
-                  - controller_list
-                  - path
-            container:
-              type: object
-              description: Container the process is running in. Omitted for a process that is not containerized.
-              properties:
-                id:
-                  type: string
-                id_short:
-                  type: string
-                rootdir:
-                  type: string
-              required:
-                - id
-                - id_short
-                - rootdir
-            network_ports:
-              type: object
-              description: Network ports the process has open. Only protocols with activity are included, and the block is omitted entirely for a process with no network activity.
-            hash:
-              type: object
-              description: Hashes of the running process binary. Omitted when the binary could not be hashed, such as for a kernel thread.
-              properties:
-                md5:
-                  type: string
-                sha1:
-                  type: string
-                sha256:
-                  type: string
-                sha512:
-                  type: string
-            file:
-              allOf:
-                - $ref: "#/components/schemas/file"
-              description: On-disk attributes of the process binary, in the same shape as the file engine's file object. Omitted when there is no binary to analyze, such as for a kernel thread.
-            parent_process:
-              allOf:
-                - $ref: "#/components/schemas/process"
-              description: The parent of this process, in the same shape as the process object itself. Omitted when the parent could not be read.
-            status:
-              type: object
-              properties:
-                name:
-                  type: string
-                umask:
-                  type: string
-                state:
-                  type: string
-                tgid:
-                  type: integer
-                ngid:
-                  type: integer
-                pid:
-                  type: integer
-                ppid:
-                  type: integer
-                tracer_pid:
-                  type: integer
-                uid:
-                  type: integer
-                uid_effective:
-                  type: integer
-                uid_saved_set:
-                  type: integer
-                uid_file_system:
-                  type: integer
-                gid:
-                  type: integer
-                gid_effective:
-                  type: integer
-                gid_saved_set:
-                  type: integer
-                gid_file_system:
-                  type: integer
-                groupids:
-                  type: array
-                  items:
-                    type: integer
-                groupnames:
-                  type: array
-                  items:
-                    type: string
-                ns_tgid:
-                  type: integer
-                ns_pid:
-                  type: integer
-                ns_pgid:
-                  type: integer
-                ns_sid:
-                  type: integer
-                vm_peak:
-                  type: integer
-                vm_size:
-                  type: integer
-                threads:
-                  type: integer
-                cap_inh:
-                  type: string
-                cap_prm:
-                  type: string
-                cap_eff:
-                  type: string
-                cap_bnd:
-                  type: string
-                cap_amb:
-                  type: string
-                seccomp:
-                  type: integer
-                seccomp_filters:
-                  type: integer
-                flags:
-                  type: object
-                  additionalProperties:
-                    type: boolean
-                empty:
-                  type: boolean
-            capabilities:
-              type: object
-              description: Decoded process capability sets. Omitted when no set is populated, which includes a root process holding every capability (the full list is suppressed rather than repeated on every result).
-              properties:
-                permitted:
-                  description: Decoded list of permitted capabilities
-                  type: array
-                  items:
-                    $ref: "#/components/schemas/LinuxCapability"
-                inheritable:
-                  description: Decoded list of inheritable capabilities
-                  type: array
-                  items:
-                    $ref: "#/components/schemas/LinuxCapability"
-                effective:
-                  description: Decoded list of effective capabilities
-                  type: array
-                  items:
-                    $ref: "#/components/schemas/LinuxCapability"
+          $ref: "#/components/schemas/ResultProcess"
     SystemdSessionEngineResponse:
       type: object
       required:
@@ -24306,7 +25114,7 @@ components:
                       type: array
                       description: The authorized_keys files the entries came from, each in the same shape as the file engine's file object. Omitted when there are none.
                       items:
-                        $ref: "#/components/schemas/file"
+                        $ref: "#/components/schemas/ResultFile"
                 known_hosts:
                   type: object
                   required:
@@ -24381,7 +25189,7 @@ components:
                             type: string
                     file:
                       allOf:
-                        - $ref: "#/components/schemas/file"
+                        - $ref: "#/components/schemas/ResultFile"
                       description: The known_hosts file the entries came from, in the same shape as the file engine's file object. Omitted when there is none.
                 ssh_data_status:
                   type: string

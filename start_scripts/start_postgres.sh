@@ -24,8 +24,8 @@ fi
 
 # Postgres versions. Other scripts (load_images.sh, upgrade_postgres.sh,
 # generate_compose.sh, etc.) read these values from this file.
-PG14_VERSION=14.24
-PG18_VERSION=18.6
+PG14_VERSION=14.25
+PG18_VERSION=18.7
 
 # Determine which volume to use. New installs use sandfly-pg-db-vol, which
 # isn't tied to a Postgres version since upgrades happen in place. Older
